@@ -1,9 +1,8 @@
 // generate.ts
 // managed by AIDA
 
-import fs = require("fs").promises;
-import path = require("path");
-
+import { promises as fs } from "fs";
+import path from "path";
 
 /* --- SPEC --- */
 type WorkingAgreementRules = {
