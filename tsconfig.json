@@ -1,6 +1,4 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
-
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2019",
@@ -16,6 +14,7 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "esModuleInterop": true
   }
 }

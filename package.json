@@ -3,5 +3,9 @@
     "@types/node": "^24.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "gen": "ts-node generate.ts",
+    "check": "node check.js"
   }
 }

@@ -6,11 +6,19 @@ const path = require("path");
 const specialWord = "pony";
 
 /* --- SPEC --- */
-const rules = {
-  noSkeletons: true,
-  singleAsset: true,
-  confirmBeforeGuess: true,
-  managedByAida: true,
+const workingAgreementRules = {
+  managedByAida: true, // every generated file must carry // managed by AIDA
+  confirmBeforeGuess: true, // only one clarifying question if ambiguity
+  noSilentFixes: true, // never “fix” spec silently
+};
+
+const appRules = {
+  noSkeletons: true, // no placeholder UIs, real logic only
+  singleAsset: true, // generator is the one canonical source
+};
+
+const tempRules = {
+  // put temporary process rules here, remove later
 };
 
 const screens = [
@@ -19,8 +27,13 @@ const screens = [
     type: "page",
     content: "This is a generated component.",
   },
+  {
+    name: "Login",
+    type: "form",
+    fields: ["email", "password"],
+    actions: ["submit"],
+  },
 ];
-/* --- /SPEC --- */
 
 /* --- TEMPLATES --- */
 function renderPage(screen) {
