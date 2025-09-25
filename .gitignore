@@ -1,0 +1,10 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Build
+dist/
+build/
+
+# Generated code
+src/
