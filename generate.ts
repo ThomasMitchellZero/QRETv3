@@ -7,6 +7,16 @@ import path from "path";
 /* --- SPEC --- */
 type Scope = "universal" | "global" | "screen" | "component";
 
+type Rule = {
+  goal: string;
+  inputs: string[];
+  constraints: string[];
+  outputs: string[];
+  precedence: number;
+  scope: Scope;
+  terms?: string[]; // dictionary terms this rule depends on
+};
+
 type WorkingAgreementRules = {
   noSilentFixes: boolean;
   // New fields per updated working agreement:
@@ -21,41 +31,9 @@ type WorkingAgreementRules = {
   standardizeWarnings: boolean; // Generated code must use a standard warning format for auto-filled or ambiguous decisions
 };
 
-// Tooling requirements: mandatory, part of spec, must be present for generator runs
-const tooling = {
-  generatorLanguage: "ts",
-  generatorRunner: "tsx",
-  genScript: "gen",
-  genCommand: "npx tsx generate.ts",
-  outputExtension: ".tsx",
-  ensurePackageScript: true,
-  requireTypeScriptForApp: true,
-  enforceESM: true,
-  note: "Any change to tooling must be made in the spec. Chat proposals are not authoritative.",
-};
-
-type AppRules = {
-  noSkeletons: boolean;
-  singleAsset: boolean;
-};
-
-type TempRules = Record<string, unknown>;
-
-type PageScreen = {
-  name: string;
-  type: "page";
-  content: string;
-  changeType?: "add" | "edit" | "replace";
-};
-type FormScreen = {
-  name: string;
-  type: "form";
-  fields: string[];
-  actions: string[]; // e.g., ["submit"]
-  changeType?: "add" | "edit" | "replace";
-};
-type Screen = PageScreen | FormScreen;
-
+/* ================================
+   PROCESS RULES (AIDA-wide)
+   ================================ */
 const workingAgreementRules: WorkingAgreementRules = {
   noSilentFixes: true, // never “fix” spec silently
   specIsOnlySource: true, // The spec is the only authoritative source.
@@ -69,20 +47,38 @@ const workingAgreementRules: WorkingAgreementRules = {
   standardizeWarnings: true, // Use `// ⚠️ Warning:` for auto-filled or ambiguous decisions
 };
 
+/* ================================
+   APP RULES (QRET scaffolding)
+   ================================ */
+type AppRules = {
+  noSkeletons: boolean;
+  singleAsset: boolean;
+};
+
 const appRules: AppRules = {
   noSkeletons: true, // no placeholder UIs, real logic only
   singleAsset: true, // generator is the one canonical source
 };
 
+/* ================================
+   TEMP RULES (Ephemeral)
+   ================================ */
+type TempRules = Record<string, unknown>;
+
 const tempRules: TempRules = {
   // put temporary process rules here, remove later
 };
 
+/* ================================
+   DICTIONARY (Terms & Definitions)
+   ================================ */
 const dictionary: Record<string, string> = {
   // term: definition
 };
 
-
+/* ================================
+   DEFAULTS
+   ================================ */
 const defaults = {
   sizeUnit: "rem", // default unit for spacing, margin, padding
   fontUnit: "rem", // default for font sizes
@@ -90,13 +86,15 @@ const defaults = {
   responsive: "mobileFirst", // base assumption for breakpoints
 };
 
-
+/* ================================
+   POLICIES
+   ================================ */
 const policies = {
   done: {
-    compilePass: true,       // must pass TypeScript compile
-    runPass: true,           // must run under npm start
-    styleRequired: false,    // CSS/styling not required at this stage
-    featureComplete: false,  // partial implementations are acceptable unless specified otherwise
+    compilePass: true, // must pass TypeScript compile
+    runPass: true, // must run under npm start
+    styleRequired: false, // CSS/styling not required at this stage
+    featureComplete: false, // partial implementations are acceptable unless specified otherwise
   },
   tieBreaker: {
     rule: "scopeFirst", // Narrower scope always wins; precedence resolves ties within scope
@@ -112,21 +110,27 @@ const policies = {
   },
   error: {
     trivial: "autoFill" as const, // fill in safe defaults silently
-    moderate: "warn" as const,    // generate but flag with standardized warnings
-    critical: "ask" as const,     // stop and request clarification
+    moderate: "warn" as const, // generate but flag with standardized warnings
+    critical: "ask" as const, // stop and request clarification
   },
 };
 
-
+/* ================================
+   INTENT (Meta constraints/outputs)
+   ================================ */
 const intent = {
   goal: "Build React prototype deterministically from spec",
   precedence: 100, // Highest authority at the app level
   inputs: ["Screen definitions", "Working agreement rules", "Tooling rules"],
   constraints: [
     {
-      rule: "Spec is the single source of truth",
+      goal: "Ensure the spec is the only authoritative source of truth",
+      inputs: ["generate.ts spec"],
+      constraints: ["No rules from chat", "No assumptions outside the spec"],
+      outputs: ["Deterministic builds"],
       precedence: 100,
-      scope: "global" as Scope, // scope can be: universal | global | screen | component
+      scope: "global" as Scope,
+      terms: ["Spec"],
     },
     {
       rule: "Generated code must compile immediately",
@@ -148,13 +152,38 @@ const intent = {
       precedence: 100,
       scope: "global" as Scope, // scope can be: universal | global | screen | component
     },
-  ],
+    {
+      rule: "Always look for opportunities to consolidate the prototype chain where it makes sense",
+      precedence: 100,
+      scope: "universal" as Scope,
+    },
+  ] as Rule[],
   outputs: [
     "Generated .tsx files under /src",
     "Diffs only when modifying generator/spec",
   ],
 };
 
+/* ================================
+   DOMAIN RULES (QRET-specific)
+   ================================ */
+const domainRules: Rule[] = [
+  {
+    goal: "Calculate refunds accurately",
+    inputs: ["ReceiptedItems", "ReturnedItems"],
+    constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
+    outputs: [
+      "Refund total = intersection of receiptedItems and returnedItems",
+    ],
+    precedence: 100,
+    scope: "global" as Scope,
+    terms: ["Refund", "ReceiptedItems", "ReturnedItems"],
+  },
+];
+
+/* ================================
+   UI SCREENS
+   ================================ */
 const screens: Screen[] = [
   {
     name: "HelloWorld",

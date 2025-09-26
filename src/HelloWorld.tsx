@@ -2,5 +2,5 @@
 import React from "react";
 
 export default function HelloWorld(): JSX.Element {
-  return <div>This is a generated component.</div>;
+  return <h1>Hello World</h1>;
 }
