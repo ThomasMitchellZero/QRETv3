@@ -5,6 +5,8 @@ npm-debug.log
 # Build
 dist/
 build/
+.DS_Store
 
 # Generated code
 src/
+

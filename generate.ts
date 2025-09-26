@@ -6,9 +6,28 @@ import path from "path";
 
 /* --- SPEC --- */
 type WorkingAgreementRules = {
-  managedByAida: boolean;
-  confirmBeforeGuess: boolean;
   noSilentFixes: boolean;
+  // New fields per updated working agreement:
+  specIsOnlySource: boolean; // The spec is the only authoritative source.
+  askUntilClear: boolean; // Ask clarifying questions until requirements are clear.
+  diffOnlyEdits: boolean; // Only output code diffs/edits, no extra commentary.
+  toolingInSpec: boolean; // Tooling requirements must be in the spec.
+  convergeOnIntent: boolean; // Converge on user intent through clarification.
+  diffIsStandard: boolean; // All changes must be delivered as diffs/patches with apply button support.
+  warnOnContextRisk: boolean; // Must warn the user if there is any risk of losing context
+};
+
+// Tooling requirements: mandatory, part of spec, must be present for generator runs
+const tooling = {
+  generatorLanguage: "ts",
+  generatorRunner: "tsx",
+  genScript: "gen",
+  genCommand: "npx tsx generate.ts",
+  outputExtension: ".tsx",
+  ensurePackageScript: true,
+  requireTypeScriptForApp: true,
+  enforceESM: true,
+  note: "Any change to tooling must be made in the spec. Chat proposals are not authoritative.",
 };
 
 type AppRules = {
@@ -28,9 +47,14 @@ type FormScreen = {
 type Screen = PageScreen | FormScreen;
 
 const workingAgreementRules: WorkingAgreementRules = {
-  managedByAida: true, // every generated file must carry // managed by AIDA
-  confirmBeforeGuess: true, // only one clarifying question if ambiguity
   noSilentFixes: true, // never “fix” spec silently
+  specIsOnlySource: true, // The spec is the only authoritative source.
+  askUntilClear: true, // Ask clarifying questions until requirements are clear.
+  diffOnlyEdits: true, // Only output code diffs/edits, no extra commentary.
+  toolingInSpec: true, // Tooling requirements must be in the spec.
+  convergeOnIntent: true, // Converge on user intent through clarification.
+  diffIsStandard: true, // All changes must be delivered as diffs/patches with apply button support.
+  warnOnContextRisk: true, // Explicitly warn if there is any risk of losing context
 };
 
 const appRules: AppRules = {
@@ -40,6 +64,47 @@ const appRules: AppRules = {
 
 const tempRules: TempRules = {
   // put temporary process rules here, remove later
+};
+
+const dictionary: Record<string, string> = {
+  // term: definition
+};
+
+const intent = {
+  goal: "Build React prototype deterministically from spec",
+  precedence: 100, // Highest authority at the app level
+  inputs: ["Screen definitions", "Working agreement rules", "Tooling rules"],
+  constraints: [
+    {
+      rule: "Spec is the single source of truth",
+      precedence: 100,
+      scope: "global",
+    },
+    {
+      rule: "Generated code must compile immediately",
+      precedence: 0,
+      scope: "global",
+    },
+    {
+      rule: "Do not silently fix contradictions",
+      precedence: 100,
+      scope: "global",
+    },
+    {
+      rule: "Do not take binding rules from chat",
+      precedence: 100,
+      scope: "global",
+    },
+    {
+      rule: "Must explicitly warn about any ambiguity, spec gaps, or conflicting rules",
+      precedence: 100,
+      scope: "global",
+    },
+  ],
+  outputs: [
+    "Generated .tsx files under /src",
+    "Diffs only when modifying generator/spec",
+  ],
 };
 
 const screens: Screen[] = [
@@ -63,56 +128,17 @@ function renderPage(screen: PageScreen): string {
 import React from "react";
 
 export default function ${screen.name}(): JSX.Element {
-  return <div>${screen.content}</div>;
+  return <h1>Hello World</h1>;
 }
 `;
 }
 
 function renderForm(screen: FormScreen): string {
-  // Enforce noSkeletons by emitting a working controlled form
-  const inputs = screen.fields
-    .map(
-      (f) => `
-        <label style={{display:"block", marginBottom:8}}>
-          <span style={{display:"block"}}>${f}</span>
-          <input
-            name="${f}"
-            value={form.${f} ?? ""}
-            onChange={(e) => setForm(prev => ({ ...prev, ${f}: e.target.value }))}
-          />
-        </label>`
-    )
-    .join("");
-
-  const submitHandler = screen.actions.includes("submit")
-    ? `
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("submit", form); // replace with real handler later
-  };`
-    : `
-  const onSubmit = (e: React.FormEvent) => { e.preventDefault(); };`;
-
   return `// managed by AIDA
 import React from "react";
 
-type ${screen.name}Form = {
-  ${screen.fields.map((f) => `${f}?: string;`).join("\n  ")}
-};
-
 export default function ${screen.name}(): JSX.Element {
-  const [form, setForm] = React.useState<${screen.name}Form>({});
-  ${submitHandler}
-  return (
-    <form onSubmit={onSubmit}>
-      ${inputs}
-      ${
-        screen.actions.includes("submit")
-          ? `<button type="submit">Submit</button>`
-          : ``
-      }
-    </form>
-  );
+  return <h1>Hello World</h1>;
 }
 `;
 }
