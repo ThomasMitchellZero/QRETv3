@@ -7,15 +7,18 @@ import path from "path";
 /* --- SPEC --- */
 type Scope = "universal" | "global" | "app" | "screen" | "component";
 
-type Rule = {
+type Definition = {
   id: string;
-  goal: string;
-  inputs: string[];
-  constraints: string[];
-  outputs: string[];
-  precedence: number;
+  definition: string;
   scope: Scope;
-  terms?: string[]; // dictionary terms this rule depends on
+  goal?: string;
+  inputs?: string[];
+  constraints?: string[];
+  outputs?: string[];
+  parent?: string;
+  children?: string[];
+  terms?: string[];
+  precedence?: number;
 };
 
 type WorkingAgreementRules = {
@@ -73,56 +76,88 @@ const tempRules: TempRules = {
 /* ================================
    DICTIONARY (Terms & Definitions)
    ================================ */
-type DictionaryEntry = {
-  definition: string;
-  parent?: string; // link to another dictionary entry
-  children?: string[]; // reverse links (optional)
-  scope: Scope; // scope of the term
-};
-
-const dictionary: Record<string, DictionaryEntry> = {
-  Spec: {
-    definition: "The authoritative specification file (generate.ts).",
-    scope: "universal",
-  },
-  Refund: {
-    definition: "The total amount to be returned to the customer.",
-    scope: "global",
-  },
-  ReceiptedItems: {
-    definition: "Items listed on a receipt that are eligible for return.",
-    parent: "Spec",
-    scope: "global",
-  },
-  ReturnedItems: {
-    definition: "Items provided by the customer for return.",
-    parent: "Spec",
-    scope: "global",
-  },
-  PrototypeChain: {
+const dictionary: Record<string, Definition> = {
+  Ambiguity: {
+    id: "TERM-AMBIGUITY-001",
     definition:
-      "The structured hierarchy of definitions and rules to ensure convergence.",
-    scope: "universal",
-  },
-  GeneratedCode: {
-    definition: "Code output produced deterministically from the spec.",
+      "A lack of clarity in definitions, rules, or intent requiring resolution.",
     parent: "Spec",
     scope: "universal",
   },
-  Contradictions: {
-    definition: "Conflicts between rules or definitions in the spec.",
-    parent: "Spec",
-    scope: "universal",
+  ActorTile: {
+    id: "TERM-ACTOR-TILE-001",
+    definition:
+      "A UI component representing an individual actor. Only one can be marked as 'Solo' within a given context.",
+    scope: "global",
   },
   Chat: {
+    id: "TERM-CHAT-001",
     definition:
       "Interactive conversation between human and model, not authoritative.",
     scope: "universal",
   },
-  Ambiguity: {
+  Conditional: {
+    id: "TERM-CONDITIONAL-001",
     definition:
-      "A lack of clarity in definitions, rules, or intent requiring resolution.",
+      "A step that is optional for developers to include in a phase. If implemented, it is mandatory for the user.",
+    scope: "universal",
+  },
+  Configurable: {
+    id: "TERM-CONFIGURABLE-001",
+    definition:
+      "A design element whose behavior or presence can be toggled or adjusted by developers at build time.",
+    scope: "universal",
+  },
+  Contradictions: {
+    id: "TERM-CONTRADICTIONS-001",
+    definition: "Conflicts between rules or definitions in the spec.",
     parent: "Spec",
+    scope: "universal",
+  },
+  DerivedValue: {
+    id: "TERM-DERIVED-VALUE-001",
+    definition:
+      "A value computed from other data. It must always be recalculated on render and never stored in persistent state.",
+    scope: "global",
+  },
+  GeneratedCode: {
+    id: "TERM-GENERATED-CODE-001",
+    definition: "Code output produced deterministically from the spec.",
+    parent: "Spec",
+    scope: "universal",
+  },
+  Phase: {
+    id: "TERM-PHASE-001",
+    definition:
+      "A distinct step or stage in the QRET workflow. Each phase can include up to four steps: (1) User Input (mandatory, visible UI), (2) Validity of Phase Repo (mandatory, below the UI), (3) Resolutions (conditional, may be included as a separate screen or workflow, always required if present), and (4) Cleanup (conditional, may be included to remove invalid entries).",
+    scope: "global",
+  },
+  PrototypeChain: {
+    id: "TERM-PROTOTYPE-CHAIN-001",
+    definition:
+      "The structured hierarchy of definitions and rules to ensure convergence.",
+    scope: "universal",
+  },
+  ReceiptedItems: {
+    id: "TERM-RECEIPTED-ITEMS-001",
+    definition: "Items listed on a receipt that are eligible for return.",
+    parent: "Spec",
+    scope: "global",
+  },
+  Refund: {
+    id: "TERM-REFUND-001",
+    definition: "The total amount to be returned to the customer.",
+    scope: "global",
+  },
+  ReturnedItems: {
+    id: "TERM-RETURNED-ITEMS-001",
+    definition: "Items provided by the customer for return.",
+    parent: "Spec",
+    scope: "global",
+  },
+  Spec: {
+    id: "TERM-SPEC-001",
+    definition: "The authoritative specification file (generate.ts).",
     scope: "universal",
   },
 };
@@ -175,7 +210,8 @@ const intent = {
   inputs: ["Screen definitions", "Working agreement rules", "Tooling rules"],
   constraints: [
     {
-      id: "PROC-001",
+      id: "PROC-SPEC-001",
+      definition: "Rule definition",
       goal: "Ensure the spec is the only authoritative source of truth",
       inputs: ["generate.ts spec"],
       constraints: ["No rules from chat", "No assumptions outside the spec"],
@@ -185,7 +221,8 @@ const intent = {
       terms: ["Spec"],
     },
     {
-      id: "PROC-002",
+      id: "PROC-COMPILATION-001",
+      definition: "Rule definition",
       goal: "Ensure generated code compiles immediately",
       inputs: ["Generated code"],
       constraints: ["Must pass TypeScript compiler without errors"],
@@ -195,7 +232,8 @@ const intent = {
       terms: ["GeneratedCode"],
     },
     {
-      id: "PROC-003",
+      id: "PROC-CONTRADICTION-001",
+      definition: "Rule definition",
       goal: "Prevent silent contradictions",
       inputs: ["Spec"],
       constraints: [
@@ -209,7 +247,8 @@ const intent = {
       terms: ["Spec", "Contradictions"],
     },
     {
-      id: "PROC-004",
+      id: "PROC-CHAT-001",
+      definition: "Rule definition",
       goal: "Ensure chat is non-binding",
       inputs: ["Chat context"],
       constraints: ["Chat may clarify but cannot introduce binding rules"],
@@ -219,7 +258,8 @@ const intent = {
       terms: ["Chat", "Spec"],
     },
     {
-      id: "PROC-005",
+      id: "PROC-AMBIGUITY-001",
+      definition: "Rule definition",
       goal: "Surface ambiguities and conflicts explicitly",
       inputs: ["Spec"],
       constraints: [
@@ -231,7 +271,8 @@ const intent = {
       terms: ["Ambiguity", "Spec", "Conflicts"],
     },
     {
-      id: "PROC-006",
+      id: "PROC-PROTOTYPE-CHAIN-001",
+      definition: "Rule definition",
       goal: "Consolidate prototype chain where appropriate",
       inputs: ["Spec rules", "Dictionary terms"],
       constraints: ["Look for overlaps and redundancies"],
@@ -240,7 +281,7 @@ const intent = {
       scope: "universal" as Scope,
       terms: ["PrototypeChain"],
     },
-  ] as Rule[],
+  ] as Definition[],
   outputs: [
     "Generated .tsx files under /src",
     "Diffs only when modifying generator/spec",
@@ -250,9 +291,10 @@ const intent = {
 /* ================================
    DOMAIN RULES (QRET-specific)
    ================================ */
-const domainRules: Rule[] = [
+const domainRules: Definition[] = [
   {
-    id: "DOM-001",
+    id: "DOM-REFUND-001",
+    definition: "Rule definition",
     goal: "Calculate refunds accurately",
     inputs: ["ReceiptedItems", "ReturnedItems"],
     constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
@@ -262,6 +304,71 @@ const domainRules: Rule[] = [
     precedence: 100,
     scope: "global" as Scope,
     terms: ["Refund", "ReceiptedItems", "ReturnedItems"],
+  },
+  {
+    id: "DOM-NAVIGATION-001",
+    definition: "Rule definition",
+    goal: "Allow free navigation between phases unless explicitly restricted",
+    inputs: ["Navigation state", "Phase definitions"],
+    constraints: ["Phases are navigable unless a rule explicitly blocks it"],
+    outputs: ["Users can move freely between phases"],
+    precedence: 50,
+    scope: "global" as Scope,
+    terms: ["Navigation"],
+  },
+  {
+    id: "DOM-PHASE-001",
+    definition: "Rule definition",
+    goal: "Advance phase only after validation and cleanup",
+    inputs: ["Phase data"],
+    constraints: [
+      "Validation must succeed",
+      "Cleanup must run before phase advance",
+    ],
+    outputs: ["Validated and cleaned state before advancing"],
+    precedence: 100,
+    scope: "global" as Scope,
+    terms: ["Validation", "Cleanup"],
+  },
+  {
+    id: "DOM-STAGE-001",
+    definition: "Rule definition",
+    goal: "Prevent stages from auto-closing due to internal interaction",
+    inputs: ["Stage state"],
+    constraints: [
+      "Stage closure cannot be triggered solely by internal component interaction",
+    ],
+    outputs: ["Stages remain open unless explicitly closed"],
+    precedence: 80,
+    scope: "global" as Scope,
+    terms: ["Stage"],
+  },
+  {
+    id: "DOM-ACTOR-TILE-001",
+    definition: "Rule definition",
+    goal: "Restrict Solo state to a single ActorTile in a context",
+    inputs: ["ActorTile states", "Context"],
+    constraints: [
+      "Only one ActorTile can be marked Solo within a given context",
+    ],
+    outputs: ["Valid state with at most one Solo ActorTile per context"],
+    precedence: 90,
+    scope: "global" as Scope,
+    terms: ["ActorTile"],
+  },
+  {
+    id: "DOM-DERIVED-VALUE-001",
+    definition: "Rule definition",
+    goal: "Ensure derived values are recalculated on render",
+    inputs: ["Component props", "Component state"],
+    constraints: [
+      "Derived values must not be stored in state",
+      "Derived values must be recalculated each render",
+    ],
+    outputs: ["Components with reliable, up-to-date derived values"],
+    precedence: 95,
+    scope: "global" as Scope,
+    terms: ["DerivedValue"],
   },
 ];
 
