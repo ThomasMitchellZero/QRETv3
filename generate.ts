@@ -281,10 +281,26 @@ const intent = {
       scope: "universal" as Scope,
       terms: ["PrototypeChain"],
     },
+    {
+      id: "PROC-UNIQUE-KEYS-001",
+      definition: "Rule definition",
+      goal: "Guarantee that definition keys are unique across their scope and the prototype chain",
+      inputs: ["Dictionary terms", "Rules", "Prototype chain"],
+      constraints: [
+        "A definition's key cannot duplicate another within the same scope",
+        "A definition's key cannot duplicate any ancestor's key in the prototype chain",
+      ],
+      outputs: [
+        "Globally unique, non-colliding definitions across scope and prototype chain",
+      ],
+      precedence: 100,
+      scope: "global" as Scope,
+      terms: ["Spec"],
+    },
   ] as Definition[],
   outputs: [
-    "Generated .tsx files under /src",
-    "Diffs only when modifying generator/spec",
+    "Generated .tsx files under /src (React app in TypeScript, scope: global)",
+    "Diffs only when modifying generator/spec (scope: global)",
   ],
 };
 
@@ -375,14 +391,7 @@ const domainRules: Definition[] = [
 /* ================================
    UI SCREENS
    ================================ */
-const screens: Screen[] = [
-  {
-    name: "HelloWorld",
-    type: "page",
-    content: "This is a generated component.",
-    changeType: "replace",
-  },
-];
+// screens will be defined later
 /* --- /SPEC --- */
 
 /* --- TEMPLATES --- */
