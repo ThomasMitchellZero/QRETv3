@@ -280,6 +280,12 @@ const policies = {
     moderate: "warn" as const, // generate but flag with standardized warnings
     critical: "ask" as const, // stop and request clarification
   },
+  styling: {
+    tool: "scss" as const, // enforce SCSS as the styling tool
+    scope: "global" as const, // universal rule across all apps
+    units: "rem" as const, // all spacing and font sizes in rem
+    organization: "components-first" as const, // colocate .scss files with components
+  },
 };
 
 /* ================================
