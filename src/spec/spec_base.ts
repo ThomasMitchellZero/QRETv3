@@ -82,6 +82,32 @@ export const WorkingAgreement: Concept[] = [
     ],
     precedence: 100,
   },
+  {
+    id: "PROC-SWEEPO-002",
+    term: "SweepoAlwaysRemote",
+    layer: "universal",
+    definition:
+      "Sweepo must always pull the most current state from the remote GitHub repo, never from memory or local context.",
+    constraints: [
+      "User commits and pushes first",
+      "Sweepo fetches fresh state from remote repo",
+      "This guarantees both model and user are aligned to the same authoritative source",
+    ],
+    precedence: 100,
+  },
+  {
+    id: "PROC-SWEEPO-003",
+    term: "SweepoReportUpdate",
+    layer: "universal",
+    definition:
+      "Sweepo must, when possible, report the timestamp or identifier of the most recent update from the remote GitHub repo.",
+    constraints: [
+      "Report last commit hash or timestamp if available",
+      "If remote metadata cannot be retrieved, explicitly state limitation",
+      "Purpose: ensure user visibility into freshness of fetched repo state",
+    ],
+    precedence: 100,
+  },
 ];
 
 /* ================================
