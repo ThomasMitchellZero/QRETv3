@@ -4,6 +4,13 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+/* ================================
+   PLUMBING LAYER (Boundary)
+   ================================ */
+namespace PlumbingLayer {
+  // Placeholder for future plumbing layer logic
+}
+
 /* --- SPEC --- */
 type Concept = {
   id: string;
