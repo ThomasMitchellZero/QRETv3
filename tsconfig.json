@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2019",
+    "module": "ESNext",
+    "target": "ESNext",
     "types": ["node"],
     "sourceMap": true,
     "declaration": true,
@@ -15,6 +15,13 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "allowJs": false,
+    "checkJs": false,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noEmit": true
+  },
+  "include": ["src", "generate.ts"],
+  "exclude": ["node_modules"]
 }

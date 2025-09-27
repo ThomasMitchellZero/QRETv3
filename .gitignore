@@ -1,12 +1,21 @@
-# Node
-node_modules/
-npm-debug.log
+# dependencies
+/node_modules
 
-# Build
-dist/
-build/
+# build output
+/dist
+/.vite
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# editor
+.vscode/
 .DS_Store
-
-# Generated code
-src/
-
