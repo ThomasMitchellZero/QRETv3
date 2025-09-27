@@ -22,6 +22,6 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["src", "generate.ts"],
+  "include": ["src", "generate.ts", "spec/spec_base.ts"],
   "exclude": ["node_modules"]
 }
