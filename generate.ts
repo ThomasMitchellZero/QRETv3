@@ -4,12 +4,6 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-/* ================================
-   PLUMBING LAYER (Boundary)
-   ================================ */
-namespace PlumbingLayer {
-  // Placeholder for future plumbing layer logic
-}
 
 /* --- SPEC --- */
 type Concept = {
@@ -597,3 +591,24 @@ main().catch((err) => {
   process.exit(1);
 });
 /* --- /MAIN --- */
+
+  ScanDefinition: {
+    id: "SCAN-001",
+    term: "ScanDefinition",
+    layer: "universal",
+    goal: "Checking only the currently open file/tab in VS Code",
+    inputs: ["Open file window"],
+    constraints: ["Scan must not refer to the entire repo"],
+    outputs: ["Summaries and analyses of only the open file"],
+    precedence: 100,
+  },
+  SweepoDefinition: {
+    id: "SWEEPO-001",
+    term: "SweepoDefinition",
+    layer: "universal",
+    goal: "Inspecting the repo-level context, including multiple files",
+    inputs: ["Repo root and visible files"],
+    constraints: ["Sweepo may not replace scan", "Sweepo is repo-level only"],
+    outputs: ["Summaries and analyses of repo context"],
+    precedence: 100,
+  },
