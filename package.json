@@ -15,7 +15,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "gen": "ts-node generate.ts",
+    "gen": "npx tsx generate.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
