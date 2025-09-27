@@ -5,20 +5,24 @@ import { promises as fs } from "fs";
 import path from "path";
 
 /* --- SPEC --- */
-type Scope = "universal" | "global" | "app" | "screen" | "component";
-
-type Definition = {
+type Concept = {
   id: string;
-  definition: string;
-  scope: Scope;
+  term: string;
+  layer: "universal" | "global" | "app" | "screen" | "component";
+  definition?: string;
   goal?: string;
   inputs?: string[];
   constraints?: string[];
   outputs?: string[];
-  parent?: string;
-  children?: string[];
-  terms?: string[];
+  children?: Concept[];
   precedence?: number;
+  scopePath?: string[];
+};
+
+// Component type: must represent a React component (component or screen), outputs must include a React component file or UI element
+type Component = Concept & {
+  layer: "component" | "screen";
+  outputs: string[]; // must output a React component file or UI element
 };
 
 type WorkingAgreementRules = {
@@ -52,19 +56,6 @@ const workingAgreementRules: WorkingAgreementRules = {
 };
 
 /* ================================
-   APP RULES (QRET scaffolding)
-   ================================ */
-type AppRules = {
-  noSkeletons: boolean;
-  singleAsset: boolean;
-};
-
-const appRules: AppRules = {
-  noSkeletons: true, // no placeholder UIs, real logic only
-  singleAsset: true, // generator is the one canonical source
-};
-
-/* ================================
    TEMP RULES (Ephemeral)
    ================================ */
 type TempRules = Record<string, unknown>;
@@ -76,90 +67,179 @@ const tempRules: TempRules = {
 /* ================================
    DICTIONARY (Terms & Definitions)
    ================================ */
-const dictionary: Record<string, Definition> = {
+const dictionary: Record<string, Concept> = {
+  Floorplan: {
+    id: "TERM-FLOORPLAN-001",
+    term: "Floorplan",
+    layer: "global",
+    definition:
+      "The global layout template for all ecosystem apps. The page is divided into two rows: (1) Top bar, 2rem tall, blue, reserved for ecosystem-level content, and (2) App window filling the rest of the viewport. The App window has three columns: optional left (25%), optional right (25%), and a main column that fills the remaining space. The main column contains stacked rows: (a) Page Title & Exit button, (b) Navigation bar nodes, (c) Main Content (configurable, expands to fill), and (d) Footer row with total refund on the left and continuation button on the right.",
+  },
   Ambiguity: {
     id: "TERM-AMBIGUITY-001",
+    term: "Ambiguity",
+    layer: "universal",
     definition:
       "A lack of clarity in definitions, rules, or intent requiring resolution.",
-    parent: "Spec",
-    scope: "universal",
   },
   ActorTile: {
     id: "TERM-ACTOR-TILE-001",
+    term: "ActorTile",
+    layer: "global",
     definition:
       "A UI component representing an individual actor. Only one can be marked as 'Solo' within a given context.",
-    scope: "global",
   },
   Chat: {
     id: "TERM-CHAT-001",
+    term: "Chat",
+    layer: "universal",
     definition:
       "Interactive conversation between human and model, not authoritative.",
-    scope: "universal",
   },
   Conditional: {
     id: "TERM-CONDITIONAL-001",
+    term: "Conditional",
+    layer: "universal",
     definition:
       "A step that is optional for developers to include in a phase. If implemented, it is mandatory for the user.",
-    scope: "universal",
   },
   Configurable: {
     id: "TERM-CONFIGURABLE-001",
+    term: "Configurable",
+    layer: "universal",
     definition:
       "A design element whose behavior or presence can be toggled or adjusted by developers at build time.",
-    scope: "universal",
   },
   Contradictions: {
     id: "TERM-CONTRADICTIONS-001",
+    term: "Contradictions",
+    layer: "universal",
     definition: "Conflicts between rules or definitions in the spec.",
-    parent: "Spec",
-    scope: "universal",
   },
   DerivedValue: {
     id: "TERM-DERIVED-VALUE-001",
-    definition:
-      "A value computed from other data. It must always be recalculated on render and never stored in persistent state.",
-    scope: "global",
+    term: "DerivedValue",
+    layer: "global",
+    definition: "A value computed from other data.",
   },
   GeneratedCode: {
     id: "TERM-GENERATED-CODE-001",
+    term: "GeneratedCode",
+    layer: "universal",
     definition: "Code output produced deterministically from the spec.",
-    parent: "Spec",
-    scope: "universal",
   },
   Phase: {
     id: "TERM-PHASE-001",
+    term: "Phase",
+    layer: "global",
     definition:
-      "A distinct step or stage in the QRET workflow. Each phase can include up to four steps: (1) User Input (mandatory, visible UI), (2) Validity of Phase Repo (mandatory, below the UI), (3) Resolutions (conditional, may be included as a separate screen or workflow, always required if present), and (4) Cleanup (conditional, may be included to remove invalid entries).",
-    scope: "global",
+      "A distinct step or stage in the QRET workflow consisting of required user interaction and supporting logic.",
   },
   PrototypeChain: {
     id: "TERM-PROTOTYPE-CHAIN-001",
+    term: "PrototypeChain",
+    layer: "universal",
     definition:
       "The structured hierarchy of definitions and rules to ensure convergence.",
-    scope: "universal",
   },
   ReceiptedItems: {
     id: "TERM-RECEIPTED-ITEMS-001",
+    term: "ReceiptedItems",
+    layer: "global",
     definition: "Items listed on a receipt that are eligible for return.",
-    parent: "Spec",
-    scope: "global",
   },
   Refund: {
     id: "TERM-REFUND-001",
+    term: "Refund",
+    layer: "global",
     definition: "The total amount to be returned to the customer.",
-    scope: "global",
   },
   ReturnedItems: {
     id: "TERM-RETURNED-ITEMS-001",
+    term: "ReturnedItems",
+    layer: "global",
     definition: "Items provided by the customer for return.",
-    parent: "Spec",
-    scope: "global",
   },
   Spec: {
     id: "TERM-SPEC-001",
+    term: "Spec",
+    layer: "universal",
     definition: "The authoritative specification file (generate.ts).",
-    scope: "universal",
   },
+};
+
+/* ================================
+   FLOORPLAN COMPONENT
+   ================================ */
+const floorplanComponent: Component = {
+  id: "COMP-FLOORPLAN-001",
+  term: "FloorplanComponent",
+  layer: "component",
+  definition: "Global floorplan component for ecosystem apps",
+  inputs: ["leftColumn", "rightColumn", "mainContent"],
+  outputs: ["Floorplan.tsx"], // outputs a React component file
+  children: [
+    {
+      id: "COMP-TOPBAR-001",
+      term: "TopBar",
+      layer: "component",
+      definition:
+        "Top bar, 2rem tall, blue, reserved for ecosystem-level content",
+      outputs: ["TopBar.tsx"],
+    },
+    {
+      id: "COMP-LEFTCOL-001",
+      term: "LeftColumn",
+      layer: "component",
+      definition: "Optional left column (25% width)",
+      outputs: ["LeftColumn.tsx"],
+    },
+    {
+      id: "COMP-MAINCOL-001",
+      term: "MainColumn",
+      layer: "component",
+      definition: "Main column, fills remaining space, contains stacked rows",
+      outputs: ["MainColumn.tsx"],
+      children: [
+        {
+          id: "COMP-TITLE-ROW-001",
+          term: "PageTitleRow",
+          layer: "component",
+          definition: "Row: Page Title & Exit button",
+          outputs: ["PageTitleRow.tsx"],
+        },
+        {
+          id: "COMP-NAVBAR-ROW-001",
+          term: "NavigationBarRow",
+          layer: "component",
+          definition: "Row: Navigation bar nodes",
+          outputs: ["NavigationBarRow.tsx"],
+        },
+        {
+          id: "COMP-MAINCONTENT-ROW-001",
+          term: "MainContentRow",
+          layer: "component",
+          definition: "Row: Main Content (configurable, expands to fill)",
+          outputs: ["MainContentRow.tsx"],
+        },
+        {
+          id: "COMP-FOOTER-ROW-001",
+          term: "FooterRow",
+          layer: "component",
+          definition:
+            "Row: Footer with total refund on the left and continuation button on the right",
+          outputs: ["FooterRow.tsx"],
+        },
+      ],
+    },
+    {
+      id: "COMP-RIGHTCOL-001",
+      term: "RightColumn",
+      layer: "component",
+      definition: "Optional right column (25% width)",
+      outputs: ["RightColumn.tsx"],
+    },
+  ],
 };
 
 /* ================================
@@ -211,28 +291,30 @@ const intent = {
   constraints: [
     {
       id: "PROC-SPEC-001",
+      term: "SpecRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Ensure the spec is the only authoritative source of truth",
       inputs: ["generate.ts spec"],
       constraints: ["No rules from chat", "No assumptions outside the spec"],
       outputs: ["Deterministic builds"],
       precedence: 100,
-      scope: "global" as Scope,
-      terms: ["Spec"],
     },
     {
       id: "PROC-COMPILATION-001",
+      term: "CompilationRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Ensure generated code compiles immediately",
       inputs: ["Generated code"],
       constraints: ["Must pass TypeScript compiler without errors"],
       outputs: ["Compilable .tsx files"],
       precedence: 0,
-      scope: "global" as Scope,
-      terms: ["GeneratedCode"],
     },
     {
       id: "PROC-CONTRADICTION-001",
+      term: "ContradictionRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Prevent silent contradictions",
       inputs: ["Spec"],
@@ -243,22 +325,22 @@ const intent = {
         "Warnings or clarification requests when contradictions appear",
       ],
       precedence: 100,
-      scope: "global" as Scope,
-      terms: ["Spec", "Contradictions"],
     },
     {
       id: "PROC-CHAT-001",
+      term: "ChatRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Ensure chat is non-binding",
       inputs: ["Chat context"],
       constraints: ["Chat may clarify but cannot introduce binding rules"],
       outputs: ["Spec remains authoritative"],
       precedence: 100,
-      scope: "global" as Scope,
-      terms: ["Chat", "Spec"],
     },
     {
       id: "PROC-AMBIGUITY-001",
+      term: "AmbiguityRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Surface ambiguities and conflicts explicitly",
       inputs: ["Spec"],
@@ -267,22 +349,22 @@ const intent = {
       ],
       outputs: ["Warnings presented to user"],
       precedence: 100,
-      scope: "global" as Scope,
-      terms: ["Ambiguity", "Spec", "Conflicts"],
     },
     {
       id: "PROC-PROTOTYPE-CHAIN-001",
+      term: "PrototypeChainRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Consolidate prototype chain where appropriate",
       inputs: ["Spec rules", "Dictionary terms"],
       constraints: ["Look for overlaps and redundancies"],
       outputs: ["Unified prototype chain"],
       precedence: 100,
-      scope: "universal" as Scope,
-      terms: ["PrototypeChain"],
     },
     {
       id: "PROC-UNIQUE-KEYS-001",
+      term: "UniqueKeysRule",
+      layer: "universal",
       definition: "Rule definition",
       goal: "Guarantee that definition keys are unique across their scope and the prototype chain",
       inputs: ["Dictionary terms", "Rules", "Prototype chain"],
@@ -294,10 +376,8 @@ const intent = {
         "Globally unique, non-colliding definitions across scope and prototype chain",
       ],
       precedence: 100,
-      scope: "global" as Scope,
-      terms: ["Spec"],
     },
-  ] as Definition[],
+  ] as Concept[],
   outputs: [
     "Generated .tsx files under /src (React app in TypeScript, scope: global)",
     "Diffs only when modifying generator/spec (scope: global)",
@@ -307,9 +387,11 @@ const intent = {
 /* ================================
    DOMAIN RULES (QRET-specific)
    ================================ */
-const domainRules: Definition[] = [
+const domainRules: Concept[] = [
   {
     id: "DOM-REFUND-001",
+    term: "RefundRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Calculate refunds accurately",
     inputs: ["ReceiptedItems", "ReturnedItems"],
@@ -318,22 +400,22 @@ const domainRules: Definition[] = [
       "Refund total = intersection of receiptedItems and returnedItems",
     ],
     precedence: 100,
-    scope: "global" as Scope,
-    terms: ["Refund", "ReceiptedItems", "ReturnedItems"],
   },
   {
     id: "DOM-NAVIGATION-001",
+    term: "NavigationRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Allow free navigation between phases unless explicitly restricted",
     inputs: ["Navigation state", "Phase definitions"],
     constraints: ["Phases are navigable unless a rule explicitly blocks it"],
     outputs: ["Users can move freely between phases"],
     precedence: 50,
-    scope: "global" as Scope,
-    terms: ["Navigation"],
   },
   {
     id: "DOM-PHASE-001",
+    term: "PhaseRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Advance phase only after validation and cleanup",
     inputs: ["Phase data"],
@@ -343,11 +425,11 @@ const domainRules: Definition[] = [
     ],
     outputs: ["Validated and cleaned state before advancing"],
     precedence: 100,
-    scope: "global" as Scope,
-    terms: ["Validation", "Cleanup"],
   },
   {
     id: "DOM-STAGE-001",
+    term: "StageRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Prevent stages from auto-closing due to internal interaction",
     inputs: ["Stage state"],
@@ -356,11 +438,11 @@ const domainRules: Definition[] = [
     ],
     outputs: ["Stages remain open unless explicitly closed"],
     precedence: 80,
-    scope: "global" as Scope,
-    terms: ["Stage"],
   },
   {
     id: "DOM-ACTOR-TILE-001",
+    term: "ActorTileSoloRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Restrict Solo state to a single ActorTile in a context",
     inputs: ["ActorTile states", "Context"],
@@ -369,48 +451,75 @@ const domainRules: Definition[] = [
     ],
     outputs: ["Valid state with at most one Solo ActorTile per context"],
     precedence: 90,
-    scope: "global" as Scope,
-    terms: ["ActorTile"],
   },
   {
     id: "DOM-DERIVED-VALUE-001",
+    term: "DerivedValueRule",
+    layer: "global",
     definition: "Rule definition",
     goal: "Ensure derived values are recalculated on render",
     inputs: ["Component props", "Component state"],
     constraints: [
       "Derived values must not be stored in state",
       "Derived values must be recalculated each render",
+      "Derived values must always be deterministic given the same inputs",
     ],
     outputs: ["Components with reliable, up-to-date derived values"],
     precedence: 95,
-    scope: "global" as Scope,
-    terms: ["DerivedValue"],
   },
 ];
 
 /* ================================
    UI SCREENS
    ================================ */
-// screens will be defined later
-/* --- /SPEC --- */
+
+const screens: Concept[] = [
+  {
+    id: "COMP-HOME-001",
+    term: "Home",
+    layer: "screen",
+    definition: "Home page screen",
+    goal: "Provide a landing page",
+    constraints: ["Must render Hello World"],
+    outputs: ["src/Home.tsx"],
+  },
+  {
+    ...floorplanComponent,
+    outputs: ["src/components/FloorplanComponent.tsx"],
+    // Ensure file path for FloorplanComponent
+  },
+];
 
 /* --- TEMPLATES --- */
-function renderPage(screen: PageScreen): string {
+function renderPage(screen: Concept): string {
   return `// managed by AIDA
 import React from "react";
 
-export default function ${screen.name}(): JSX.Element {
+export default function ${screen.term}(): JSX.Element {
   return <h1>Hello World</h1>;
 }
 `;
 }
 
-function renderForm(screen: FormScreen): string {
+function renderComponent(comp: Concept, bgColor: string): string {
+  // Each component renders a <div> with its label (term) and a background color
   return `// managed by AIDA
 import React from "react";
 
-export default function ${screen.name}(): JSX.Element {
-  return <h1>Hello World</h1>;
+export default function ${comp.term}(): JSX.Element {
+  return (
+    <div style={{
+      background: "${bgColor}",
+      padding: "1rem",
+      margin: "0.5rem",
+      borderRadius: "0.5rem",
+      color: "#fff",
+      fontWeight: "bold",
+      textAlign: "center"
+    }}>
+      ${comp.term}
+    </div>
+  );
 }
 `;
 }
@@ -423,24 +532,54 @@ async function main(): Promise<void> {
 
   const outputs: string[] = [];
 
-  for (const screen of screens) {
-    let code: string;
-    switch (screen.type) {
-      case "page":
-        code = renderPage(screen);
-        break;
-      case "form":
-        code = renderForm(screen);
-        break;
-      default: {
-        // Exhaustiveness guard
-        const _never: never = screen;
-        throw new Error("Unsupported screen type: " + JSON.stringify(_never));
+  // Helper: assign a distinct background color per component depth
+  const bgColors = [
+    "#1976d2", // FloorplanComponent
+    "#388e3c", // TopBar, LeftColumn, RightColumn, MainColumn
+    "#fbc02d", // PageTitleRow, NavigationBarRow, MainContentRow, FooterRow
+    "#8e24aa", // Deeper
+    "#d84315", // More depth
+  ];
+
+  // Recursively generate components from a root Concept/component
+  async function generateComponentFiles(
+    comp: Concept,
+    depth: number = 0
+  ): Promise<void> {
+    const bgColor = bgColors[depth % bgColors.length];
+    if (comp.outputs && comp.outputs.length > 0) {
+      for (const out of comp.outputs) {
+        // Determine output path: if not absolute, write under src/components
+        let filePath = out;
+        if (!filePath.startsWith("src/")) {
+          filePath = path.join("src/components", out);
+        }
+        const absPath = path.resolve(filePath);
+        await fs.mkdir(path.dirname(absPath), { recursive: true });
+        const code = renderComponent(comp, bgColor);
+        await fs.writeFile(absPath, code, "utf8");
+        outputs.push(filePath.replace(/\\/g, "/"));
       }
     }
-    const file = path.join(outDir, `${screen.name}.tsx`);
-    await fs.writeFile(file, code, "utf8");
-    outputs.push(`src/${screen.name}.tsx`);
+    if (comp.children) {
+      for (const child of comp.children) {
+        await generateComponentFiles(child, depth + 1);
+      }
+    }
+  }
+
+  // Generate screens (Home and FloorplanComponent)
+  for (const screen of screens) {
+    if (screen.term === "Home") {
+      // Home screen: output to src/Home.tsx
+      const code = renderPage(screen);
+      const file = path.join(outDir, `Home.tsx`);
+      await fs.writeFile(file, code, "utf8");
+      outputs.push(`src/Home.tsx`);
+    } else if (screen.term === "FloorplanComponent") {
+      // Generate FloorplanComponent and its children recursively
+      await generateComponentFiles(screen, 0);
+    }
   }
 
   console.log("Generated:", outputs.join(", "));
