@@ -9,16 +9,15 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^5.4.0",
     "@vitejs/plugin-react": "^4.3.0"
   },
   "scripts": {
-    "gen": "tsx generate.ts",
-    "check": "node check.js",
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "gen": "ts-node generate.ts",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
   }
 }
