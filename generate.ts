@@ -4,6 +4,18 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import {
+  SpecBase,
+  DomainRules,
+  Dictionary,
+  Defaults,
+  Policies,
+  Conventions,
+  BuildTopology,
+  Lifecycle,
+  BucketPolicy,
+} from "./spec/spec_base";
+
 
 /* --- SPEC --- */
 type Concept = {

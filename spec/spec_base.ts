@@ -22,13 +22,14 @@ export type Concept = {
 /* ================================
    WORKING AGREEMENT (UNIVERSAL)
    ================================ */
+// --- WORKING AGREEMENT (UNIVERSAL) ---
 export const WorkingAgreement: Concept[] = [
   {
     id: "PROC-SSOT-001",
     term: "SpecIsOnlySource",
     layer: "universal",
     definition:
-      "The spec is the sole binding authority; chat is non-authoritative.",
+      "The spec is the only binding authority; chat is non-authoritative.",
     precedence: 100,
     constraints: [
       "All cross-thread rules must be in spec",
@@ -37,10 +38,60 @@ export const WorkingAgreement: Concept[] = [
     ],
   },
   {
+    id: "PROC-NOSILENT-001",
+    term: "NoSilentFixes",
+    layer: "universal",
+    definition: "Never 'fix' spec or code silently; always surface changes.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-ASK-001",
+    term: "AskUntilClear",
+    layer: "universal",
+    definition: "Ask clarifying questions until requirements are clear.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-TOOLING-001",
+    term: "ToolingInSpec",
+    layer: "universal",
+    definition: "Tooling requirements must be explicitly declared in the spec.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-CONVERGE-001",
+    term: "ConvergeOnIntent",
+    layer: "universal",
+    definition: "Converge on user intent through clarification.",
+    precedence: 100,
+  },
+  {
     id: "PROC-DIFF-001",
     term: "DiffOnlyEdits",
     layer: "universal",
     definition: "All code changes are delivered as diffs/patches.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-DIFF-STD-001",
+    term: "DiffIsStandard",
+    layer: "universal",
+    definition:
+      "All changes must be delivered as standard diffs/patches with apply support.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-WARN-CTX-001",
+    term: "WarnOnContextRisk",
+    layer: "universal",
+    definition: "Must warn the user if there is any risk of losing context.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-CHAT-NONAUTH-001",
+    term: "ChatIsNonAuthoritative",
+    layer: "universal",
+    definition: "Chat may clarify but is never binding.",
     precedence: 100,
   },
   {
@@ -64,49 +115,33 @@ export const WorkingAgreement: Concept[] = [
     ],
     precedence: 100,
   },
+  // Scan/Sweepo rules (appear only here, not in Dictionary)
   {
-    id: "SCAN-001",
+    id: "PROC-SCAN-001",
     term: "Scan",
     layer: "universal",
     definition: "Analyze only the currently open file/tab.",
     precedence: 100,
+    constraints: [
+      "Scan must not refer to the entire repo",
+      "Scan operates only on the active file in the editor",
+    ],
   },
   {
-    id: "SWEEPO-001",
+    id: "PROC-SWEEPO-001",
     term: "Sweepo",
     layer: "universal",
     definition:
-      "Repo-level inspection that refreshes from the remote to ensure model and user see the same state.",
-    constraints: [
-      "Sweepo must refresh against the remote repo to guarantee latest state",
-    ],
+      "Repo-level inspection that always fetches the latest remote state to guarantee alignment between model and user.",
     precedence: 100,
-  },
-  {
-    id: "PROC-SWEEPO-002",
-    term: "SweepoAlwaysRemote",
-    layer: "universal",
-    definition:
-      "Sweepo must always pull the most current state from the remote GitHub repo, never from memory or local context.",
     constraints: [
-      "User commits and pushes first",
-      "Sweepo fetches fresh state from remote repo",
-      "This guarantees both model and user are aligned to the same authoritative source",
+      "Sweepo may not replace Scan",
+      "Sweepo is repo-level only",
+      "User must commit and push first",
+      "Sweepo must always pull fresh from the remote GitHub repo",
+      "Sweepo must report time elapsed since last commit hash or timestamp if available",
+      "If remote metadata cannot be retrieved, Sweepo must explicitly state limitation",
     ],
-    precedence: 100,
-  },
-  {
-    id: "PROC-SWEEPO-003",
-    term: "SweepoReportUpdate",
-    layer: "universal",
-    definition:
-      "Sweepo must, when possible, report the timestamp or identifier of the most recent update from the remote GitHub repo.",
-    constraints: [
-      "Report last commit hash or timestamp if available",
-      "If remote metadata cannot be retrieved, explicitly state limitation",
-      "Purpose: ensure user visibility into freshness of fetched repo state",
-    ],
-    precedence: 100,
   },
 ];
 
@@ -136,40 +171,207 @@ export const Policies = {
     tool: "scss" as const,
     scope: "global" as const,
     units: "rem" as const,
-    organization: "components-first" as const, // colocate .scss with components
+    organization: "components-first" as const,
   },
 };
 
-/* ================================
-   DICTIONARY (UNIVERSAL TERMS)
-   ================================ */
+// --- DICTIONARY (UNIVERSAL TERMS) ---
 export const Dictionary: Record<string, Concept> = {
-  PrototypeChain: {
+  "PrototypeChain": {
     id: "DICT-PROTOTYPE-001",
     term: "PrototypeChain",
     layer: "universal",
     definition:
       "Resolution order over scope and precedence for deriving effective intent.",
   },
-  DerivedValue: {
+  "DerivedValue": {
     id: "DICT-DERIVED-001",
     term: "DerivedValue",
     layer: "universal",
     definition:
-      "A value computed deterministically from current inputs; never stored.",
+      "A value computed deterministically from current inputs; never stored in state.",
     constraints: [
       "Do not persist derived values",
       "Recompute on render or via hooks",
     ],
   },
-  Floorplan: {
+  "Floorplan": {
     id: "DICT-FLOORPLAN-001",
     term: "Floorplan",
     layer: "global",
     definition:
       "Global page layout: ecosystem top bar, optional side columns, main column rows.",
   },
+  "Ambiguity": {
+    id: "DICT-AMBIGUITY-001",
+    term: "Ambiguity",
+    layer: "universal",
+    definition:
+      "A lack of clarity in definitions, rules, or intent requiring resolution.",
+  },
+  "ActorTile": {
+    id: "DICT-ACTOR-TILE-001",
+    term: "ActorTile",
+    layer: "global",
+    definition:
+      "A UI component representing an individual actor. Only one can be marked as 'Solo' within a given context.",
+  },
+  "Chat": {
+    id: "DICT-CHAT-001",
+    term: "Chat",
+    layer: "universal",
+    definition:
+      "Interactive conversation between human and model, not authoritative.",
+  },
+  "Conditional": {
+    id: "DICT-CONDITIONAL-001",
+    term: "Conditional",
+    layer: "universal",
+    definition:
+      "A step that is optional for developers to include in a phase. If implemented, it is mandatory for the user.",
+  },
+  "Configurable": {
+    id: "DICT-CONFIGURABLE-001",
+    term: "Configurable",
+    layer: "universal",
+    definition:
+      "A design element whose behavior or presence can be toggled or adjusted by developers at build time.",
+  },
+  "Contradictions": {
+    id: "DICT-CONTRADICTIONS-001",
+    term: "Contradictions",
+    layer: "universal",
+    definition: "Conflicts between rules or definitions in the spec.",
+  },
+  "GeneratedCode": {
+    id: "DICT-GENERATED-CODE-001",
+    term: "GeneratedCode",
+    layer: "universal",
+    definition: "Code output produced deterministically from the spec.",
+  },
+  "Phase": {
+    id: "DICT-PHASE-001",
+    term: "Phase",
+    layer: "global",
+    definition:
+      "A distinct step or stage in the QRET workflow consisting of required user interaction and supporting logic.",
+  },
+  "ReceiptedItems": {
+    id: "DICT-RECEIPTED-ITEMS-001",
+    term: "ReceiptedItems",
+    layer: "global",
+    definition: "Items listed on a receipt that are eligible for return.",
+  },
+  "Refund": {
+    id: "DICT-REFUND-001",
+    term: "Refund",
+    layer: "global",
+    definition: "The total amount to be returned to the customer.",
+  },
+  "ReturnedItems": {
+    id: "DICT-RETURNED-ITEMS-001",
+    term: "ReturnedItems",
+    layer: "global",
+    definition: "Items provided by the customer for return.",
+  },
+  "Spec": {
+    id: "DICT-SPEC-001",
+    term: "Spec",
+    layer: "universal",
+    definition: "The authoritative specification file (generate.ts).",
+  },
 };
+
+// Defaults from generate.ts
+export const Defaults = {
+  sizeUnit: "rem",
+  fontUnit: "rem",
+  colorFormat: "hex",
+  responsive: "mobileFirst",
+};
+
+// Domain rules from generate.ts
+export const DomainRules: Concept[] = [
+  {
+    id: "DOM-REFUND-001",
+    term: "RefundRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Calculate refunds accurately",
+    inputs: ["ReceiptedItems", "ReturnedItems"],
+    constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
+    outputs: [
+      "Refund total = intersection of receiptedItems and returnedItems",
+    ],
+    precedence: 100,
+  },
+  {
+    id: "DOM-NAVIGATION-001",
+    term: "NavigationRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Allow free navigation between phases unless explicitly restricted",
+    inputs: ["Navigation state", "Phase definitions"],
+    constraints: ["Phases are navigable unless a rule explicitly blocks it"],
+    outputs: ["Users can move freely between phases"],
+    precedence: 50,
+  },
+  {
+    id: "DOM-PHASE-001",
+    term: "PhaseRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Advance phase only after validation and cleanup",
+    inputs: ["Phase data"],
+    constraints: [
+      "Validation must succeed",
+      "Cleanup must run before phase advance",
+    ],
+    outputs: ["Validated and cleaned state before advancing"],
+    precedence: 100,
+  },
+  {
+    id: "DOM-STAGE-001",
+    term: "StageRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Prevent stages from auto-closing due to internal interaction",
+    inputs: ["Stage state"],
+    constraints: [
+      "Stage closure cannot be triggered solely by internal component interaction",
+    ],
+    outputs: ["Stages remain open unless explicitly closed"],
+    precedence: 80,
+  },
+  {
+    id: "DOM-ACTOR-TILE-001",
+    term: "ActorTileSoloRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Restrict Solo state to a single ActorTile in a context",
+    inputs: ["ActorTile states", "Context"],
+    constraints: [
+      "Only one ActorTile can be marked Solo within a given context",
+    ],
+    outputs: ["Valid state with at most one Solo ActorTile per context"],
+    precedence: 90,
+  },
+  {
+    id: "DOM-DERIVED-VALUE-001",
+    term: "DerivedValueRule",
+    layer: "global",
+    definition: "Rule definition",
+    goal: "Ensure derived values are recalculated on render",
+    inputs: ["Component props", "Component state"],
+    constraints: [
+      "Derived values must not be stored in state",
+      "Derived values must be recalculated each render",
+      "Derived values must always be deterministic given the same inputs",
+    ],
+    outputs: ["Components with reliable, up-to-date derived values"],
+    precedence: 95,
+  },
+];
 
 /* ================================
    UNIVERSAL CODING CONVENTIONS
@@ -264,9 +466,7 @@ export const BucketPolicy = {
   scope: "universal" as Scope,
 };
 
-/* ================================
-   EXPORT (AGGREGATE SPEC BASE)
-   ================================ */
+// --- EXPORT AGGREGATE SPEC BASE ---
 export const SpecBase = {
   WorkingAgreement,
   Policies,
