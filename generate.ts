@@ -606,9 +606,13 @@ main().catch((err) => {
     id: "SWEEPO-001",
     term: "SweepoDefinition",
     layer: "universal",
-    goal: "Inspecting the repo-level context, including multiple files",
+    goal: "Inspecting the repo-level context, including multiple files. Ensures model and user are always looking at the same project state by re-syncing from the GitHub remote.",
     inputs: ["Repo root and visible files"],
-    constraints: ["Sweepo may not replace scan", "Sweepo is repo-level only"],
+    constraints: [
+      "Sweepo may not replace scan",
+      "Sweepo is repo-level only",
+      "Sweepo must refresh against the remote repo to guarantee latest state"
+    ],
     outputs: ["Summaries and analyses of repo context"],
     precedence: 100,
   },
