@@ -378,6 +378,24 @@ const intent = {
       ],
       precedence: 100,
     },
+    {
+      id: "PROC-THREAD-RESET-001",
+      term: "ThreadResetRule",
+      layer: "universal",
+      definition: "Rule definition",
+      goal: "Ensure clarity about what persists and what resets when changing threads",
+      inputs: ["Spec", "Thread context"],
+      constraints: [
+        "Spec persists across threads and remains authoritative",
+        "Thread-specific chat context does not persist across threads unless written into spec",
+        "Any shorthand or temporary rules in chat are lost on thread reset"
+      ],
+      outputs: [
+        "Deterministic continuity via spec",
+        "Clarity about resets when switching threads"
+      ],
+      precedence: 100,
+    },
   ] as Concept[],
   outputs: [
     "Generated .tsx files under /src (React app in TypeScript, scope: global)",
@@ -526,8 +544,58 @@ export default function ${comp.term}(): JSX.Element {
 }
 /* --- /TEMPLATES --- */
 
+/* ================================
+   VALIDATION (Spec Linter)
+   ================================ */
+function flattenConceptTree(root: Concept): Concept[] {
+  const acc: Concept[] = [root];
+  if (root.children && root.children.length) {
+    for (const c of root.children) acc.push(...flattenConceptTree(c));
+  }
+  return acc;
+}
+
+function collectAllConcepts(): Concept[] {
+  const dict = Object.values(dictionary);
+  const intents = (intent.constraints as Concept[]) ?? [];
+  const domains = domainRules ?? [];
+  // `screens` may include nested component trees (e.g., FloorplanComponent)
+  const screenTrees = screens.flatMap((s) => flattenConceptTree(s));
+  return [...dict, ...intents, ...domains, ...screenTrees];
+}
+
+function validateSpec(): void {
+  const concepts = collectAllConcepts();
+  const errors: string[] = [];
+
+  // 1) Duplicate ID check across the entire prototype chain
+  const idCounts = new Map<string, number>();
+  for (const c of concepts) {
+    idCounts.set(c.id, (idCounts.get(c.id) ?? 0) + 1);
+  }
+  for (const [id, count] of idCounts.entries()) {
+    if (count > 1) errors.push(`Duplicate id detected: ${id} (count=${count})`);
+  }
+
+  // 2) Ensure any declared outputs end with .tsx (TypeScript React only)
+  for (const c of concepts) {
+    if (!c.outputs) continue;
+    for (const out of c.outputs) {
+      if (!out.endsWith(".tsx")) {
+        errors.push(`Output for ${c.term} (${c.id}) must be .tsx, found: ${out}`);
+      }
+    }
+  }
+
+  if (errors.length) {
+    const details = errors.map((e) => ` - ${e}`).join("\n");
+    throw new Error(`Spec validation failed with ${errors.length} issue(s):\n${details}`);
+  }
+}
+
 /* --- MAIN --- */
 async function main(): Promise<void> {
+  validateSpec();
   const outDir = path.resolve("src");
   await fs.mkdir(outDir, { recursive: true });
 
