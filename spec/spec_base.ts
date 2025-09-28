@@ -5,7 +5,7 @@
 /* ================================
    TYPES
    ================================ */
-export type Scope = "universal" | "global" | "screen" | "component";
+export type Scope = "universal" | "global" | "screen" | "component" | "app";
 
 export type Concept = {
   id: string;
@@ -217,7 +217,7 @@ export const Dictionary: Record<string, Concept> = {
   "PrototypeChain": {
     id: "DICT-PROTOTYPE-001",
     term: "PrototypeChain",
-    layer: "universal", 
+    layer: "universal",
     definition:
       "Resolution order over scope and precedence for deriving effective intent.",
   },

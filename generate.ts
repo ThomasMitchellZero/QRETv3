@@ -3,10 +3,10 @@
 
 import { promises as fs } from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 import { type Concept } from "./spec/spec_base";
 import {
-  AppComponents,
   AppScreens,
   Dictionary,
   SpecBase,
@@ -63,13 +63,10 @@ function collectAllConcepts(): Concept[] {
   const dict = Object.values(Dictionary);
   const intents = SpecBase.WorkingAgreement ?? [];
   const domains = DomainRules ?? [];
-  // Include AppComponents and AppScreens
-  const components = AppComponents ?? [];
   const screens = AppScreens ?? [];
   // `screens` may include nested component trees (e.g., FloorplanComponent)
   const screenTrees = screens.flatMap((s) => flattenConceptTree(s));
-  const componentTrees = components.flatMap((c) => flattenConceptTree(c));
-  return [...dict, ...intents, ...domains, ...componentTrees, ...screenTrees];
+  return [...dict, ...intents, ...domains, ...screenTrees];
 }
 
 function validateSpec(): void {
@@ -107,6 +104,17 @@ function validateSpec(): void {
 
 /* --- MAIN --- */
 async function main(): Promise<void> {
+  // Heartbeat: show repo state
+  let commitHash = "unknown";
+  try {
+    commitHash = execSync("git rev-parse HEAD").toString().trim();
+  } catch (err) {
+    commitHash = "not a git repo";
+  }
+  console.log(
+    `Context loaded: commit ${commitHash} @ ${new Date().toISOString()}`
+  );
+  console.log("Specs: spec_base.ts loaded");
   validateSpec();
   const outDir = path.resolve("src");
   await fs.mkdir(outDir, { recursive: true });
@@ -137,7 +145,7 @@ async function main(): Promise<void> {
         }
         const absPath = path.resolve(filePath);
         await fs.mkdir(path.dirname(absPath), { recursive: true });
-        const code = renderComponent(comp, bgColor);
+        const code = renderComponent(comp, bgColor ?? "transparent");
         await fs.writeFile(absPath, code, "utf8");
         outputs.push(filePath.replace(/\\/g, "/"));
       }
