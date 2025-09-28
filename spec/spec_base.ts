@@ -177,7 +177,6 @@ export const AppInstances: Concept[] = [
     precedence: 100,
   },
 ];
-];
 
 /* ================================
    UNIVERSAL POLICIES / STANDARDS

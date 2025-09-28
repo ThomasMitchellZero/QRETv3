@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
-    "types": ["node"],
+    "types": ["node", "react", "react-dom"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -18,7 +18,7 @@
     "esModuleInterop": true,
     "allowJs": false,
     "checkJs": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "noEmit": true
   },
