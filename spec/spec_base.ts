@@ -1,4 +1,5 @@
 // spec_base.ts — AIDA/QRET shared spec foundation
+// This file is the Single Source of Truth (SSoT).
 // managed by AIDA
 
 /* ================================
@@ -132,17 +133,50 @@ export const WorkingAgreement: Concept[] = [
     term: "Sweepo",
     layer: "universal",
     definition:
-      "Repo-level inspection that always fetches the latest remote state to guarantee alignment between model and user.",
+      "Quick, default repo-level inspection using only the state of currently open VS Code windows as authoritative. Sweepo does not fetch the remote repo; it assumes the open files in the editor reflect the true state.",
     precedence: 100,
     constraints: [
       "Sweepo may not replace Scan",
       "Sweepo is repo-level only",
-      "User must commit and push first",
-      "Sweepo must always pull fresh from the remote GitHub repo",
-      "Sweepo must report time elapsed since last commit hash or timestamp if available",
-      "If remote metadata cannot be retrieved, Sweepo must explicitly state limitation",
+      "Sweepo treats open VS Code windows as the single source of truth for the repo",
+      "Sweepo does not perform remote fetch or drift detection",
+      "Sweepo is fast and assumes user intent matches open editor state",
+      "If files are not open, Sweepo cannot analyze them",
     ],
   },
+  // DeepSweepo: full remote repo scan with drift detection and warnings
+  {
+    id: "PROC-DEEPSWEEPO-001",
+    term: "DeepSweepo",
+    layer: "universal",
+    definition:
+      "Comprehensive, full remote GitHub repo inspection that always fetches the latest remote state for authoritative analysis. DeepSweepo includes drift detection and explicit overwrite warnings if the local understanding differs from the remote.",
+    precedence: 100,
+    inputs: ["repoUrl", "branch"],
+    constraints: [
+      "DeepSweepo always pulls the latest state from the remote GitHub repo",
+      "User must commit and push before DeepSweepo runs",
+      "If remote metadata cannot be retrieved, DeepSweepo must explicitly state limitation",
+      "If drift is detected between previous and new repo snapshots, model must warn the user before replacing prior understanding",
+      "On drift warning, user may inspect differences or allow overwrite",
+      "After overwrite, old repo understanding is fully replaced by the new snapshot",
+      "DeepSweepo is slower and more authoritative than Sweepo",
+      "DeepSweepo requires explicit repo URL and branch context",
+    ],
+  },
+/* ================================
+   APP-LEVEL INSTANCES
+   ================================ */
+export const AppInstances: Concept[] = [
+  {
+    id: "APP-QRET-001",
+    term: "QRET-DeepSweepo",
+    layer: "app",
+    definition: "App-level binding of DeepSweepo to the QRET repo.",
+    inputs: ["https://github.com/ThomasMitchellZero/QRETv3.git", "main"],
+    precedence: 100,
+  },
+];
 ];
 
 /* ================================
@@ -162,6 +196,9 @@ export const Policies = {
   },
   optimization: { prioritize: "clarity" as const },
   naming: { enforceDictionary: true, onMissingTerm: "error" as const },
+  // Planned upgrade: StrictTerminologyEnforcement
+  // Universal policy to enforce consistent terminology across the spec.
+  // Not yet active — dictionary pruning pass required before enabling.
   error: {
     trivial: "autoFill" as const,
     moderate: "warn" as const,
@@ -470,16 +507,7 @@ export const BucketPolicy = {
    APP COMPONENTS AND SCREENS
    ================================ */
 
-export const AppComponents: Concept[] = [
-  {
-    id: "COMP-FLOORPLAN-001",
-    term: "FloorplanComponent",
-    layer: "component",
-    definition:
-      "A React component that renders the global page layout including the ecosystem top bar, optional side columns, and main column rows.",
-    precedence: 100,
-  },
-];
+// AppComponents removed; Floorplan structure is now under AppScreens only.
 
 export const AppScreens: Concept[] = [
   {
@@ -491,13 +519,71 @@ export const AppScreens: Concept[] = [
   },
   {
     id: "SCREEN-FLOORPLAN-001",
-    term: "FloorplanScreen",
+    term: "Floorplan",
     layer: "screen",
-    definition: "Screen that uses the FloorplanComponent for layout.",
+    definition: "The global page layout: ecosystem top bar, optional side columns, main column rows.",
     precedence: 100,
+    outputs: ["FloorplanComponent.tsx"],
     children: [
-      // Reference the FloorplanComponent concept
-      { ...AppComponents[0] },
+      {
+        id: "COMP-TOPBAR-001",
+        term: "TopBar",
+        layer: "component",
+        definition: "Ecosystem top bar row.",
+        outputs: ["TopBar.tsx"],
+      },
+      {
+        id: "COMP-LEFTCOL-001",
+        term: "LeftColumn",
+        layer: "component",
+        definition: "Optional left-side column, 25% width.",
+        outputs: ["LeftColumn.tsx"],
+      },
+      {
+        id: "COMP-RIGHTCOL-001",
+        term: "RightColumn",
+        layer: "component",
+        definition: "Optional right-side column, 25% width.",
+        outputs: ["RightColumn.tsx"],
+      },
+      {
+        id: "COMP-MAINCOL-001",
+        term: "MainColumn",
+        layer: "component",
+        definition: "Main column that expands to fill remaining width.",
+        outputs: ["MainColumn.tsx"],
+        children: [
+          {
+            id: "COMP-PAGETITLE-001",
+            term: "PageTitleRow",
+            layer: "component",
+            definition: "Row containing the page title and exit button.",
+            outputs: ["PageTitleRow.tsx"],
+          },
+          {
+            id: "COMP-NAVBAR-001",
+            term: "NavigationBarRow",
+            layer: "component",
+            definition: "Row containing navigation nodes.",
+            outputs: ["NavigationBarRow.tsx"],
+          },
+          {
+            id: "COMP-MAINCONTENT-001",
+            term: "MainContentRow",
+            layer: "component",
+            definition: "Configurable main content row.",
+            outputs: ["MainContentRow.tsx"],
+          },
+          {
+            id: "COMP-FOOTER-001",
+            term: "FooterRow",
+            layer: "component",
+            definition:
+              "Footer row with refund display (left) and continuation button (right).",
+            outputs: ["FooterRow.tsx"],
+          },
+        ],
+      },
     ],
   },
 ];
@@ -513,6 +599,6 @@ export const SpecBase = {
   BuildTopology,
   Lifecycle,
   BucketPolicy,
-  AppComponents,
   AppScreens,
+  AppInstances,
 };
