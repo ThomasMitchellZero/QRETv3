@@ -82,15 +82,19 @@ function validateSpec(): void {
     if (count > 1) errors.push(`Duplicate id detected: ${id} (count=${count})`);
   }
 
-  // 2) Ensure any declared outputs end with .tsx (TypeScript React only)
+  // 2) Ensure any declared outputs end with .tsx (TypeScript React only) for UI concepts
   for (const c of concepts) {
     if (!c.outputs) continue;
     for (const out of c.outputs) {
-      if (!out.endsWith(".tsx")) {
-        errors.push(
-          `Output for ${c.term} (${c.id}) must be .tsx, found: ${out}`
-        );
+      // Only enforce .tsx for UI-related layers (screens/components)
+      if (c.layer === "screen" || c.layer === "component") {
+        if (!out.endsWith(".tsx")) {
+          errors.push(
+            `Output for ${c.term} (${c.id}) must be .tsx, found: ${out}`
+          );
+        }
       }
+      // For other layers, skip the .tsx enforcement
     }
   }
 

@@ -1,0 +1,89 @@
+/* stable/styles/floorplan.scss */
+/* Floorplan SCSS — global layout with labeled debug colors */
+
+.floorplan {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 25% 1fr 25%;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+
+  .top-bar {
+    grid-column: 1 / span 3;
+    height: 60px;
+    background-color: #d0eaff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .left-column {
+    grid-row: 2;
+    grid-column: 1;
+    background-color: #ffe0e0;
+
+    .left-column-title {
+      height: 40px;
+      background-color: #ffcccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .right-column {
+    grid-row: 2;
+    grid-column: 3;
+    background-color: #e0ffe0;
+
+    .right-column-title {
+      height: 40px;
+      background-color: #ccffcc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .main-column {
+    grid-row: 2;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    background-color: #e0e0ff;
+
+    .page-title-row {
+      height: 50px;
+      background-color: #ccccff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+    }
+
+    .nav-bar-row {
+      height: 40px;
+      background-color: #99ccff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-content-row {
+      flex: 1;
+      background-color: #eeeeff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-row {
+      height: 50px;
+      background-color: #cccccc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+    }
+  }
+}

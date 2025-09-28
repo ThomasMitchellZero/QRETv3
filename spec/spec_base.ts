@@ -18,6 +18,7 @@ export type Concept = {
   outputs?: string[]; // paths or artifacts
   precedence?: number; // higher wins within same scope
   children?: Concept[];
+  styleClass?: string;
 };
 
 /* ================================
@@ -209,6 +210,8 @@ export const Policies = {
     scope: "global" as const,
     units: "rem" as const,
     organization: "components-first" as const,
+    // sourceFile is the authoritative bucket file for all SCSS styling.
+    sourceFile: "stable/style/style_base.scss",
   },
 };
 
@@ -525,6 +528,7 @@ export const AppScreens: Concept[] = [
       "The global page layout: ecosystem top bar, optional side columns, main column rows.",
     precedence: 100,
     outputs: ["FloorplanComponent.tsx"],
+    styleClass: "floorplan",
     children: [
       {
         id: "COMP-TOPBAR-001",
@@ -532,6 +536,7 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Ecosystem top bar row.",
         outputs: ["TopBar.tsx"],
+        styleClass: "top-bar",
       },
       {
         id: "COMP-LEFTCOL-001",
@@ -539,6 +544,7 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Optional left-side column, 25% width.",
         outputs: ["LeftColumn.tsx"],
+        styleClass: "left-column",
         children: [
           {
             id: "COMP-LEFTCOL-TITLE-001",
@@ -547,6 +553,7 @@ export const AppScreens: Concept[] = [
             definition:
               "Title row within the LeftColumn for labeling or contextual heading.",
             outputs: ["LeftColumnTitle.tsx"],
+            styleClass: "left-column-title",
           },
         ],
       },
@@ -556,6 +563,7 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Optional right-side column, 25% width.",
         outputs: ["RightColumn.tsx"],
+        styleClass: "right-column",
         children: [
           {
             id: "COMP-RIGHTCOL-TITLE-001",
@@ -564,6 +572,7 @@ export const AppScreens: Concept[] = [
             definition:
               "Title row within the RightColumn for labeling or contextual heading.",
             outputs: ["RightColumnTitle.tsx"],
+            styleClass: "right-column-title",
           },
         ],
       },
@@ -573,6 +582,7 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Main column that expands to fill remaining width.",
         outputs: ["MainColumn.tsx"],
+        styleClass: "main-column",
         children: [
           {
             id: "COMP-PAGETITLE-001",
@@ -580,6 +590,7 @@ export const AppScreens: Concept[] = [
             layer: "component",
             definition: "Row containing the page title and exit button.",
             outputs: ["PageTitleRow.tsx"],
+            styleClass: "page-title-row",
           },
           {
             id: "COMP-NAVBAR-001",
@@ -587,6 +598,7 @@ export const AppScreens: Concept[] = [
             layer: "component",
             definition: "Row containing navigation nodes.",
             outputs: ["NavigationBarRow.tsx"],
+            styleClass: "nav-bar-row",
           },
           {
             id: "COMP-MAINCONTENT-001",
@@ -594,6 +606,7 @@ export const AppScreens: Concept[] = [
             layer: "component",
             definition: "Configurable main content row.",
             outputs: ["MainContentRow.tsx"],
+            styleClass: "main-content-row",
           },
           {
             id: "COMP-FOOTER-001",
@@ -602,6 +615,7 @@ export const AppScreens: Concept[] = [
             definition:
               "Footer row with refund display (left) and continuation button (right).",
             outputs: ["FooterRow.tsx"],
+            styleClass: "footer-row",
           },
         ],
       },
