@@ -164,6 +164,7 @@ export const WorkingAgreement: Concept[] = [
       "DeepSweepo requires explicit repo URL and branch context",
     ],
   },
+];
 /* ================================
    APP-LEVEL INSTANCES
    ================================ */
@@ -216,7 +217,7 @@ export const Dictionary: Record<string, Concept> = {
   "PrototypeChain": {
     id: "DICT-PROTOTYPE-001",
     term: "PrototypeChain",
-    layer: "universal",
+    layer: "universal", 
     definition:
       "Resolution order over scope and precedence for deriving effective intent.",
   },
@@ -520,7 +521,8 @@ export const AppScreens: Concept[] = [
     id: "SCREEN-FLOORPLAN-001",
     term: "Floorplan",
     layer: "screen",
-    definition: "The global page layout: ecosystem top bar, optional side columns, main column rows.",
+    definition:
+      "The global page layout: ecosystem top bar, optional side columns, main column rows.",
     precedence: 100,
     outputs: ["FloorplanComponent.tsx"],
     children: [
