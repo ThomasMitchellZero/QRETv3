@@ -278,7 +278,7 @@ export const Dictionary: Record<string, Concept> = {
     id: "DICT-SPEC-001",
     term: "Spec",
     layer: "universal",
-    definition: "The authoritative specification file (generate.ts).",
+    definition: "The authoritative specification file (spec_base.ts).",
   },
 };
 
@@ -466,7 +466,45 @@ export const BucketPolicy = {
   scope: "universal" as Scope,
 };
 
-// --- EXPORT AGGREGATE SPEC BASE ---
+/* ================================
+   APP COMPONENTS AND SCREENS
+   ================================ */
+
+export const AppComponents: Concept[] = [
+  {
+    id: "COMP-FLOORPLAN-001",
+    term: "FloorplanComponent",
+    layer: "component",
+    definition:
+      "A React component that renders the global page layout including the ecosystem top bar, optional side columns, and main column rows.",
+    precedence: 100,
+  },
+];
+
+export const AppScreens: Concept[] = [
+  {
+    id: "SCREEN-HOME-001",
+    term: "Home",
+    layer: "screen",
+    definition: "The main home screen of the application.",
+    precedence: 100,
+  },
+  {
+    id: "SCREEN-FLOORPLAN-001",
+    term: "FloorplanScreen",
+    layer: "screen",
+    definition: "Screen that uses the FloorplanComponent for layout.",
+    precedence: 100,
+    children: [
+      // Reference the FloorplanComponent concept
+      { ...AppComponents[0] },
+    ],
+  },
+];
+
+/* ================================
+   EXPORT AGGREGATE SPEC BASE
+   ================================ */
 export const SpecBase = {
   WorkingAgreement,
   Policies,
@@ -475,4 +513,6 @@ export const SpecBase = {
   BuildTopology,
   Lifecycle,
   BucketPolicy,
+  AppComponents,
+  AppScreens,
 };
