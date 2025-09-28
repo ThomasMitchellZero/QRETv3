@@ -24,22 +24,15 @@ export default function ${screen.term}(): JSX.Element {
 `;
 }
 
-function renderComponent(comp: Concept, bgColor: string): string {
-  // Each component renders a <div> with its label (term) and a background color
+function renderComponent(comp: Concept): string {
+  // Each component renders a <div> with its className (from styleClass) and a label
+  const className = comp.styleClass ?? "UNSTYLED";
   return `// managed by AIDA
 import React from "react";
 
 export default function ${comp.term}(): JSX.Element {
   return (
-    <div style={{
-      background: "${bgColor}",
-      padding: "1rem",
-      margin: "0.5rem",
-      borderRadius: "0.5rem",
-      color: "#fff",
-      fontWeight: "bold",
-      textAlign: "center"
-    }}>
+    <div className="${className}">
       ${comp.term}
     </div>
   );
@@ -125,21 +118,11 @@ async function main(): Promise<void> {
 
   const outputs: string[] = [];
 
-  // Helper: assign a distinct background color per component depth
-  const bgColors = [
-    "#1976d2", // FloorplanComponent
-    "#388e3c", // TopBar, LeftColumn, RightColumn, MainColumn
-    "#fbc02d", // PageTitleRow, NavigationBarRow, MainContentRow, FooterRow
-    "#8e24aa", // Deeper
-    "#d84315", // More depth
-  ];
-
   // Recursively generate components from a root Concept/component
   async function generateComponentFiles(
     comp: Concept,
     depth: number = 0
   ): Promise<void> {
-    const bgColor = bgColors[depth % bgColors.length];
     if (comp.outputs && comp.outputs.length > 0) {
       for (const out of comp.outputs) {
         // Determine output path: if not absolute, write under src/components
@@ -149,7 +132,7 @@ async function main(): Promise<void> {
         }
         const absPath = path.resolve(filePath);
         await fs.mkdir(path.dirname(absPath), { recursive: true });
-        const code = renderComponent(comp, bgColor ?? "transparent");
+        const code = renderComponent(comp);
         await fs.writeFile(absPath, code, "utf8");
         outputs.push(filePath.replace(/\\/g, "/"));
       }

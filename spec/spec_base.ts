@@ -47,13 +47,6 @@ export const WorkingAgreement: Concept[] = [
     precedence: 100,
   },
   {
-    id: "PROC-ASK-001",
-    term: "AskUntilClear",
-    layer: "universal",
-    definition: "Ask clarifying questions until requirements are clear.",
-    precedence: 100,
-  },
-  {
     id: "PROC-TOOLING-001",
     term: "ToolingInSpec",
     layer: "universal",
@@ -61,39 +54,10 @@ export const WorkingAgreement: Concept[] = [
     precedence: 100,
   },
   {
-    id: "PROC-CONVERGE-001",
-    term: "ConvergeOnIntent",
-    layer: "universal",
-    definition: "Converge on user intent through clarification.",
-    precedence: 100,
-  },
-  {
-    id: "PROC-DIFF-001",
-    term: "DiffOnlyEdits",
-    layer: "universal",
-    definition: "All code changes are delivered as diffs/patches.",
-    precedence: 100,
-  },
-  {
-    id: "PROC-DIFF-STD-001",
-    term: "DiffIsStandard",
-    layer: "universal",
-    definition:
-      "All changes must be delivered as standard diffs/patches with apply support.",
-    precedence: 100,
-  },
-  {
     id: "PROC-WARN-CTX-001",
     term: "WarnOnContextRisk",
     layer: "universal",
     definition: "Must warn the user if there is any risk of losing context.",
-    precedence: 100,
-  },
-  {
-    id: "PROC-CHAT-NONAUTH-001",
-    term: "ChatIsNonAuthoritative",
-    layer: "universal",
-    definition: "Chat may clarify but is never binding.",
     precedence: 100,
   },
   {
@@ -115,6 +79,31 @@ export const WorkingAgreement: Concept[] = [
       "Thread-specific chat context is ephemeral",
       "Shorthand or temporary chat rules vanish on reset",
     ],
+    precedence: 100,
+  },
+  // Consolidated diff/patch, binding authority, and ambiguity resolution rules:
+  {
+    id: "PROC-DIFF-REQSTD-001",
+    term: "DiffsAreRequiredAndStandardized",
+    layer: "universal",
+    definition:
+      "All changes must be delivered as standard diffs/patches, never as direct edits.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-SPEC-BINDING-001",
+    term: "SpecIsBindingChatIsAdvisory",
+    layer: "universal",
+    definition:
+      "Spec is binding and authoritative; chat may clarify but is never binding.",
+    precedence: 100,
+  },
+  {
+    id: "PROC-AMBIGUITY-RES-001",
+    term: "ResolveAmbiguityThroughClarification",
+    layer: "universal",
+    definition:
+      "All ambiguity is resolved by asking clarifying questions until intent is clear.",
     precedence: 100,
   },
   // Scan/Sweepo rules (appear only here, not in Dictionary)
@@ -185,8 +174,7 @@ export const AppInstances: Concept[] = [
    ================================ */
 export const Policies = {
   done: {
-    compilePass: true,
-    runPass: true,
+    buildPass: true,
     styleRequired: false,
     featureComplete: false,
   },
@@ -206,12 +194,17 @@ export const Policies = {
     critical: "ask" as const,
   },
   styling: {
-    tool: "scss" as const,
-    scope: "global" as const,
-    units: "rem" as const,
-    organization: "components-first" as const,
-    // sourceFile is the authoritative bucket file for all SCSS styling.
-    sourceFile: "stable/style/style_base.scss",
+    standard: {
+      tool: "scss" as const,
+      scope: "global" as const,
+      units: "rem" as const,
+      organization: "components-first" as const,
+      sourceFile: "stable/style/style_base.scss",
+      // All debug colors in SCSS are treated as final unless spec explicitly overrides.
+      debugColorsTreatedAsFinal: true,
+      // Inline style props (e.g., style={{}} in React) must not override class-based SCSS styling.
+      noInlineStyleOverrides: true,
+    },
   },
 };
 
@@ -234,13 +227,6 @@ export const Dictionary: Record<string, Concept> = {
       "Do not persist derived values",
       "Recompute on render or via hooks",
     ],
-  },
-  "Floorplan": {
-    id: "DICT-FLOORPLAN-001",
-    term: "Floorplan",
-    layer: "global",
-    definition:
-      "Global page layout: ecosystem top bar, optional side columns, main column rows.",
   },
   "Ambiguity": {
     id: "DICT-AMBIGUITY-001",

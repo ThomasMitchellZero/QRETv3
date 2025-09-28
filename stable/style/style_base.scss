@@ -1,6 +1,12 @@
 /* stable/styles/floorplan.scss */
 /* Floorplan SCSS — global layout with labeled debug colors */
 
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .floorplan {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -12,9 +18,7 @@
     grid-column: 1 / span 3;
     height: 60px;
     background-color: #d0eaff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @include flex-center;
   }
 
   .left-column {
@@ -25,9 +29,7 @@
     .left-column-title {
       height: 40px;
       background-color: #ffcccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-center;
     }
   }
 
@@ -39,9 +41,7 @@
     .right-column-title {
       height: 40px;
       background-color: #ccffcc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-center;
     }
   }
 
@@ -55,8 +55,7 @@
     .page-title-row {
       height: 50px;
       background-color: #ccccff;
-      display: flex;
-      align-items: center;
+      @include flex-center;
       justify-content: space-between;
       padding: 0 1rem;
     }
@@ -64,24 +63,19 @@
     .nav-bar-row {
       height: 40px;
       background-color: #99ccff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-center;
     }
 
     .main-content-row {
       flex: 1;
       background-color: #eeeeff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-center;
     }
 
     .footer-row {
       height: 50px;
       background-color: #cccccc;
-      display: flex;
-      align-items: center;
+      @include flex-center;
       justify-content: space-between;
       padding: 0 1rem;
     }
