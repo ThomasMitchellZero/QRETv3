@@ -539,6 +539,16 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Optional left-side column, 25% width.",
         outputs: ["LeftColumn.tsx"],
+        children: [
+          {
+            id: "COMP-LEFTCOL-TITLE-001",
+            term: "LeftColumnTitle",
+            layer: "component",
+            definition:
+              "Title row within the LeftColumn for labeling or contextual heading.",
+            outputs: ["LeftColumnTitle.tsx"],
+          },
+        ],
       },
       {
         id: "COMP-RIGHTCOL-001",
@@ -546,6 +556,16 @@ export const AppScreens: Concept[] = [
         layer: "component",
         definition: "Optional right-side column, 25% width.",
         outputs: ["RightColumn.tsx"],
+        children: [
+          {
+            id: "COMP-RIGHTCOL-TITLE-001",
+            term: "RightColumnTitle",
+            layer: "component",
+            definition:
+              "Title row within the RightColumn for labeling or contextual heading.",
+            outputs: ["RightColumnTitle.tsx"],
+          },
+        ],
       },
       {
         id: "COMP-MAINCOL-001",
