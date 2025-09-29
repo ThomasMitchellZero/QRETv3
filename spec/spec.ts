@@ -414,7 +414,7 @@ export const GlobalRules: Concept[] = [
     id: "REFUND-001",
     term: "RefundRule",
     layer: "global",
-    definition: "Refund calculation rule",
+    definition: "Defines refund calculation among sibling rules.",
     intent: "Ensure accurate refunds based on items receipted and returned.",
     inputs: ["ReceiptedItems", "ReturnedItems"],
     constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
@@ -427,7 +427,8 @@ export const GlobalRules: Concept[] = [
     id: "NAV-CYCLE-001",
     term: "NavigationCycle",
     layer: "global",
-    definition: "Workflow phase navigation cycle",
+    definition:
+      "Distinguishes phase navigation cycle from other navigation rules.",
     intent:
       "Provide predictable navigation and separation between phase state and transaction state.",
     constraints: [
@@ -458,7 +459,7 @@ export const GlobalRules: Concept[] = [
     id: "PHASE-001",
     term: "PhaseRule",
     layer: "global",
-    definition: "Phase advancement rule",
+    definition: "Distinguishes phase advancement from other workflow steps.",
     intent: "Advance phase only after validation and cleanup.",
     inputs: ["Phase data"],
     constraints: [
@@ -471,7 +472,7 @@ export const GlobalRules: Concept[] = [
     id: "STAGE-001",
     term: "StageRule",
     layer: "global",
-    definition: "Stage persistence rule",
+    definition: "Distinguishes stage persistence from phase advancement.",
     intent: "Prevent stages from auto-closing due to internal interaction.",
     inputs: ["Stage state"],
     constraints: [
@@ -483,7 +484,7 @@ export const GlobalRules: Concept[] = [
     id: "ACTOR-TILE-001",
     term: "ActorTileSoloRule",
     layer: "global",
-    definition: "ActorTile solo restriction",
+    definition: "Restricts Solo state to one ActorTile per context.",
     intent: "Restrict Solo state to a single ActorTile in a context.",
     inputs: ["ActorTile states", "Context"],
     constraints: [
@@ -495,7 +496,7 @@ export const GlobalRules: Concept[] = [
     id: "DERIVED-VALUE-001",
     term: "DerivedValueRule",
     layer: "global",
-    definition: "Derived value recalculation rule",
+    definition: "Specifies derived value recalculation requirements.",
     intent: "Ensure derived values are recalculated on render.",
     inputs: ["Component props", "Component state"],
     constraints: [
@@ -510,7 +511,8 @@ export const GlobalRules: Concept[] = [
     id: "BUSINESS-LOGIC-001",
     term: "BusinessLogicRule",
     layer: "global",
-    definition: "Transactional correctness logic",
+    definition:
+      "Distinguishes transactional business logic from navigation or UI logic.",
     intent:
       "Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
     constraints: [
@@ -523,6 +525,8 @@ export const GlobalRules: Concept[] = [
         term: "RefundComputation",
         layer: "global",
         definition:
+          "Distinguishes refund computation logic from other business logic.",
+        intent:
           "Refunds computed as intersection of receiptedItems and returnedItems",
       },
     ],
@@ -531,7 +535,8 @@ export const GlobalRules: Concept[] = [
     id: "NAV-LOGIC-001",
     term: "NavigationLogicRule",
     layer: "global",
-    definition: "Navigation flow and gating logic",
+    definition:
+      "Distinguishes navigation flow and gating logic from business logic.",
     intent:
       "Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
     constraints: [
@@ -543,7 +548,9 @@ export const GlobalRules: Concept[] = [
         id: "NAV-PHASE-001",
         term: "PhaseAdvance",
         layer: "global",
-        definition: "Phase advance requires validation and cleanup",
+        definition:
+          "Distinguishes phase advance logic from other navigation logic.",
+        intent: "Phase advance requires validation and cleanup",
       },
     ],
   },
