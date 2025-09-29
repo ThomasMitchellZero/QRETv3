@@ -14,8 +14,7 @@
     "@vitejs/plugin-react": "^4.3.0"
   },
   "scripts": {
-    "dev": "npm run gen && vite",
-    "gen": "npx tsx generate.ts",
+    "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"

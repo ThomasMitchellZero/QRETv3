@@ -2,7 +2,8 @@
 // managed by AIDA
 
 import React from "react";
+import { Start } from "./pages/Pages";
 
 export default function App(): JSX.Element {
-  return <div style={{ height: "100vh", width: "100vw" }}></div>;
+  return <Start />;
 }
