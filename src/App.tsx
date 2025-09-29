@@ -1,5 +1,6 @@
 // src/App.tsx
 // managed by AIDA
+import "./style.scss";
 
 import React from "react";
 import { Start } from "./pages/Pages";
