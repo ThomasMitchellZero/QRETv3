@@ -414,8 +414,8 @@ export const GlobalRules: Concept[] = [
     id: "REFUND-001",
     term: "RefundRule",
     layer: "global",
-    definition: "Rule definition",
-    intent: "Calculate refunds accurately",
+    definition: "Refund calculation rule",
+    intent: "Ensure accurate refunds based on items receipted and returned.",
     inputs: ["ReceiptedItems", "ReturnedItems"],
     constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
     outputs: [
@@ -427,12 +427,11 @@ export const GlobalRules: Concept[] = [
     id: "NAV-CYCLE-001",
     term: "NavigationCycle",
     layer: "global",
-    definition:
-      "Navigation between workflow phases is governed by the Navigation Cycle",
+    definition: "Workflow phase navigation cycle",
     intent:
-      "Provide a consistent, predictable navigation experience and clear separation between phase and transaction state.",
+      "Provide predictable navigation and separation between phase state and transaction state.",
     constraints: [
-      "canonizes phase routing, step rendering, entry points, and state handling",
+      "Canonizes phase routing, step rendering, entry points, and state handling",
       "Each phase has a unique, routable URL.",
       "Steps within a phase are not routable; they are conditionally rendered within the phase screen.",
       "Entering a phase always displays its canonical entry screen, regardless of prior step.",
@@ -459,8 +458,8 @@ export const GlobalRules: Concept[] = [
     id: "PHASE-001",
     term: "PhaseRule",
     layer: "global",
-    definition: "Rule definition",
-    intent: "Advance phase only after validation and cleanup",
+    definition: "Phase advancement rule",
+    intent: "Advance phase only after validation and cleanup.",
     inputs: ["Phase data"],
     constraints: [
       "Validation must succeed",
@@ -472,8 +471,8 @@ export const GlobalRules: Concept[] = [
     id: "STAGE-001",
     term: "StageRule",
     layer: "global",
-    definition: "Rule definition",
-    intent: "Prevent stages from auto-closing due to internal interaction",
+    definition: "Stage persistence rule",
+    intent: "Prevent stages from auto-closing due to internal interaction.",
     inputs: ["Stage state"],
     constraints: [
       "Stage closure cannot be triggered solely by internal component interaction",
@@ -484,8 +483,8 @@ export const GlobalRules: Concept[] = [
     id: "ACTOR-TILE-001",
     term: "ActorTileSoloRule",
     layer: "global",
-    definition: "Rule definition",
-    intent: "Restrict Solo state to a single ActorTile in a context",
+    definition: "ActorTile solo restriction",
+    intent: "Restrict Solo state to a single ActorTile in a context.",
     inputs: ["ActorTile states", "Context"],
     constraints: [
       "Only one ActorTile can be marked Solo within a given context",
@@ -496,8 +495,8 @@ export const GlobalRules: Concept[] = [
     id: "DERIVED-VALUE-001",
     term: "DerivedValueRule",
     layer: "global",
-    definition: "Rule definition",
-    intent: "Ensure derived values are recalculated on render",
+    definition: "Derived value recalculation rule",
+    intent: "Ensure derived values are recalculated on render.",
     inputs: ["Component props", "Component state"],
     constraints: [
       "Derived values must not be stored in state",
@@ -511,9 +510,9 @@ export const GlobalRules: Concept[] = [
     id: "BUSINESS-LOGIC-001",
     term: "BusinessLogicRule",
     layer: "global",
-    definition: "Defines the rules for transactional correctness in QRET.",
+    definition: "Transactional correctness logic",
     intent:
-      "Defines the rules for transactional correctness in QRET. Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
+      "Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
     constraints: [
       "Given the same inputs, business logic must always produce the same outputs.",
       "Business logic must not depend on navigation state.",
@@ -524,7 +523,7 @@ export const GlobalRules: Concept[] = [
         term: "RefundComputation",
         layer: "global",
         definition:
-          "Refunds are computed as the intersection of receiptedItems and returnedItems.",
+          "Refunds computed as intersection of receiptedItems and returnedItems",
       },
     ],
   },
@@ -532,10 +531,9 @@ export const GlobalRules: Concept[] = [
     id: "NAV-LOGIC-001",
     term: "NavigationLogicRule",
     layer: "global",
-    definition:
-      "Defines the rules for experience flow and user action gating in QRET.",
+    definition: "Navigation flow and gating logic",
     intent:
-      "Defines the rules for experience flow and user action gating in QRET. Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
+      "Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
     constraints: [
       "User must only see actions and inputs valid for the current phase.",
       "Navigation determines when and where business logic may be triggered.",
@@ -545,8 +543,7 @@ export const GlobalRules: Concept[] = [
         id: "NAV-PHASE-001",
         term: "PhaseAdvance",
         layer: "global",
-        definition:
-          "A phase may only advance once its validation and cleanup requirements are met.",
+        definition: "Phase advance requires validation and cleanup",
       },
     ],
   },
