@@ -25,22 +25,21 @@ export type Scope =
   | "god"
   | "universal"
   | "global"
-  | "screen"
   | "app"
+  | "screen"
   | "component";
 
 export type Concept = {
   id: string;
   term: string;
   layer: Scope;
-  definition?: string;
-  goal?: string;
-  inputs?: string[];
-  constraints?: string[];
-  outputs?: string[]; // paths or artifacts
-  children?: Concept[];
-  styleClass?: string;
-  defersTo?: string[]; // Higher-level rules this rule defers to
+  definition?: string; // concise "what it is", distinguishes from siblings
+  intent?: string; // purpose / why it exists
+  constraints?: string[]; // musts and must-nots
+  inputs?: string[]; // interfaces/data consumed
+  outputs?: string[]; // interfaces/data provided
+  children?: Concept[]; // sub-concepts or nested rules
+  defersTo?: string[]; // parent or higher-level rules this defers to
 };
 
 // UNIVERSAL rules defer to TEMP rules where explicitly defined.
@@ -187,7 +186,7 @@ export const WorkingAgreement: Concept[] = [
       "If local changes would be overwritten: fail loud until resolved.",
       "User must commit and push before startup sequence can be declared complete.",
       "Litany Recital: Recite the Litany (L1–Lx) verbatim as the second step, confirming alignment with rules and SSoT.",
-      "Spec Confirmation: Announce recognition of spec_base.ts as the Single Source of Truth and verify it has been successfully loaded.",
+      "Spec Confirmation: Announce recognition of spec.ts as the Single Source of Truth and verify it has been successfully loaded.",
       "Context Report: Surface the current commit hash, branch, and timestamp as the final startup checkpoint.",
       "Quick Sweepo: Perform a Sweepo immediately after repo refresh to confirm open window state matches repo state.",
     ],
@@ -274,8 +273,8 @@ export const Dictionary: Record<string, Concept> = {
     id: "DICT-PROTOTYPE-001",
     term: "PrototypeChain",
     layer: "universal",
-    definition:
-      "Resolution order over scope and precedence for deriving effective intent.",
+    definition: "Resolution order over scope and precedence",
+    intent: "for deriving effective intent.",
   },
   "DerivedValue": {
     id: "DICT-DERIVED-001",
@@ -416,7 +415,7 @@ export const GlobalRules: Concept[] = [
     term: "RefundRule",
     layer: "global",
     definition: "Rule definition",
-    goal: "Calculate refunds accurately",
+    intent: "Calculate refunds accurately",
     inputs: ["ReceiptedItems", "ReturnedItems"],
     constraints: ["Item IDs must be numeric", "Quantity must be > 0"],
     outputs: [
@@ -429,15 +428,20 @@ export const GlobalRules: Concept[] = [
     term: "NavigationCycle",
     layer: "global",
     definition:
-      "Navigation between workflow phases is governed by the Navigation Cycle, which canonizes phase routing, step rendering, entry points, and state handling.",
-    goal: "Provide a consistent, predictable navigation experience and clear separation between phase and transaction state.",
+      "Navigation between workflow phases is governed by the Navigation Cycle",
+    intent:
+      "Provide a consistent, predictable navigation experience and clear separation between phase and transaction state.",
     constraints: [
+      "canonizes phase routing, step rendering, entry points, and state handling",
       "Each phase has a unique, routable URL.",
       "Steps within a phase are not routable; they are conditionally rendered within the phase screen.",
       "Entering a phase always displays its canonical entry screen, regardless of prior step.",
       "Navigation between phases may be triggered at any time by the user or system.",
       "All state specific to a phase is discarded when leaving that phase; only transaction state persists across phases.",
       "When the system triggers navigation, the destination may be conditionally altered (e.g., based on validation or business rules).",
+      "The Continue button may trigger navigation to another phase.",
+      "The Nav Bar contains Nav Cards, which act as both a progress tracker and navigation controls for moving between phases.",
+      "All navigation actions may conditionally redirect their target based on business logic or validation.",
     ],
     outputs: [
       "Phases are addressable via unique URLs.",
@@ -446,6 +450,9 @@ export const GlobalRules: Concept[] = [
       "Navigation triggers can originate from user or system.",
       "Phase-specific state is ephemeral; transaction state persists.",
       "System navigation may redirect based on conditions.",
+      "Continue button navigation supported.",
+      "Nav Bar with Nav Cards provides progress tracking and navigation.",
+      "Conditional redirection is supported for all navigation triggers.",
     ],
   },
   {
@@ -453,7 +460,7 @@ export const GlobalRules: Concept[] = [
     term: "PhaseRule",
     layer: "global",
     definition: "Rule definition",
-    goal: "Advance phase only after validation and cleanup",
+    intent: "Advance phase only after validation and cleanup",
     inputs: ["Phase data"],
     constraints: [
       "Validation must succeed",
@@ -466,7 +473,7 @@ export const GlobalRules: Concept[] = [
     term: "StageRule",
     layer: "global",
     definition: "Rule definition",
-    goal: "Prevent stages from auto-closing due to internal interaction",
+    intent: "Prevent stages from auto-closing due to internal interaction",
     inputs: ["Stage state"],
     constraints: [
       "Stage closure cannot be triggered solely by internal component interaction",
@@ -478,7 +485,7 @@ export const GlobalRules: Concept[] = [
     term: "ActorTileSoloRule",
     layer: "global",
     definition: "Rule definition",
-    goal: "Restrict Solo state to a single ActorTile in a context",
+    intent: "Restrict Solo state to a single ActorTile in a context",
     inputs: ["ActorTile states", "Context"],
     constraints: [
       "Only one ActorTile can be marked Solo within a given context",
@@ -490,7 +497,7 @@ export const GlobalRules: Concept[] = [
     term: "DerivedValueRule",
     layer: "global",
     definition: "Rule definition",
-    goal: "Ensure derived values are recalculated on render",
+    intent: "Ensure derived values are recalculated on render",
     inputs: ["Component props", "Component state"],
     constraints: [
       "Derived values must not be stored in state",
@@ -505,7 +512,8 @@ export const GlobalRules: Concept[] = [
     term: "BusinessLogicRule",
     layer: "global",
     definition: "Defines the rules for transactional correctness in QRET.",
-    goal: "Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
+    intent:
+      "Defines the rules for transactional correctness in QRET. Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
     constraints: [
       "Given the same inputs, business logic must always produce the same outputs.",
       "Business logic must not depend on navigation state.",
@@ -526,7 +534,8 @@ export const GlobalRules: Concept[] = [
     layer: "global",
     definition:
       "Defines the rules for experience flow and user action gating in QRET.",
-    goal: "Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
+    intent:
+      "Defines the rules for experience flow and user action gating in QRET. Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
     constraints: [
       "User must only see actions and inputs valid for the current phase.",
       "Navigation determines when and where business logic may be triggered.",
