@@ -255,7 +255,7 @@ export const Policies = {
       scope: "global" as const,
       units: "rem" as const,
       organization: "components-first" as const,
-      sourceFile: "style_base.scss",
+      sourceFile: "style.scss",
       // All debug colors in SCSS are treated as final unless spec explicitly overrides.
       debugColorsTreatedAsFinal: true,
       // Inline style props (e.g., style={{}} in React) must not override class-based SCSS styling.
@@ -299,7 +299,7 @@ export const Dictionary: Record<string, Concept> = {
     term: "ActorTile",
     layer: "global",
     definition:
-      "A UI component representing an individual actor. Only one can be marked as 'Solo' within a given context.",
+      "A UI component representing an individual actor. Only one can be marked as 'Solo' within a given context. Solo state is further constrained by ActorTileSoloRule.",
   },
   "Chat": {
     id: "DICT-CHAT-001",
@@ -367,7 +367,6 @@ export const Dictionary: Record<string, Concept> = {
   },
 };
 
-// Defaults from generate.ts
 export const Defaults = {
   sizeUnit: "rem",
   fontUnit: "rem",
@@ -422,51 +421,54 @@ export const GlobalRules: Concept[] = [
       "Refund total = intersection of receiptedItems and returnedItems",
     ],
   },
-  // Canonical Navigation Cycle rule
   {
-    id: "NAV-CYCLE-001",
-    term: "NavigationCycle",
+    id: "PHASE-NAV-001",
+    term: "PhaseNavigationRule",
     layer: "global",
     definition:
-      "Distinguishes phase navigation cycle from other navigation rules.",
+      "Unified rule governing phase navigation, phase advancement, and intra-phase steps. Consolidates navigation cycle, phase rules, and navigation logic.",
     intent:
-      "Provide predictable navigation and separation between phase state and transaction state.",
+      "Provide predictable navigation within and between Phases. Clearly separate navigation from business logic.  Ensure that criteria to Navigate are met.  Navigation determines when and where business logic may be triggered.",
     constraints: [
-      "Canonizes phase routing, step rendering, entry points, and state handling",
       "Each phase has a unique, routable URL.",
+      "Entering a phase always displays its canonical Primary Screen, regardless of prior step.",
       "Steps within a phase are not routable; they are conditionally rendered within the phase screen.",
-      "Entering a phase always displays its canonical entry screen, regardless of prior step.",
-      "Navigation between phases may be triggered at any time by the user or system.",
-      "All state specific to a phase is discarded when leaving that phase; only transaction state persists across phases.",
-      "When the system triggers navigation, the destination may be conditionally altered (e.g., based on validation or business rules).",
-      "The Continue button may trigger navigation to another phase.",
-      "The Nav Bar contains Nav Cards, which act as both a progress tracker and navigation controls for moving between phases.",
+      "On navigation attempt from the Primary Screen, evaluation must run before allowing exit.",
+      "If evaluation fails, exit is blocked and Phase State may be updated.",
+      "Pseudo-navigation within the Phase (e.g., Resolution, Review) is permitted and common.",
+      "True exit to another Phase occurs only if evaluation conditions are met.",
+      "Phase-specific state is ephemeral and discarded on exit.",
+      "Transaction-level state always persists across phases.",
+      "Validation and cleanup must run before any true phase advance.",
+      "Navigation between phases may be triggered at any time by user or system.",
+      "System-triggered navigation may conditionally alter the destination based on validation or business rules.",
       "All navigation actions may conditionally redirect their target based on business logic or validation.",
+      "User must only see actions and inputs valid for the current phase.",
     ],
     outputs: [
-      "Phases are addressable via unique URLs.",
-      "Step-level navigation is not supported at the routing level.",
-      "Phase entry is always canonical.",
-      "Navigation triggers can originate from user or system.",
-      "Phase-specific state is ephemeral; transaction state persists.",
-      "System navigation may redirect based on conditions.",
-      "Continue button navigation supported.",
-      "Nav Bar with Nav Cards provides progress tracking and navigation.",
-      "Conditional redirection is supported for all navigation triggers.",
+      "Validation of Phase inputs",
+      "Intra-phase pseudo-navigation",
+      "Inter-phase navigation to next phase URL",
     ],
-  },
-  {
-    id: "PHASE-001",
-    term: "PhaseRule",
-    layer: "global",
-    definition: "Distinguishes phase advancement from other workflow steps.",
-    intent: "Advance phase only after validation and cleanup.",
-    inputs: ["Phase data"],
-    constraints: [
-      "Validation must succeed",
-      "Cleanup must run before phase advance",
+    children: [
+      {
+        id: "STEP-001",
+        term: "StepRule",
+        layer: "global",
+        definition: "Defines behavior of steps and sub-screens within a Phase.",
+        intent:
+          "Ensure predictable handling of navigation attempts inside a Phase before allowing progression to another Phase.",
+        constraints: [
+          "Steps/sub-screens within a Phase are not routable; they must be conditionally rendered.",
+          "Each Phase has a Primary Screen that is always shown on entry.",
+          "Pseudo-navigation within the Phase is permitted and common.",
+          "Evaluation must occur before any exit attempt.",
+        ],
+        outputs: [
+          "A standardized approach to navigation between phases and within phases",
+        ],
+      },
     ],
-    outputs: ["Validated and cleaned state before advancing"],
   },
   {
     id: "STAGE-001",
@@ -491,20 +493,6 @@ export const GlobalRules: Concept[] = [
       "Only one ActorTile can be marked Solo within a given context",
     ],
     outputs: ["Valid state with at most one Solo ActorTile per context"],
-  },
-  {
-    id: "DERIVED-VALUE-001",
-    term: "DerivedValueRule",
-    layer: "global",
-    definition: "Specifies derived value recalculation requirements.",
-    intent: "Ensure derived values are recalculated on render.",
-    inputs: ["Component props", "Component state"],
-    constraints: [
-      "Derived values must not be stored in state",
-      "Derived values must be recalculated each render",
-      "Derived values must always be deterministic given the same inputs",
-    ],
-    outputs: ["Components with reliable, up-to-date derived values"],
   },
   // --- Additional rules ---
   {
@@ -531,35 +519,12 @@ export const GlobalRules: Concept[] = [
       },
     ],
   },
-  {
-    id: "NAV-LOGIC-001",
-    term: "NavigationLogicRule",
-    layer: "global",
-    definition:
-      "Distinguishes navigation flow and gating logic from business logic.",
-    intent:
-      "Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
-    constraints: [
-      "User must only see actions and inputs valid for the current phase.",
-      "Navigation determines when and where business logic may be triggered.",
-    ],
-    children: [
-      {
-        id: "NAV-PHASE-001",
-        term: "PhaseAdvance",
-        layer: "global",
-        definition:
-          "Distinguishes phase advance logic from other navigation logic.",
-        intent: "Phase advance requires validation and cleanup",
-      },
-    ],
-  },
 ];
 
 /* ================================
-   EXPORT AGGREGATE SPEC BASE
+   EXPORT AGGREGATE SPEC
    ================================ */
-export const SpecBase = {
+export const Spec = {
   WorkingAgreement,
   Policies,
   Dictionary,
