@@ -1,3 +1,17 @@
+// ==========================================================
+// NOTE: The following sections were deliberately removed:
+//   1. BuildTopology
+//   2. Lifecycle
+//   3. BucketPolicy
+// These sections are now explicitly deprecated and should NOT be referenced.
+// Their prior functional roles (promotion logic, stable/src boundaries, bucket file organization)
+// have been replaced by the new explicit delegation model, where:
+//   - App.tsx is canonical for runtime structure
+//   - style.scss is canonical for styling
+//   - All promotion, organization, and lifecycle concerns are delegated to stable, well-defined artifacts
+//   - The spec only delegates, it does not enforce or describe bucket/stable/src boundaries itself
+// If you need the prior logic, refer to the new delegation policies in WorkingAgreement and Conventions.
+// ==========================================================
 // spec.ts — AIDA/QRET project specification
 // This file is the Single Source of Truth (SSoT).
 // managed by AIDA
@@ -41,6 +55,13 @@ export const WorkingAgreement: Concept[] = [
       "This hierarchy must always be respected unless God rules override",
       "Temporary or shorthand chat rules are automatically discarded on thread reset",
     ],
+  },
+  {
+    id: "PROC-DELEGATION-001",
+    term: "DelegatedAuthority",
+    layer: "universal",
+    definition:
+      "The Spec file is the Single Source of Truth (SSoT), but may delegate canonical authority for specific concerns to stable, well-defined artifacts (e.g., style.scss for styling, App.tsx for runtime structure). Such delegation is explicit in the spec and binding for those domains.",
   },
   // Consolidated fail loud/escalation rule
   {
@@ -150,6 +171,18 @@ export const WorkingAgreement: Concept[] = [
       "Quick Sweepo: Perform a Sweepo immediately after repo refresh to confirm open window state matches repo state.",
     ],
   },
+  {
+    id: "PROC-DEPRECATION-001",
+    term: "DeprecatedBoundary",
+    layer: "universal",
+    definition:
+      "Any section of the spec explicitly marked as deprecated is treated as non-canonical and read-only. It must never override current WorkingAgreement, Conventions, or delegated artifacts.",
+    constraints: [
+      "Deprecated sections may only be referenced for historical context.",
+      "If a conflict arises between deprecated content and active rules, the deprecated content is ignored.",
+      "Any attempt to use deprecated definitions must surface a ⚠️ warning.",
+    ],
+  },
 ];
 // APP-level rules defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 /* ================================
@@ -196,6 +229,9 @@ export const Policies = {
       // Inline style props (e.g., style={{}} in React) must not override class-based SCSS styling.
       noInlineStyleOverrides: true,
     },
+    constraints: [
+      "The file style.scss is the canonical authority for all styling; no other file may override its definitions except by explicit spec rule.",
+    ],
   },
 };
 
@@ -295,7 +331,7 @@ export const Dictionary: Record<string, Concept> = {
     id: "DICT-SPEC-001",
     term: "Spec",
     layer: "universal",
-    definition: "The authoritative specification file (spec_base.ts).",
+    definition: "The authoritative specification file (spec.ts).",
   },
 };
 
@@ -312,6 +348,13 @@ export const Defaults = {
    UNIVERSAL CODING CONVENTIONS
    ================================ */
 export const Conventions: Concept[] = [
+  {
+    id: "STD-CONTAINER-001",
+    term: "AppContainerAuthority",
+    layer: "universal",
+    definition:
+      "The file App.tsx is the canonical container for runtime wiring and application-level structure; all app-level wiring must be reflected in App.tsx unless explicitly delegated in the spec.",
+  },
   {
     id: "STD-NAMING-001",
     term: "NamingConventions",
@@ -410,6 +453,10 @@ export const DomainRules: Concept[] = [
     outputs: ["Components with reliable, up-to-date derived values"],
   },
 ];
+
+/////////////////////////////////////////////////////////////////
+//   Deprecated soon, make no new references to anything past here.
+/////////////////////////////////////////////////////////////////
 
 export const AppScreens: Concept[] = [
   {
