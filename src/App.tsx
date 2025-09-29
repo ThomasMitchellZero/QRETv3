@@ -2,12 +2,12 @@
 // managed by AIDA
 
 import React from "react";
-import FloorplanComponent from "./components/FloorplanComponent";
+import Start from "./Start";
 
 export default function App(): JSX.Element {
   return (
     <div style={{ height: "100vh", width: "100vw" }}>
-      <FloorplanComponent />
+      <Start />
     </div>
   );
 }

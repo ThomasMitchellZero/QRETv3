@@ -144,17 +144,21 @@ async function main(): Promise<void> {
     }
   }
 
-  // Generate screens (Home and FloorplanComponent)
+  // Generate screens (Start and Floorplan)
   for (const screen of AppScreens) {
-    if (screen.term === "Home") {
-      // Home screen: output to src/Home.tsx
+    if (screen.term === "Start") {
+      // Start screen: output to src/Start.tsx
       const code = renderPage(screen);
-      const file = path.join(outDir, `Home.tsx`);
+      const file = path.join(outDir, `Start.tsx`);
       await fs.writeFile(file, code, "utf8");
-      outputs.push(`src/Home.tsx`);
-    } else if (screen.term === "FloorplanComponent") {
-      // Generate FloorplanComponent and its children recursively
-      await generateComponentFiles(screen, 0);
+      outputs.push(`src/Start.tsx`);
+    } else if (screen.term === "Floorplan") {
+      // Generate FloorplanComponent and its children recursively, root file is FloorplanComponent.tsx
+      await generateComponentFiles(
+        // Overwrite outputs to use FloorplanComponent.tsx as the root file
+        { ...screen, outputs: ["FloorplanComponent.tsx"] },
+        0
+      );
     }
   }
 
