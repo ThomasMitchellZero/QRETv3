@@ -1,4 +1,4 @@
-// spec_base.ts — AIDA/QRET shared spec foundation
+// spec.ts — AIDA/QRET project specification
 // This file is the Single Source of Truth (SSoT).
 // managed by AIDA
 
@@ -24,8 +24,8 @@ export type Concept = {
 // UNIVERSAL rules defer to TEMP rules where explicitly defined.
 // Otherwise, UNIVERSAL supersedes GLOBAL and APP.
 /* ================================
-      WORKING AGREEMENT (UNIVERSAL)
-      ================================ */
+   WORKING AGREEMENT (UNIVERSAL)
+   ================================ */
 // --- WORKING AGREEMENT (UNIVERSAL) ---
 export const WorkingAgreement: Concept[] = [
   {
@@ -151,11 +151,10 @@ export const WorkingAgreement: Concept[] = [
     ],
   },
 ];
-// APP-level rules defer to GLOBAL, UNIVERSAL, and TEMP rules.
-// Explicit APP overrides must be declared with defersTo.
+// APP-level rules defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 /* ================================
-      APP-LEVEL INSTANCES
-      ================================ */
+   APP-LEVEL INSTANCES
+   ================================ */
 export const AppInstances: Concept[] = [
   {
     id: "APP-QRET-001",
@@ -166,11 +165,10 @@ export const AppInstances: Concept[] = [
   },
 ];
 
-// UNIVERSAL policies defer to TEMP rules where explicitly defined.
-// Otherwise, UNIVERSAL supersedes GLOBAL and APP.
+// UNIVERSAL policies: apply globally unless explicitly overridden.
 /* ================================
-      UNIVERSAL POLICIES / STANDARDS
-      ================================ */
+   UNIVERSAL POLICIES / STANDARDS
+   ================================ */
 export const Policies = {
   done: {
     buildPass: true,
@@ -192,7 +190,7 @@ export const Policies = {
       scope: "global" as const,
       units: "rem" as const,
       organization: "components-first" as const,
-      sourceFile: "stable/style/style_base.scss",
+      sourceFile: "style_base.scss",
       // All debug colors in SCSS are treated as final unless spec explicitly overrides.
       debugColorsTreatedAsFinal: true,
       // Inline style props (e.g., style={{}} in React) must not override class-based SCSS styling.
@@ -309,11 +307,10 @@ export const Defaults = {
   responsive: "mobileFirst",
 };
 
-// UNIVERSAL conventions defer to TEMP rules where explicitly defined.
-// Otherwise, UNIVERSAL supersedes GLOBAL and APP.
+// UNIVERSAL coding conventions: apply globally unless explicitly overridden.
 /* ================================
-      UNIVERSAL CODING CONVENTIONS
-      ================================ */
+   UNIVERSAL CODING CONVENTIONS
+   ================================ */
 export const Conventions: Concept[] = [
   {
     id: "STD-NAMING-001",
@@ -331,19 +328,11 @@ export const Conventions: Concept[] = [
   },
 ];
 
-// APP components and screens defer to GLOBAL, UNIVERSAL, and TEMP rules.
+// APP components and screens defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 
 ////////////////////////////////////////////////////////////////////
 
-/*
-
-
-EVERYTHING BELOW THIS POINT IS REFERENCE-ONLY
-DO NOT TREAT AS PART OF SPEC.
-THESE THINGS STAY HERE UNTIL COMPONENTIZED.
-
-
-*/
+// Reference: Domain rules and screen/component structure.
 
 // Domain rules from generate.ts
 export const DomainRules: Concept[] = [
@@ -533,8 +522,8 @@ export const AppScreens: Concept[] = [
 ];
 
 /* ================================
-      EXPORT AGGREGATE SPEC BASE
-      ================================ */
+   EXPORT AGGREGATE SPEC BASE
+   ================================ */
 export const SpecBase = {
   WorkingAgreement,
   Policies,
