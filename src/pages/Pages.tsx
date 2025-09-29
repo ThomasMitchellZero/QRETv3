@@ -1,5 +1,5 @@
 import React from "react";
-import { Floorplan } from "../components/components";
+import { Floorplan } from "../components/Components";
 
 export function Start(): JSX.Element {
   return (

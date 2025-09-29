@@ -21,7 +21,13 @@
 /* ================================
    TYPES
    ================================ */
-export type Scope = "universal" | "global" | "screen" | "component" | "app";
+export type Scope =
+  | "god"
+  | "universal"
+  | "global"
+  | "screen"
+  | "app"
+  | "component";
 
 export type Concept = {
   id: string;
@@ -63,7 +69,20 @@ export const WorkingAgreement: Concept[] = [
     term: "DelegatedAuthority",
     layer: "universal",
     definition:
-      "The Spec file is the Single Source of Truth (SSoT), but may delegate canonical authority for specific concerns to stable, well-defined artifacts (e.g., style.scss for styling, App.tsx for runtime structure). Such delegation is explicit in the spec and binding for those domains.",
+      "The Spec file remains the Single Source of Truth (SSoT), but may explicitly delegate ('crown pointing') canonical authority for a specific domain or concern to another stable, well-defined artifact (e.g., style.scss for styling, App.tsx for runtime structure). Such delegation is binding only because the Spec itself says so; the delegated artifact's authority is canonical for that domain solely by explicit reference in the Spec. The Spec thus 'points the crown' to another artifact for a domain, but retains ultimate SSoT status and may revoke or reassign delegated authority at any time.",
+  },
+  {
+    id: "PROC-CREATION-CONTEXT-001",
+    term: "SpecAsCreationContext",
+    layer: "universal",
+    definition:
+      "The Spec serves as canonical context for the creation of new components, logic, and artifacts. Its primary role is to capture intent, rules, and constraints, then delegate canonical authority to the stable artifacts that embody them (e.g., App.tsx, style.scss, or React components).",
+    constraints: [
+      "Spec rules are not duplicated into implementation; they provide context for generating or extending artifacts.",
+      "Once a concern is delegated to an artifact, that artifact is the canonical authority.",
+      "Spec must always remain aligned with delegated artifacts by explicitly recording the delegation and intent.",
+      "Spec’s authority in this mode is contextual: its role is to ensure new creations respect defined rules, intent, and delegation boundaries.",
+    ],
   },
   // Consolidated fail loud/escalation rule
   {
@@ -185,6 +204,18 @@ export const WorkingAgreement: Concept[] = [
       "Any attempt to use deprecated definitions must surface a ⚠️ warning.",
     ],
   },
+  {
+    id: "PROC-RULE-CREATE-001",
+    term: "RuleCreationConstraint",
+    layer: "universal",
+    definition:
+      "New rules should only be created if necessary; prefer expanding or refactoring existing rules to cover new cases where possible.",
+    constraints: [
+      "Before introducing a new rule, check if the requirement can be addressed by extending or refining an existing rule.",
+      "Redundant or overlapping rules must be avoided.",
+      "If a new rule is required, document why no existing rule could be adapted.",
+    ],
+  },
 ];
 // APP-level rules defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 /* ================================
@@ -192,7 +223,7 @@ export const WorkingAgreement: Concept[] = [
    ================================ */
 export const AppInstances: Concept[] = [
   {
-    id: "APP-QRET-001",
+    id: "QRET-001",
     term: "QRET-DeepSweepo",
     layer: "app",
     definition: "App-level binding of DeepSweepo to the QRET repo.",
@@ -379,10 +410,9 @@ export const Conventions: Concept[] = [
 
 // Reference: Domain rules and screen/component structure.
 
-// Domain rules from generate.ts
-export const DomainRules: Concept[] = [
+export const GlobalRules: Concept[] = [
   {
-    id: "DOM-REFUND-001",
+    id: "REFUND-001",
     term: "RefundRule",
     layer: "global",
     definition: "Rule definition",
@@ -393,18 +423,33 @@ export const DomainRules: Concept[] = [
       "Refund total = intersection of receiptedItems and returnedItems",
     ],
   },
+  // Canonical Navigation Cycle rule
   {
-    id: "DOM-NAVIGATION-001",
-    term: "NavigationRule",
+    id: "NAV-CYCLE-001",
+    term: "NavigationCycle",
     layer: "global",
-    definition: "Rule definition",
-    goal: "Allow free navigation between phases unless explicitly restricted",
-    inputs: ["Navigation state", "Phase definitions"],
-    constraints: ["Phases are navigable unless a rule explicitly blocks it"],
-    outputs: ["Users can move freely between phases"],
+    definition:
+      "Navigation between workflow phases is governed by the Navigation Cycle, which canonizes phase routing, step rendering, entry points, and state handling.",
+    goal: "Provide a consistent, predictable navigation experience and clear separation between phase and transaction state.",
+    constraints: [
+      "Each phase has a unique, routable URL.",
+      "Steps within a phase are not routable; they are conditionally rendered within the phase screen.",
+      "Entering a phase always displays its canonical entry screen, regardless of prior step.",
+      "Navigation between phases may be triggered at any time by the user or system.",
+      "All state specific to a phase is discarded when leaving that phase; only transaction state persists across phases.",
+      "When the system triggers navigation, the destination may be conditionally altered (e.g., based on validation or business rules).",
+    ],
+    outputs: [
+      "Phases are addressable via unique URLs.",
+      "Step-level navigation is not supported at the routing level.",
+      "Phase entry is always canonical.",
+      "Navigation triggers can originate from user or system.",
+      "Phase-specific state is ephemeral; transaction state persists.",
+      "System navigation may redirect based on conditions.",
+    ],
   },
   {
-    id: "DOM-PHASE-001",
+    id: "PHASE-001",
     term: "PhaseRule",
     layer: "global",
     definition: "Rule definition",
@@ -417,7 +462,7 @@ export const DomainRules: Concept[] = [
     outputs: ["Validated and cleaned state before advancing"],
   },
   {
-    id: "DOM-STAGE-001",
+    id: "STAGE-001",
     term: "StageRule",
     layer: "global",
     definition: "Rule definition",
@@ -429,7 +474,7 @@ export const DomainRules: Concept[] = [
     outputs: ["Stages remain open unless explicitly closed"],
   },
   {
-    id: "DOM-ACTOR-TILE-001",
+    id: "ACTOR-TILE-001",
     term: "ActorTileSoloRule",
     layer: "global",
     definition: "Rule definition",
@@ -441,7 +486,7 @@ export const DomainRules: Concept[] = [
     outputs: ["Valid state with at most one Solo ActorTile per context"],
   },
   {
-    id: "DOM-DERIVED-VALUE-001",
+    id: "DERIVED-VALUE-001",
     term: "DerivedValueRule",
     layer: "global",
     definition: "Rule definition",
@@ -454,117 +499,45 @@ export const DomainRules: Concept[] = [
     ],
     outputs: ["Components with reliable, up-to-date derived values"],
   },
-];
-
-/////////////////////////////////////////////////////////////////
-//   Deprecated soon, make no new references to anything past here.
-/////////////////////////////////////////////////////////////////
-
-export const AppScreens: Concept[] = [
+  // --- Additional rules ---
   {
-    id: "SCREEN-START-001",
-    term: "Start",
-    layer: "screen",
-    definition:
-      "The first phase page where users set options before beginning the return process.",
-  },
-  {
-    id: "SCREEN-FLOORPLAN-001",
-    term: "Floorplan",
-    layer: "screen",
-    definition:
-      "The global page layout: ecosystem top bar, optional side columns, main column rows.",
-    outputs: ["FloorplanComponent.tsx"],
-    styleClass: "floorplan",
+    id: "BUSINESS-LOGIC-001",
+    term: "BusinessLogicRule",
+    layer: "global",
+    definition: "Defines the rules for transactional correctness in QRET.",
+    goal: "Ensure all transactional outcomes (refunds, receipted items, returned items) are accurate and deterministic.",
+    constraints: [
+      "Given the same inputs, business logic must always produce the same outputs.",
+      "Business logic must not depend on navigation state.",
+    ],
     children: [
       {
-        id: "COMP-TOPBAR-001",
-        term: "TopBar",
-        layer: "component",
-        definition: "Ecosystem top bar row.",
-        outputs: ["TopBar.tsx"],
-        styleClass: "top-bar",
+        id: "BUSINESS-REFUND-001",
+        term: "RefundComputation",
+        layer: "global",
+        definition:
+          "Refunds are computed as the intersection of receiptedItems and returnedItems.",
       },
+    ],
+  },
+  {
+    id: "NAV-LOGIC-001",
+    term: "NavigationLogicRule",
+    layer: "global",
+    definition:
+      "Defines the rules for experience flow and user action gating in QRET.",
+    goal: "Minimize collisions between user inputs by controlling visibility and allowed actions at each step.",
+    constraints: [
+      "User must only see actions and inputs valid for the current phase.",
+      "Navigation determines when and where business logic may be triggered.",
+    ],
+    children: [
       {
-        id: "COMP-LEFTCOL-001",
-        term: "LeftColumn",
-        layer: "component",
-        definition: "Optional left-side column, 25% width.",
-        outputs: ["LeftColumn.tsx"],
-        styleClass: "left-column",
-        children: [
-          {
-            id: "COMP-LEFTCOL-TITLE-001",
-            term: "LeftColumnTitle",
-            layer: "component",
-            definition:
-              "Title row within the LeftColumn for labeling or contextual heading.",
-            outputs: ["LeftColumnTitle.tsx"],
-            styleClass: "left-column-title",
-          },
-        ],
-      },
-      {
-        id: "COMP-RIGHTCOL-001",
-        term: "RightColumn",
-        layer: "component",
-        definition: "Optional right-side column, 25% width.",
-        outputs: ["RightColumn.tsx"],
-        styleClass: "right-column",
-        children: [
-          {
-            id: "COMP-RIGHTCOL-TITLE-001",
-            term: "RightColumnTitle",
-            layer: "component",
-            definition:
-              "Title row within the RightColumn for labeling or contextual heading.",
-            outputs: ["RightColumnTitle.tsx"],
-            styleClass: "right-column-title",
-          },
-        ],
-      },
-      {
-        id: "COMP-MAINCOL-001",
-        term: "MainColumn",
-        layer: "component",
-        definition: "Main column that expands to fill remaining width.",
-        outputs: ["MainColumn.tsx"],
-        styleClass: "main-column",
-        children: [
-          {
-            id: "COMP-PAGETITLE-001",
-            term: "PageTitleRow",
-            layer: "component",
-            definition: "Row containing the page title and exit button.",
-            outputs: ["PageTitleRow.tsx"],
-            styleClass: "page-title-row",
-          },
-          {
-            id: "COMP-NAVBAR-001",
-            term: "NavigationBarRow",
-            layer: "component",
-            definition: "Row containing navigation nodes.",
-            outputs: ["NavigationBarRow.tsx"],
-            styleClass: "nav-bar-row",
-          },
-          {
-            id: "COMP-MAINCONTENT-001",
-            term: "MainContentRow",
-            layer: "component",
-            definition: "Configurable main content row.",
-            outputs: ["MainContentRow.tsx"],
-            styleClass: "main-content-row",
-          },
-          {
-            id: "COMP-FOOTER-001",
-            term: "FooterRow",
-            layer: "component",
-            definition:
-              "Footer row with refund display (left) and continuation button (right).",
-            outputs: ["FooterRow.tsx"],
-            styleClass: "footer-row",
-          },
-        ],
+        id: "NAV-PHASE-001",
+        term: "PhaseAdvance",
+        layer: "global",
+        definition:
+          "A phase may only advance once its validation and cleanup requirements are met.",
       },
     ],
   },
@@ -578,6 +551,6 @@ export const SpecBase = {
   Policies,
   Dictionary,
   Conventions,
-  AppScreens,
   AppInstances,
+  GlobalRules,
 };

@@ -1,3 +1,40 @@
+/* ================================
+   CSS RESET / BASELINE
+   Ensures consistent rendering across browsers
+   ================================ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
 /* stable/styles/floorplan.scss */
 /* Floorplan SCSS — global layout with labeled debug colors */
 
