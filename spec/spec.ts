@@ -24,8 +24,8 @@ export type Concept = {
 // UNIVERSAL rules defer to TEMP rules where explicitly defined.
 // Otherwise, UNIVERSAL supersedes GLOBAL and APP.
 /* ================================
-   WORKING AGREEMENT (UNIVERSAL)
-   ================================ */
+      WORKING AGREEMENT (UNIVERSAL)
+      ================================ */
 // --- WORKING AGREEMENT (UNIVERSAL) ---
 export const WorkingAgreement: Concept[] = [
   {
@@ -154,8 +154,8 @@ export const WorkingAgreement: Concept[] = [
 // APP-level rules defer to GLOBAL, UNIVERSAL, and TEMP rules.
 // Explicit APP overrides must be declared with defersTo.
 /* ================================
-   APP-LEVEL INSTANCES
-   ================================ */
+      APP-LEVEL INSTANCES
+      ================================ */
 export const AppInstances: Concept[] = [
   {
     id: "APP-QRET-001",
@@ -169,8 +169,8 @@ export const AppInstances: Concept[] = [
 // UNIVERSAL policies defer to TEMP rules where explicitly defined.
 // Otherwise, UNIVERSAL supersedes GLOBAL and APP.
 /* ================================
-   UNIVERSAL POLICIES / STANDARDS
-   ================================ */
+      UNIVERSAL POLICIES / STANDARDS
+      ================================ */
 export const Policies = {
   done: {
     buildPass: true,
@@ -309,6 +309,42 @@ export const Defaults = {
   responsive: "mobileFirst",
 };
 
+// UNIVERSAL conventions defer to TEMP rules where explicitly defined.
+// Otherwise, UNIVERSAL supersedes GLOBAL and APP.
+/* ================================
+      UNIVERSAL CODING CONVENTIONS
+      ================================ */
+export const Conventions: Concept[] = [
+  {
+    id: "STD-NAMING-001",
+    term: "NamingConventions",
+    layer: "universal",
+    definition:
+      "PascalCase components/files, camelCase vars/functions, UPPER_SNAKE_CASE constants.",
+  },
+  {
+    id: "STD-WIRING-001",
+    term: "ComponentWiring",
+    layer: "universal",
+    definition:
+      "Screens compose layouts and components; props are typed; default exports per component.",
+  },
+];
+
+// APP components and screens defer to GLOBAL, UNIVERSAL, and TEMP rules.
+
+////////////////////////////////////////////////////////////////////
+
+/*
+
+
+EVERYTHING BELOW THIS POINT IS REFERENCE-ONLY
+DO NOT TREAT AS PART OF SPEC.
+THESE THINGS STAY HERE UNTIL COMPONENTIZED.
+
+
+*/
+
 // Domain rules from generate.ts
 export const DomainRules: Concept[] = [
   {
@@ -385,107 +421,6 @@ export const DomainRules: Concept[] = [
     outputs: ["Components with reliable, up-to-date derived values"],
   },
 ];
-
-// UNIVERSAL conventions defer to TEMP rules where explicitly defined.
-// Otherwise, UNIVERSAL supersedes GLOBAL and APP.
-/* ================================
-   UNIVERSAL CODING CONVENTIONS
-   ================================ */
-export const Conventions: Concept[] = [
-  {
-    id: "STD-FOLDERS-001",
-    term: "FolderStructure",
-    layer: "universal",
-    definition: "Standard folders for React + TS + SCSS.",
-    outputs: [
-      "src/components",
-      "src/screens",
-      "src/layout",
-      "src/hooks",
-      "src/types",
-      "spec/",
-      "stable/",
-    ],
-  },
-  {
-    id: "STD-NAMING-001",
-    term: "NamingConventions",
-    layer: "universal",
-    definition:
-      "PascalCase components/files, camelCase vars/functions, UPPER_SNAKE_CASE constants.",
-  },
-  {
-    id: "STD-WIRING-001",
-    term: "ComponentWiring",
-    layer: "universal",
-    definition:
-      "Screens compose layouts and components; props are typed; default exports per component.",
-  },
-  {
-    id: "STD-REFLOW-001",
-    term: "RefactorSafety",
-    layer: "universal",
-    definition:
-      "Use tsconfig path aliases; avoid deep relative imports; compute derived values in hooks.",
-  },
-];
-
-// UNIVERSAL policy; supersedes GLOBAL and APP unless explicitly deferred.
-/* ================================
-   STABLE VS GENERATED POLICY
-   ================================ */
-export const BuildTopology = {
-  stableDir: "stable",
-  generatedDir: "src", // never hand-edit; overwritten by generator
-  rule: "Stable components live outside /src; generator only writes to /src",
-};
-
-// UNIVERSAL lifecycle rules defer only to TEMP rules where defined.
-/* ================================
-   LIFECYCLE POLICY
-   ================================ */
-export const Lifecycle = {
-  rule: "singleSourceId" as const, // An ID is defined in exactly one place at a time
-  stages: [
-    "specOnly", // defined only in spec as intent + constraints
-    "stablePromoted", // implemented as React in /stable, spec references file only
-    "deprecated", // optionally retired, with archival notes
-  ],
-  metadata: {
-    storage: "adjacentMetaFile", // preserve original spec block in a .meta.json alongside promoted component
-    requirement: true, // metadata must always travel with promoted components
-  },
-};
-
-// UNIVERSAL bucket policy; supersedes GLOBAL and APP unless explicitly deferred.
-/* ================================
-   BUCKET POLICY
-   ================================ */
-export const BucketPolicy = {
-  rule: "bucketFilesOverGodFile" as const,
-  definition:
-    "Components, layouts, hooks, and types are organized into a small set of bucket files rather than one god file or many micro-files.",
-  buckets: [
-    "stable/components/index.tsx", // all leaf components together
-    "stable/layouts/index.tsx", // layouts such as Floorplan, NavBar
-    "stable/hooks/index.ts", // custom hooks together
-    "stable/types/index.ts", // shared types/interfaces
-  ],
-  constraints: [
-    "Most changes should only require one bucket open",
-    "In rare cross-bucket breaks, at most two buckets need to be open simultaneously",
-    "Spec continues to declare global intent; buckets implement it",
-  ],
-  precedence: 100,
-  scope: "universal" as Scope,
-};
-
-// APP components and screens defer to GLOBAL, UNIVERSAL, and TEMP rules.
-/* ================================
-   APP COMPONENTS AND SCREENS
-   ================================ */
-
-// AppComponents removed; Floorplan structure is now under AppScreens only.
 
 export const AppScreens: Concept[] = [
   {
@@ -598,16 +533,13 @@ export const AppScreens: Concept[] = [
 ];
 
 /* ================================
-   EXPORT AGGREGATE SPEC BASE
-   ================================ */
+      EXPORT AGGREGATE SPEC BASE
+      ================================ */
 export const SpecBase = {
   WorkingAgreement,
   Policies,
   Dictionary,
   Conventions,
-  BuildTopology,
-  Lifecycle,
-  BucketPolicy,
   AppScreens,
   AppInstances,
 };
