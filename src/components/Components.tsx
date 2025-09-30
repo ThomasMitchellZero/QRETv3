@@ -9,7 +9,7 @@
 // Outputs: Rendered UI React elements.
 // ================================
 
-import type { NavNode } from "../types/Types";
+import type { PhaseNode, PhaseState } from "../types/Types";
 import React from "react";
 
 //********************************************************************
@@ -49,31 +49,25 @@ export function Floorplan(props: FloorplanProps): JSX.Element {
 }
 
 //********************************************************************
-//  NAV NODE TILE
+//  PHASE NODE TILE
 //********************************************************************
-// Component: NavNodeTile
-// Definition: Simple card/tile UI for displaying a NavNode's metadata.
-// Intent: Render a styled summary of a navigation node (phase/step) for navigation UI or debugging.
-// Constraints:
-//   - Only displays id, url, and status fields.
-//   - Styling is delegated to style.scss via className "nav-node-tile".
-//   - Does not handle navigation logic or business logic.
-// Inputs: { node: NavNode }
-// Outputs: JSX element visually representing the node's id, url, and status.
-export type NavNodeTileProps = {
-  node: NavNode;
+// Component: PhaseNodeTile
+// Definition: Simple card/tile UI for displaying a PhaseNode's metadata.
+// ...
+export type PhaseNodeTileProps = {
+  node: PhaseNode;
 };
 
-export function NavNodeTile({ node }: NavNodeTileProps): JSX.Element {
+export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
   return (
-    <div className="nav-node-tile">
-      <div className="nav-node-id">
+    <div className="phase-node-tile">
+      <div className="phase-node-id">
         <strong>ID:</strong> {node.id}
       </div>
-      <div className="nav-node-url">
+      <div className="phase-node-url">
         <strong>URL:</strong> {node.url}
       </div>
-      <div className="nav-node-status">
+      <div className="phase-node-status">
         <strong>Status:</strong> {node.status}
       </div>
     </div>

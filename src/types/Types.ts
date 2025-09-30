@@ -10,9 +10,9 @@
 // ================================
 
 //********************************************************************
-//  NAV NODE
+//  PHASE NODE
 //********************************************************************
-// Type: NavNode
+// Type: PhaseNode
 // Definition: Canonical description of a navigable phase/step.
 // Intent: Encapsulate identifiers, URLs, and conditions for navigation.
 // Constraints:
@@ -20,11 +20,11 @@
 //   - Conditions, if present, must be externally resolvable booleans.
 // Inputs: Phase/transaction state, routing logic.
 // Outputs: Metadata consumed by navigation UI and logic.
-export type NavNode = {
-  id: string; // unique identifier of the nav node
-  url: string; // URL path associated with the phase
-  status: "mandatory" | "conditional"; // whether always required or conditionally included
-  conditions?: string[]; // optional list of conditions controlling navigation to this node
+export type PhaseNode = {
+  id: string;
+  url: string;
+  status: "mandatory" | "conditional";
+  conditions?: string[];
 };
 
 //********************************************************************

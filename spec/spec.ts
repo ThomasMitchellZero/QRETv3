@@ -78,7 +78,7 @@ export const WorkingAgreement: Concept[] = [
       "All delegation follows artifact buckets:",
       "  - App.tsx → canonical runtime container.",
       "  - style.scss → canonical styling authority.",
-      "  - Types.ts → canonical shared type definitions.",
+      "  - Types.ts → canonical shared type definitions (e.g., PhaseNode for navigation metadata).",
       "  - Logic.ts → canonical shared hooks and reusable logic.",
       "  - Components & Pages → canonical UI containers, with inline headers.",
       "Misalignment between spec delegation and artifact header triggers Fail Loud escalation.",
