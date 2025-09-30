@@ -64,11 +64,26 @@ export const WorkingAgreement: Concept[] = [
     ],
   },
   {
-    id: "PROC-DELEGATION-001",
-    term: "DelegatedAuthority",
+    id: "PROC-DELEGATION-UNIFIED-001",
+    term: "DelegatedAuthorityUnified",
     layer: "universal",
     definition:
-      "The Spec file remains the Single Source of Truth (SSoT), but may explicitly delegate ('crown pointing') canonical authority for a specific domain or concern to another stable, well-defined artifact (e.g., style.scss for styling, App.tsx for runtime structure). Such delegation is binding only because the Spec itself says so; the delegated artifact's authority is canonical for that domain solely by explicit reference in the Spec. The Spec thus 'points the crown' to another artifact for a domain, but retains ultimate SSoT status and may revoke or reassign delegated authority at any time.",
+      "The spec remains the Single Source of Truth (SSoT) but may explicitly delegate ('crown pointing') canonical authority for specific domains (styling, logic, types, components, pages) to stable, well-defined artifacts. Delegated authority is binding only because the spec declares it, and artifacts themselves provide binding details through their design headers.",
+    intent:
+      "To modularize authority in parallel with modularized artifacts, preventing duplication, ensuring clear responsibility boundaries, and keeping the spec lean as a context-and-delegation map rather than a redundant copy of details.",
+    constraints: [
+      "The spec declares the crown; content is always pulled directly from delegated artifacts.",
+      "Delegated artifacts must include authoritative inline design headers (definition, intent, constraints).",
+      "No duplication or shadow definitions in the spec for delegated domains.",
+      "All delegation follows artifact buckets:",
+      "  - App.tsx → canonical runtime container.",
+      "  - style.scss → canonical styling authority.",
+      "  - Types.ts → canonical shared type definitions.",
+      "  - Logic.ts → canonical shared hooks and reusable logic.",
+      "  - Components & Pages → canonical UI containers, with inline headers.",
+      "Misalignment between spec delegation and artifact header triggers Fail Loud escalation.",
+      "Spec’s role is to record intent and delegation, not reproduce content.",
+    ],
   },
   {
     id: "PROC-CREATION-CONTEXT-001",
@@ -156,7 +171,7 @@ export const WorkingAgreement: Concept[] = [
     constraints: [
       "DeepSweepo always pulls the latest state from the remote GitHub repo",
       "User must commit and push before DeepSweepo runs",
-      "If remote metadata cannot be retrieved, DeepSweepo must explicitly state limitation",
+      "When Remote is retrieved, time elapsed since commit must be stated in the response.  If remote metadata cannot be retrieved, DeepSweepo must explicitly state limitation",
       "DeepSweepo is slower and more authoritative than Sweepo",
       "DeepSweepo requires explicit repo URL and branch context",
     ],
@@ -269,13 +284,6 @@ export const Policies = {
 
 // --- DICTIONARY (UNIVERSAL TERMS) ---
 export const Dictionary: Record<string, Concept> = {
-  "PrototypeChain": {
-    id: "DICT-PROTOTYPE-001",
-    term: "PrototypeChain",
-    layer: "universal",
-    definition: "Resolution order over scope and precedence",
-    intent: "for deriving effective intent.",
-  },
   "DerivedValue": {
     id: "DICT-DERIVED-001",
     term: "DerivedValue",
@@ -328,12 +336,6 @@ export const Dictionary: Record<string, Concept> = {
     layer: "universal",
     definition: "Conflicts between rules or definitions in the spec.",
   },
-  "GeneratedCode": {
-    id: "DICT-GENERATED-CODE-001",
-    term: "GeneratedCode",
-    layer: "universal",
-    definition: "Code output produced deterministically from the spec.",
-  },
   "Phase": {
     id: "DICT-PHASE-001",
     term: "Phase",
@@ -359,12 +361,6 @@ export const Dictionary: Record<string, Concept> = {
     layer: "global",
     definition: "Items provided by the customer for return.",
   },
-  "Spec": {
-    id: "DICT-SPEC-001",
-    term: "Spec",
-    layer: "universal",
-    definition: "The authoritative specification file (spec.ts).",
-  },
 };
 
 export const Defaults = {
@@ -379,13 +375,6 @@ export const Defaults = {
    UNIVERSAL CODING CONVENTIONS
    ================================ */
 export const Conventions: Concept[] = [
-  {
-    id: "STD-CONTAINER-001",
-    term: "AppContainerAuthority",
-    layer: "universal",
-    definition:
-      "The file App.tsx is the canonical container for runtime wiring and application-level structure; all app-level wiring must be reflected in App.tsx unless explicitly delegated in the spec.",
-  },
   {
     id: "STD-NAMING-001",
     term: "NamingConventions",
@@ -435,7 +424,7 @@ export const GlobalRules: Concept[] = [
       "Steps within a phase are not routable; they are conditionally rendered within the phase screen.",
       "On navigation attempt from the Primary Screen, evaluation must run before allowing exit.",
       "If evaluation fails, exit is blocked and Phase State may be updated.",
-      "Pseudo-navigation within the Phase (e.g., Resolution, Review) is permitted and common.",
+      "Pseudo-navigation within the Phase (e.g., Resolution, cart modification, etc.) is permitted and common.",
       "True exit to another Phase occurs only if evaluation conditions are met.",
       "Phase-specific state is ephemeral and discarded on exit.",
       "Transaction-level state always persists across phases.",
@@ -444,6 +433,7 @@ export const GlobalRules: Concept[] = [
       "System-triggered navigation may conditionally alter the destination based on validation or business rules.",
       "All navigation actions may conditionally redirect their target based on business logic or validation.",
       "User must only see actions and inputs valid for the current phase.",
+      "Phases have stable internal content (screens, steps, logic) but their inclusion in the transaction flow may be mandatory or conditional. Mandatory phases (e.g., Receipts, Return Items) are always encountered in every transaction. Conditional phases (e.g., Manager Approval) may appear before or after any other phase, depending on transaction state or business rules.",
     ],
     outputs: [
       "Validation of Phase inputs",

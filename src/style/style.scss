@@ -1,4 +1,15 @@
 /* ================================
+   style.scss — Canonical Styles Bucket
+   Definition: Central SCSS file providing reset, baseline, and application-wide styling.
+   Intent: Ensure consistent design, debugging visibility, and final styling authority.
+   Constraints:
+     - This is the single authoritative styling source.
+     - No inline styles in components may override these definitions.
+   Inputs: Classnames referenced in React components.
+   Outputs: Global and component-specific visual styles.
+   ================================ */
+
+/* ================================
    CSS RESET / BASELINE
    Ensures consistent rendering across browsers
    ================================ */
