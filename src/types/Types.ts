@@ -18,13 +18,19 @@
 // Constraints:
 //   - `status` must be "mandatory" or "conditional".
 //   - Conditions, if present, must be externally resolvable booleans.
+//   - `selected` is true if this phase is the current phase.
+//   - `enabled` is true if the user/system can navigate into this phase.
+//   - `visible` is true if the phase is shown in the UI, even if disabled.
 // Inputs: Phase/transaction state, routing logic.
-// Outputs: Metadata consumed by navigation UI and logic.
+// Outputs: Metadata consumed by navigation UI and logic, including state flags.
 export type PhaseNode = {
   id: string;
   url: string;
   status: "mandatory" | "conditional";
   conditions?: string[];
+  selected?: boolean;
+  enabled?: boolean;
+  visible?: boolean;
 };
 
 //********************************************************************
@@ -42,6 +48,7 @@ export type TransactionState = {
   currentPhase: string; // id of current Phase/NavNode
   userInputs: Record<string, any>; // flexible map for user input values
   transactionId?: string; // optional identifier for persistence/debug
+  phases: PhaseNode[]; // ordered list of phases in this transaction
 };
 
 //********************************************************************

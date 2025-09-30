@@ -11,6 +11,8 @@
 
 import type { PhaseNode, PhaseState } from "../types/Types";
 import React from "react";
+import { useTransaction } from "../logic/Logic";
+import { Start } from "../pages/Pages";
 
 //********************************************************************
 //  FLOORPLAN
@@ -54,6 +56,16 @@ export function Floorplan(props: FloorplanProps): JSX.Element {
 // Component: PhaseNodeTile
 // Definition: Simple card/tile UI for displaying a PhaseNode's metadata.
 // ...
+
+//********************************************************************
+//  PHASE NODE TILE
+//********************************************************************
+// Component: PhaseNodeTile
+// Definition: Simple card/tile UI for displaying a PhaseNode's metadata.
+// Intent: Show phase metadata in a compact, reusable UI.
+// Constraints: Pure UI; no logic. Styling delegated to style.scss.
+// Inputs: PhaseNodeTileProps { node }
+// Outputs: JSX element for phase node.
 export type PhaseNodeTileProps = {
   node: PhaseNode;
 };
@@ -72,4 +84,52 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
       </div>
     </div>
   );
+}
+
+//********************************************************************
+//  CARD
+//********************************************************************
+// Component: Card
+// Definition: Generic container component for displaying content in a card-style UI.
+// Intent: Provide a reusable, stylized card wrapper for content blocks.
+// Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
+// Inputs: CardProps { children, onClick }
+// Outputs: JSX element wrapping children in a styled card.
+export type CardProps = {
+  children: React.ReactNode;
+  onClick?: () => void;
+};
+
+export function Card({ children, onClick }: CardProps): JSX.Element {
+  return (
+    <div className="card" onClick={onClick}>
+      {children}
+    </div>
+  );
+}
+
+// ================================
+// PagesRouter.tsx — Temporary Phase Router
+// Definition: Fake router component that renders pages based on TransactionState.currentPhase.
+// Intent: Provide simple conditional rendering as a placeholder for future real routing.
+// Constraints:
+//   - Reads TransactionState.currentPhase.
+//   - Must be wrapped in TransactionProvider.
+//   - No URL changes yet; state-only.
+// Inputs: TransactionState.currentPhase
+// Outputs: Page component (e.g., <Start />)
+// ================================
+
+export function PagesRouter(): JSX.Element {
+  const [transaction] = useTransaction();
+
+  switch (transaction.currentPhase) {
+    case "add-items":
+      return <Start />;
+    // Add more cases here as new pages are built
+    default:
+      return (
+        <div>⚠️ No page defined for phase: {transaction.currentPhase}</div>
+      );
+  }
 }

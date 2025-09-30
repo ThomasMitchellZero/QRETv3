@@ -1,5 +1,5 @@
 import React from "react";
-import { Floorplan } from "../components/Components";
+import { Floorplan, Card } from "../components/Components";
 
 export function Start(): JSX.Element {
   return (
@@ -9,7 +9,13 @@ export function Start(): JSX.Element {
       rightColumn={<div>Right Column</div>}
       pageTitle={<div>Page Title</div>}
       navBar={<div>Nav Bar</div>}
-      mainContent={<div>Main Content</div>}
+      mainContent={
+        <div>
+          <Card>Card 1</Card>
+          <Card>Card 2</Card>
+          <Card>Card 3</Card>
+        </div>
+      }
       footer={<div>Footer</div>}
     />
   );
