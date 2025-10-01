@@ -423,6 +423,20 @@ export const Conventions: Concept[] = [
     definition:
       "Screens compose layouts and components; props are typed; default exports per component.",
   },
+  {
+    id: "STD-STRINGS-001",
+    term: "TemplateLiteralPolicy",
+    layer: "universal",
+    definition:
+      "Any string involving variables must use template literals, not concatenation.",
+    intent:
+      "Ensure clarity, readability, and consistency across code by standardizing variable interpolation.",
+    constraints: [
+      "Always prefer `${var}` syntax inside backticks.",
+      "Concatenation with + is prohibited when variables are involved.",
+      "Static strings without variables may remain as plain quotes.",
+    ],
+  },
 ];
 
 // APP components and screens defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.

@@ -9,7 +9,11 @@
 // Outputs: Rendered UI React elements.
 // ================================
 
-import type { PhaseNode, PhaseState } from "../types/Types";
+import type { PhaseNode } from "../types/Types";
+import { StartPhase } from "../phases/050-Start";
+import { ReturnItemsPhase } from "../phases/200-ReturnItems";
+import { ReceiptsPhase } from "../phases/250-Receipts";
+
 import React from "react";
 import {
   useTransaction,
@@ -17,7 +21,44 @@ import {
   useNavigatePhase,
 } from "../logic/Logic";
 
-import { StartPhase, ReturnItemsPhase, ReceiptsPhase } from "../phases/Phases";
+// PhaseProps type and Phase component are globalized here for all phases.
+
+//********************************************************************
+//  PHASE (GLOBAL WRAPPER)
+//********************************************************************
+// Type: PhaseProps
+// Definition: Props for the global Phase wrapper component.
+// Intent: Standardize per-phase layout and context.
+// Inputs: phaseId (string), title (ReactNode), children (ReactNode)
+// Outputs: JSX structure with PhaseProvider and Floorplan.
+export type PhaseProps = {
+  phaseId: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+};
+
+// Component: Phase
+// Definition: Global wrapper for all phase screens, providing PhaseProvider and Floorplan.
+// Intent: Ensure every phase screen uses consistent structure and context.
+// Constraints: Must wrap children in PhaseProvider, render Floorplan with canonical slots.
+// Inputs: PhaseProps
+// Outputs: JSX layout for a phase screen.
+import { PhaseProvider } from "../logic/Logic";
+export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
+  return (
+    <PhaseProvider phaseId={phaseId}>
+      <Floorplan
+        topBar={<div>Top Bar</div>}
+        leftColumn={<div>Left Column</div>}
+        rightColumn={<div>Right Column</div>}
+        pageTitle={<div>{title}</div>}
+        navBar={<NavBar />}
+        mainContent={<>{children}</>}
+        footer={<div>Footer</div>}
+      />
+    </PhaseProvider>
+  );
+}
 
 //********************************************************************
 //  FLOORPLAN
