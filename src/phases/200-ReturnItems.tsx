@@ -57,6 +57,81 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   );
 }
 
+// ================================
+// RETURN ITEMS LIST
+// ================================
+// Component: ReturnItemsList
+// Definition: List of all return items currently in the transaction repo.
+// Intent: Map the "return-items" repo and display each item using ReturnItemsCard.
+// Constraints:
+//   - Must read from transaction.userInputs["return-items"].
+//   - Must coerce repo to a Map if needed.
+// Inputs: none
+// Outputs: List of ReturnItemsCard components.
+function ReturnItemsList() {
+  const [transaction] = useTransaction();
+  const repo = transaction.userInputs["return-items"];
+  const itemsMap: Map<string, any> =
+    repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
+
+  return (
+    <div className="return-items-list">
+      {Array.from(itemsMap.values()).map((item: any) => (
+        <ReturnItemsCard key={item.id} id={item.id} qty={item.qty} />
+      ))}
+    </div>
+  );
+}
+
+// ================================
+// ITEM ENTRY
+// ================================
+// Component: ItemEntry
+// Definition: Local form for adding a return item by id and qty.
+// Intent: Collect item details, then push to TransactionState when valid.
+// Constraints:
+//   - Local state only until Add button pressed.
+//   - Populates same type used by ReturnItemsCard and "return-items" repo.
+// Inputs: none
+// Outputs: Dispatches ADD action with { id, qty } payload.
+function ItemEntry() {
+  const [, dispatch] = useTransaction();
+  const [id, setId] = React.useState("");
+  const [qty, setQty] = React.useState<number>(1);
+
+  const handleAdd = () => {
+    if (!id || qty <= 0) return;
+    dispatch({
+      type: "REPO_ACTION",
+      repoAction: {
+        type: "ADD",
+        target: "return-items",
+        payload: { id, qty },
+      },
+    });
+    setId("");
+    setQty(1);
+  };
+
+  return (
+    <div className="item-entry">
+      <input
+        type="text"
+        placeholder="Item #"
+        value={id}
+        onChange={(e) => setId(e.target.value)}
+      />
+      <input
+        type="number"
+        min={1}
+        value={qty}
+        onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
+      />
+      <button onClick={handleAdd}>Add Item</button>
+    </div>
+  );
+}
+
 //********************************************************************
 //  RETURN ITEMS PHASE SCAFFOLD
 //********************************************************************
@@ -72,7 +147,12 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
 export function ReturnItemsPhase() {
   return (
     <Phase phaseId="return-items" title="Return Items">
-      <Floorplan pageTitle="Return Items" leftColumn={null} />
+      <Floorplan
+        pageTitle="Return Items"
+        leftColumn={null}
+        mainContent={<ReturnItemsList />}
+        rightColumn={<ItemEntry />}
+      />
     </Phase>
   );
 }

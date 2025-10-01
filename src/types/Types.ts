@@ -67,3 +67,10 @@ export type PhaseState = {
   screen: string; // id of the current screen in this phase
   localValues: Record<string, any>; // ephemeral inputs/flags
 };
+
+// src/types/Types.ts
+export type BaseItem = {
+  id: string;
+  valueCents?: number;
+  qty?: number;
+};

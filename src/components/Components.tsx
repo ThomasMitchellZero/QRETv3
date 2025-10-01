@@ -59,7 +59,6 @@ export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
 // Inputs: FloorplanProps (topBar, leftColumn, rightColumn, pageTitle, navBar, mainContent, footer).
 // Outputs: JSX layout with correct placement of sections.
 export type FloorplanProps = {
-  topBar?: React.ReactNode;
   leftColumn?: React.ReactNode;
   rightColumn?: React.ReactNode;
   pageTitle?: React.ReactNode;
@@ -69,7 +68,6 @@ export type FloorplanProps = {
 };
 
 export function Floorplan({
-  topBar,
   leftColumn,
   rightColumn,
   pageTitle,
@@ -79,18 +77,17 @@ export function Floorplan({
 }: FloorplanProps): JSX.Element {
   return (
     <div className="floorplan">
-      {topBar && <div className="top-bar">{topBar}</div>}
+      {<div className="top-bar"></div>}
       <div className="body-row">
         {leftColumn && <div className="left-column">{leftColumn}</div>}
         <div className="main-column">
           {pageTitle && <div className="page-title-row">{pageTitle}</div>}
           {navBar && <div className="nav-bar-row">{navBar}</div>}
-          {mainContent && <div className="main-content-row">{mainContent}</div>}
+          {<div className="main-content-row">{mainContent}</div>}
           {footer && <div className="footer-row">{footer}</div>}
         </div>
         {rightColumn && <div className="right-column">{rightColumn}</div>}
       </div>
-      {footer && <div className="footer-row">{footer}</div>}
     </div>
   );
 }
@@ -119,10 +116,7 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
   return (
     <div className="tile">
       <div className="phase-node-id">
-        <strong>ID:</strong> {node.id}
-      </div>
-      <div className="phase-node-status">
-        <strong>Status:</strong> {node.status}
+        <strong>{node.id}</strong>
       </div>
     </div>
   );

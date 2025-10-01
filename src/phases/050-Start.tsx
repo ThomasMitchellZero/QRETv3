@@ -17,7 +17,7 @@ import { Card, Floorplan } from "../components/Components";
 export function StartPhase() {
   return (
     <Phase phaseId="start" title="Start">
-      <Floorplan pageTitle="Start" topBar="Start" />
+      <Floorplan pageTitle="Start" />
     </Phase>
   );
 }
