@@ -1,5 +1,6 @@
 import React from "react";
 import { Phase } from "../components/Components";
+import { Card, Floorplan } from "../components/Components";
 
 //********************************************************************
 //  RECEIPTS PHASE SCAFFOLD
@@ -13,10 +14,10 @@ import { Phase } from "../components/Components";
 //   - No business logic or navigation; render only.
 // Inputs: children (React.ReactNode)
 // Outputs: JSX structure for the Receipts phase.
-export function ReceiptsPhase({ children }: { children: React.ReactNode }) {
+export function ReceiptsPhase() {
   return (
     <Phase phaseId="receipts" title="Receipts">
-      {children}
+      <Floorplan pageTitle="Receipts" />
     </Phase>
   );
 }

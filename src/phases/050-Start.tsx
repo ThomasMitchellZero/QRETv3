@@ -1,5 +1,6 @@
 import React from "react";
 import { Phase } from "../components/Components";
+import { Card, Floorplan } from "../components/Components";
 
 //********************************************************************
 //  START PHASE SCAFFOLD
@@ -13,10 +14,10 @@ import { Phase } from "../components/Components";
 //   - No business logic or navigation; render only.
 // Inputs: children (React.ReactNode)
 // Outputs: JSX structure for the Start phase.
-export function StartPhase({ children }: { children: React.ReactNode }) {
+export function StartPhase() {
   return (
     <Phase phaseId="start" title="Start">
-      {children}
+      <Floorplan pageTitle="Start" topBar="Start" />
     </Phase>
   );
 }

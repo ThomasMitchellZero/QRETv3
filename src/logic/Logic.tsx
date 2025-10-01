@@ -27,8 +27,8 @@ const initialTransactionState: TransactionState = {
   userInputs: {},
   phases: [
     { id: "start", url: "/start", status: "mandatory" },
+    { id: "return-items", url: "/return-items", status: "mandatory" },
     { id: "receipts", url: "/receipts", status: "mandatory" },
-    { id: "refund", url: "/refund", status: "mandatory" },
   ],
 };
 

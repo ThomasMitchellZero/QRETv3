@@ -45,19 +45,7 @@ export type PhaseProps = {
 // Outputs: JSX layout for a phase screen.
 import { PhaseProvider } from "../logic/Logic";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
-  return (
-    <PhaseProvider phaseId={phaseId}>
-      <Floorplan
-        topBar={<div>Top Bar</div>}
-        leftColumn={<div>Left Column</div>}
-        rightColumn={<div>Right Column</div>}
-        pageTitle={<div>{title}</div>}
-        navBar={<NavBar />}
-        mainContent={<>{children}</>}
-        footer={<div>Footer</div>}
-      />
-    </PhaseProvider>
-  );
+  return <PhaseProvider phaseId={phaseId}>{children}</PhaseProvider>;
 }
 
 //********************************************************************
@@ -75,23 +63,34 @@ export type FloorplanProps = {
   leftColumn?: React.ReactNode;
   rightColumn?: React.ReactNode;
   pageTitle?: React.ReactNode;
-  navBar?: React.ReactNode;
+  navBar?: React.ReactNode; // now required, but will default in destructure
   mainContent?: React.ReactNode;
   footer?: React.ReactNode;
 };
 
-export function Floorplan(props: FloorplanProps): JSX.Element {
+export function Floorplan({
+  topBar,
+  leftColumn,
+  rightColumn,
+  pageTitle,
+  navBar = <NavBar />,
+  mainContent,
+  footer = <Footer />,
+}: FloorplanProps): JSX.Element {
   return (
     <div className="floorplan">
-      <div className="top-bar">{props.topBar}</div>
-      <div className="left-column">{props.leftColumn}</div>
-      <div className="right-column">{props.rightColumn}</div>
-      <div className="main-column">
-        <div className="page-title-row">{props.pageTitle}</div>
-        <div className="nav-bar-row">{props.navBar}</div>
-        <div className="main-content-row">{props.mainContent}</div>
-        <div className="footer-row">{props.footer}</div>
+      {topBar && <div className="top-bar">{topBar}</div>}
+      <div className="body-row">
+        {leftColumn && <div className="left-column">{leftColumn}</div>}
+        <div className="main-column">
+          {pageTitle && <div className="page-title-row">{pageTitle}</div>}
+          {navBar && <div className="nav-bar-row">{navBar}</div>}
+          {mainContent && <div className="main-content-row">{mainContent}</div>}
+          {footer && <div className="footer-row">{footer}</div>}
+        </div>
+        {rightColumn && <div className="right-column">{rightColumn}</div>}
       </div>
+      {footer && <div className="footer-row">{footer}</div>}
     </div>
   );
 }
@@ -193,10 +192,12 @@ export function Card({ children, className }: CardProps): JSX.Element {
 export function NavBar(): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
+  const selectedId = transaction.currentPhase; // derive once, no hooks-in-loop
+
   return (
     <div className="nav-bar">
       {transaction.phases.map((node) => {
-        const isSelected = useIsSelected(node.id);
+        const isSelected = node.id === selectedId;
         return (
           <div
             key={node.id}
@@ -212,6 +213,52 @@ export function NavBar(): JSX.Element {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+//********************************************************************
+//  FOOTER
+//********************************************************************
+// Component: Footer
+// Definition: Footer bar with label and continue button to advance to the next phase.
+// Intent: Provide a canonical footer with left-aligned label and right-aligned continue navigation.
+// Constraints:
+//   - Uses useTransaction and useNavigatePhase to determine and perform navigation.
+//   - Styling follows .footer-row structure in style.scss.
+// Inputs: FooterProps { onContinue?: () => void, label?: string }
+// Outputs: JSX footer row with label and continue button.
+export type FooterProps = {
+  onContinue?: () => void;
+  label?: string;
+};
+
+export function Footer({ onContinue, label }: FooterProps): JSX.Element {
+  const [transaction] = useTransaction();
+  const navigate = useNavigatePhase();
+  const phases = transaction.phases;
+  const currentIndex = phases.findIndex(
+    (p) => p.id === transaction.currentPhase
+  );
+  const nextPhase =
+    currentIndex >= 0 && currentIndex < phases.length - 1
+      ? phases[currentIndex + 1]
+      : undefined;
+
+  const handleContinue = () => {
+    if (onContinue) {
+      onContinue();
+    } else if (nextPhase) {
+      navigate(nextPhase.id);
+    }
+  };
+
+  return (
+    <div className="footer">
+      <span>{label || "Refund Value"}</span>
+      <button onClick={handleContinue} disabled={!nextPhase}>
+        Continue
+      </button>
     </div>
   );
 }
@@ -237,23 +284,11 @@ export function PagesRouter(): JSX.Element {
 
   switch (transaction.currentPhase || "start") {
     case "start":
-      return (
-        <StartPhase>
-          <div>📦 Shart Rear</div>
-        </StartPhase>
-      );
+      return <StartPhase />;
     case "return-items":
-      return (
-        <ReturnItemsPhase>
-          <div>📦 Return Items content goes here</div>
-        </ReturnItemsPhase>
-      );
+      return <ReturnItemsPhase />;
     case "receipts":
-      return (
-        <ReceiptsPhase>
-          <div>🧾 Receipts content goes here</div>
-        </ReceiptsPhase>
-      );
+      return <ReceiptsPhase />;
     default:
       return (
         <div>⚠️ No page defined for phase: {transaction.currentPhase}</div>

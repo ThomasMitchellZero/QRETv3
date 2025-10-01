@@ -231,6 +231,21 @@ export const WorkingAgreement: Concept[] = [
       "If a new rule is required, document why no existing rule could be adapted.",
     ],
   },
+  // --- Selection Ignore Policy ---
+  {
+    id: "PROC-SELECTION-IGNORE-001",
+    term: "SelectionIgnorePolicy",
+    layer: "universal",
+    definition:
+      "Chat must disregard user text selections in the editor unless the user explicitly instructs otherwise.",
+    intent:
+      "Prevent accidental misinterpretation when multiple files/windows are open and the cursor position is unclear.",
+    constraints: [
+      "Selections are ignored by default.",
+      "Explicit instruction ('look at my selection') is required for selection to affect behavior.",
+      "Never infer user intent from selection alone.",
+    ],
+  },
 ];
 // APP-level rules defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 /* ================================

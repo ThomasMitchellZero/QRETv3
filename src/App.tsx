@@ -2,16 +2,13 @@
 // managed by AIDA
 import "./style/style.scss";
 
-import React from "react";
 import { PagesRouter } from "./components/Components";
-import { TransactionProvider, PhaseProvider } from "./logic/Logic";
+import { TransactionProvider } from "./logic/Logic";
 
 export default function App(): JSX.Element {
   return (
     <TransactionProvider>
-      <PhaseProvider>
-        <PagesRouter />
-      </PhaseProvider>
+      <PagesRouter />
     </TransactionProvider>
   );
 }
