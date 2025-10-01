@@ -169,7 +169,7 @@ export const WorkingAgreement: Concept[] = [
       "Comprehensive, full remote GitHub repo inspection that always fetches the latest remote state for authoritative analysis.",
     inputs: ["repoUrl", "branch"],
     constraints: [
-      "DeepSweepo always pulls the latest state from the remote GitHub repo",
+      "DeepSweepo always pulls the latest state from the public remote GitHub repo:  https://github.com/ThomasMitchellZero/QRETv3 ",
       "User must commit and push before DeepSweepo runs",
       "When Remote is retrieved, time elapsed since commit must be stated in the response.  If remote metadata cannot be retrieved, DeepSweepo must explicitly state limitation",
       "DeepSweepo is slower and more authoritative than Sweepo",
@@ -196,7 +196,7 @@ export const WorkingAgreement: Concept[] = [
     definition:
       "Every new working session begins with a standardized startup sequence to guarantee alignment, trust, and consistency across spec, repo, and interaction.",
     constraints: [
-      "Repo Refresh: Perform the standard repo pull/refresh sequence (equivalent to DeepSweepo: git fetch + git pull), ensuring local state matches remote.",
+      "Repo Refresh: Get a fresh copy of the public remote repo at:  https://github.com/ThomasMitchellZero/QRETv3",
       "If remote unreachable: issue ⚠️ loud warning and continue on local state.",
       "If local changes would be overwritten: fail loud until resolved.",
       "User must commit and push before startup sequence can be declared complete.",
@@ -206,6 +206,7 @@ export const WorkingAgreement: Concept[] = [
       "Quick Sweepo: Perform a Sweepo immediately after repo refresh to confirm open window state matches repo state.",
     ],
   },
+
   {
     id: "PROC-DEPRECATION-001",
     term: "DeprecatedBoundary",
@@ -516,6 +517,30 @@ export const GlobalRules: Concept[] = [
       "Only one ActorTile can be marked Solo within a given context",
     ],
     outputs: ["Valid state with at most one Solo ActorTile per context"],
+  },
+  // ================================
+  // Add to WorkingAgreement (UNIVERSAL)
+  // ================================
+
+  {
+    id: "PROC-CLICK-OUTSIDE-001",
+    term: "ClickOutsideDiscipline",
+    layer: "universal",
+    definition:
+      "QRET enforces a global 'click-outside to dismiss' posture. A background/global listener resets UI state when users click outside interactive elements.",
+    intent:
+      "Ensure consistent dismissal of transient UI states, prevent stale overlays, and reinforce a clean, predictable reset interaction model.",
+    constraints: [
+      "Default behavior: clicks bubble up to the global listener, triggering dismissal/reset.",
+      "Interactive components that must not collapse (Cards, Tiles, Modals, Menus, etc.) are responsible for explicitly stopping event propagation.",
+      "Each new component must declare its click policy: 'propagate' or 'isolate'.",
+      "Design headers for interactive artifacts must record their click policy alongside definition/intent/constraints.",
+      "Silent defaults are prohibited: click policy must be intentional and visible.",
+    ],
+    outputs: [
+      "Global dismissal mechanism at app/page level.",
+      "Predictable component-level click behavior (either resets or isolates).",
+    ],
   },
   // --- Additional rules ---
   {

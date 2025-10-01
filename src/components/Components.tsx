@@ -95,6 +95,7 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
 // Definition: Generic container component for displaying content in a tile-style UI.
 // Intent: Provide a reusable, stylized tile wrapper for content blocks.
 // Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
+//   Click Policy: propagates clicks (does not stop bubbling)
 // Inputs: TileProps { children, onClick }
 // Outputs: JSX element wrapping children in a styled tile.
 export type TileProps = {
@@ -105,6 +106,35 @@ export type TileProps = {
 export function Tile({ children, onClick }: TileProps): JSX.Element {
   return (
     <div className="tile" onClick={onClick}>
+      {children}
+    </div>
+  );
+}
+
+//********************************************************************
+//  CARD
+//********************************************************************
+// Component: Card
+// Definition: Generic container component for displaying content in a card-style UI.
+// Intent: Provide a reusable, stylized card wrapper for content blocks, with optional custom styling and event isolation.
+// Constraints: Styling delegated to style.scss. Accepts children and optional className for additional styling. Stops click event propagation from its contents.
+//   Click Policy: isolates clicks (stops bubbling)
+// Inputs: CardProps { children, className? }
+// Outputs: JSX element wrapping children in a styled card that isolates click events.
+export type CardProps = {
+  children: React.ReactNode;
+  className?: string;
+};
+
+export function Card({ children, className }: CardProps): JSX.Element {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  return (
+    <div
+      className={["card", className].filter(Boolean).join(" ")}
+      onClick={handleClick}
+    >
       {children}
     </div>
   );

@@ -32,10 +32,122 @@ const initialTransactionState: TransactionState = {
   ],
 };
 
+// ================================================================
+// Unified Meta-Repo Reducer Model Types
+// ================================================================
+/**
+ * RepoTarget: Represents the key of a userInputs repo (e.g., "receiptedItems", "returnedItems", etc).
+ * Extend this union as needed for each repo managed in userInputs.
+ */
+export type RepoTarget = string; // For generality, allow any string key in userInputs
+
+/**
+ * RepoActionType: Supported actions for a repo.
+ * - ADD: Add a new item to the repo array.
+ * - EDIT: Edit an item in the repo array by id or index.
+ * - REMOVE: Remove an item from the repo array by id or index.
+ * - DEDUCT: Deduct (decrement) a property (e.g., quantity) from an item by id or index.
+ */
+export type RepoActionType = "ADD" | "EDIT" | "REMOVE" | "DEDUCT";
+
+/**
+ * RepoAction: Action for mutating a userInputs repo.
+ */
+export type RepoAction = {
+  type: RepoActionType;
+  target: RepoTarget;
+  payload: any;
+};
+
 type TransactionAction =
   | { type: "SET_PHASE"; phaseId: string }
   | { type: "SET_INPUT"; key: string; value: any }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "REPO_ACTION"; repoAction: RepoAction };
+
+/**
+ * Helper: handleRepoAction
+ * Mutates the appropriate userInputs repo based on the action type.
+ * New Map-based implementation for React-safe immutability.
+ * - Always coerces repos into a Map (userInputs[target] instanceof Map ? userInputs[target] : new Map()).
+ * - Clones Map immutably (const newRepo = new Map(currentRepo)).
+ * - Handles "ADD", "EDIT", "REMOVE", "DEDUCT" with Map semantics (.set, .get, .delete).
+ * - Throws clear errors if required id/property is missing.
+ * - Returns updated userInputs with { ...userInputs, [target]: newRepo }.
+ */
+function handleRepoAction(
+  userInputs: Record<string, any>,
+  action: RepoAction
+): Record<string, any> {
+  const { type, target, payload } = action;
+
+  // Ensure target is always a Map
+  const currentRepo: Map<any, any> =
+    userInputs[target] instanceof Map ? userInputs[target] : new Map();
+
+  // Clone Map immutably (React requires new reference)
+  const newRepo = new Map(currentRepo);
+
+  switch (type) {
+    case "ADD": {
+      if (!payload.id) {
+        throw new Error("⚠️ ADD requires payload.id");
+      }
+      // If item with id exists and has a numeric "qty" property, increment it by payload.qty (default 1)
+      const existing = newRepo.get(payload.id);
+      if (existing && typeof existing.qty === "number") {
+        const addQty = typeof payload.qty === "number" ? payload.qty : 1;
+        newRepo.set(payload.id, {
+          ...existing,
+          qty: existing.qty + addQty,
+        });
+      } else {
+        newRepo.set(payload.id, payload);
+      }
+      break;
+    }
+
+    case "EDIT": {
+      const { id, changes } = payload;
+      if (!id) throw new Error("⚠️ EDIT requires payload.id");
+      const existing = newRepo.get(id);
+      if (existing) {
+        newRepo.set(id, { ...existing, ...changes });
+      }
+      break;
+    }
+
+    case "REMOVE": {
+      const { id } = payload;
+      if (!id) throw new Error("⚠️ REMOVE requires payload.id");
+      newRepo.delete(id);
+      break;
+    }
+
+    case "DEDUCT": {
+      const { id, property, amount = 1 } = payload;
+      if (!id) throw new Error("⚠️ DEDUCT requires payload.id");
+      const existing = newRepo.get(id);
+      if (existing && typeof existing[property] === "number") {
+        const newValue = existing[property] - amount;
+        if (newValue <= 0) {
+          newRepo.delete(id);
+        } else {
+          newRepo.set(id, {
+            ...existing,
+            [property]: newValue,
+          });
+        }
+      }
+      break;
+    }
+
+    default:
+      return userInputs;
+  }
+
+  return { ...userInputs, [target]: newRepo };
+}
 
 function transactionReducer(
   state: TransactionState,
@@ -51,6 +163,11 @@ function transactionReducer(
       };
     case "RESET":
       return initialTransactionState;
+    case "REPO_ACTION":
+      return {
+        ...state,
+        userInputs: handleRepoAction(state.userInputs, action.repoAction),
+      };
     default:
       return state;
   }
