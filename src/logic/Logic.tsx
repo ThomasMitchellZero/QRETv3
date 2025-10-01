@@ -116,8 +116,14 @@ const PhaseContext = createContext<
   [PhaseState, Dispatch<PhaseAction>] | undefined
 >(undefined);
 
-export function PhaseProvider({ children }: { children: ReactNode }) {
-  const value = useReducer(phaseReducer, initialPhaseState);
+export function PhaseProvider({
+  children,
+  phaseId,
+}: {
+  children: ReactNode;
+  phaseId: string;
+}) {
+  const value = useReducer(phaseReducer, { ...initialPhaseState, phaseId });
   return (
     <PhaseContext.Provider value={value}>{children}</PhaseContext.Provider>
   );

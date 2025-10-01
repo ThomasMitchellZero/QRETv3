@@ -245,6 +245,39 @@ export const AppInstances: Concept[] = [
   },
 ];
 
+// ================================
+// MILESTONES — Contextual Save Points
+// Definition: Snapshots of working state, recorded for reconstitution of context.
+// Intent: Allow fast restoration of project "state of mind" at critical progress points.
+// Constraints:
+//   - Milestones are descriptive, not authoritative (spec.ts remains SSoT).
+//   - Each milestone must include definition, intent, constraints, and outputs.
+//   - Reconstitution requests reference milestone IDs (e.g., "Milestone-Nav-001").
+// Inputs: Current repo state + spec.
+// Outputs: Historical context anchors.
+// ================================
+
+export const Milestones: Concept[] = [
+  {
+    id: "MILESTONE-NAV-001",
+    term: "MilestoneNavStart",
+    layer: "app",
+    definition:
+      "First working navigation milestone where NavBar and Phase-based routing are functional.",
+    intent:
+      "Provide a contextual save point capturing successful integration of NavBar, PhaseNode, and PagesRouter.",
+    constraints: [
+      "Spec.ts remains canonical; milestone is descriptive only.",
+      "Captures known-good working state, not future obligations.",
+    ],
+    outputs: [
+      "NavBar renders clickable PhaseNodeTiles.",
+      "Navigation updates TransactionState.currentPhase.",
+      "PagesRouter renders correct Phase component based on state.",
+    ],
+  },
+];
+
 // UNIVERSAL policies: apply globally unless explicitly overridden.
 /* ================================
    UNIVERSAL POLICIES / STANDARDS

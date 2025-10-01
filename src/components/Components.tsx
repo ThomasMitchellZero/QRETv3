@@ -16,7 +16,7 @@ import {
   useIsSelected,
   useNavigatePhase,
 } from "../logic/Logic";
-import { Start } from "../pages/Pages";
+
 import { StartPhase, ReturnItemsPhase, ReceiptsPhase } from "../phases/Phases";
 
 //********************************************************************
@@ -77,7 +77,7 @@ export type PhaseNodeTileProps = {
 
 export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
   return (
-    <div className="phase-node-tile">
+    <div className="tile">
       <div className="phase-node-id">
         <strong>ID:</strong> {node.id}
       </div>
@@ -129,9 +129,13 @@ export function NavBar(): JSX.Element {
         return (
           <div
             key={node.id}
-            className={`nav-item${isSelected ? " selected" : ""}`}
             onClick={() => navigate(node.id)}
-            style={{ cursor: "pointer" }}
+            style={{
+              border: isSelected ? "2px solid blue" : "1px solid #ccc",
+              cursor: "pointer",
+              borderRadius: "4px",
+              padding: "0.25rem",
+            }}
           >
             <PhaseNodeTile node={node} />
           </div>
@@ -164,7 +168,7 @@ export function PagesRouter(): JSX.Element {
     case "start":
       return (
         <StartPhase>
-          <Start />
+          <div>📦 Shart Rear</div>
         </StartPhase>
       );
     case "return-items":
