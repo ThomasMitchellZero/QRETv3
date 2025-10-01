@@ -89,22 +89,22 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
 }
 
 //********************************************************************
-//  CARD
+//  TILE
 //********************************************************************
-// Component: Card
-// Definition: Generic container component for displaying content in a card-style UI.
-// Intent: Provide a reusable, stylized card wrapper for content blocks.
+// Component: Tile
+// Definition: Generic container component for displaying content in a tile-style UI.
+// Intent: Provide a reusable, stylized tile wrapper for content blocks.
 // Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
-// Inputs: CardProps { children, onClick }
-// Outputs: JSX element wrapping children in a styled card.
-export type CardProps = {
+// Inputs: TileProps { children, onClick }
+// Outputs: JSX element wrapping children in a styled tile.
+export type TileProps = {
   children: React.ReactNode;
   onClick?: () => void;
 };
 
-export function Card({ children, onClick }: CardProps): JSX.Element {
+export function Tile({ children, onClick }: TileProps): JSX.Element {
   return (
-    <div className="card" onClick={onClick}>
+    <div className="tile" onClick={onClick}>
       {children}
     </div>
   );
