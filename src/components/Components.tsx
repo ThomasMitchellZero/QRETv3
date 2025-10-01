@@ -11,8 +11,13 @@
 
 import type { PhaseNode, PhaseState } from "../types/Types";
 import React from "react";
-import { useTransaction } from "../logic/Logic";
+import {
+  useTransaction,
+  useIsSelected,
+  useNavigatePhase,
+} from "../logic/Logic";
 import { Start } from "../pages/Pages";
+import { StartPhase, ReturnItemsPhase, ReceiptsPhase } from "../phases/Phases";
 
 //********************************************************************
 //  FLOORPLAN
@@ -76,9 +81,6 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
       <div className="phase-node-id">
         <strong>ID:</strong> {node.id}
       </div>
-      <div className="phase-node-url">
-        <strong>URL:</strong> {node.url}
-      </div>
       <div className="phase-node-status">
         <strong>Status:</strong> {node.status}
       </div>
@@ -108,6 +110,41 @@ export function Card({ children, onClick }: CardProps): JSX.Element {
   );
 }
 
+//********************************************************************
+//  NAV BAR
+//********************************************************************
+// Component: NavBar
+// Definition: Navigation bar for phase navigation.
+// Intent: Render clickable navigation items for each phase in the transaction.
+// Constraints: Uses useTransaction, useIsSelected, useNavigatePhase; wraps each PhaseNodeTile in a clickable div.
+// Inputs: none (reads transaction context)
+// Outputs: JSX navigation bar.
+export function NavBar(): JSX.Element {
+  const [transaction] = useTransaction();
+  const navigate = useNavigatePhase();
+  return (
+    <div className="nav-bar">
+      {transaction.phases.map((node) => {
+        const isSelected = useIsSelected(node.id);
+        return (
+          <div
+            key={node.id}
+            className={`nav-item${isSelected ? " selected" : ""}`}
+            onClick={() => navigate(node.id)}
+            style={{ cursor: "pointer" }}
+          >
+            <PhaseNodeTile node={node} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+//********************************************************************
+//  Pages Router
+//********************************************************************
+
 // ================================
 // PagesRouter.tsx — Temporary Phase Router
 // Definition: Fake router component that renders pages based on TransactionState.currentPhase.
@@ -123,10 +160,25 @@ export function Card({ children, onClick }: CardProps): JSX.Element {
 export function PagesRouter(): JSX.Element {
   const [transaction] = useTransaction();
 
-  switch (transaction.currentPhase) {
-    case "add-items":
-      return <Start />;
-    // Add more cases here as new pages are built
+  switch (transaction.currentPhase || "start") {
+    case "start":
+      return (
+        <StartPhase>
+          <Start />
+        </StartPhase>
+      );
+    case "return-items":
+      return (
+        <ReturnItemsPhase>
+          <div>📦 Return Items content goes here</div>
+        </ReturnItemsPhase>
+      );
+    case "receipts":
+      return (
+        <ReceiptsPhase>
+          <div>🧾 Receipts content goes here</div>
+        </ReceiptsPhase>
+      );
     default:
       return (
         <div>⚠️ No page defined for phase: {transaction.currentPhase}</div>

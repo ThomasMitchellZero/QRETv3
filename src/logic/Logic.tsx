@@ -23,10 +23,10 @@ import type { PhaseNode } from "../types/Types"; // make sure this is at the top
 //  TRANSACTION STATE CONTEXT
 //********************************************************************
 const initialTransactionState: TransactionState = {
-  currentPhase: "",
+  currentPhase: "start",
   userInputs: {},
   phases: [
-    { id: "add-items", url: "/add-items", status: "mandatory" },
+    { id: "start", url: "/start", status: "mandatory" },
     { id: "receipts", url: "/receipts", status: "mandatory" },
     { id: "refund", url: "/refund", status: "mandatory" },
   ],

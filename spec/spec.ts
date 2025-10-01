@@ -118,7 +118,7 @@ export const WorkingAgreement: Concept[] = [
     term: "DiffsAreRequiredAndStandardized",
     layer: "universal",
     definition:
-      "All changes must be delivered as standard diffs/patches, never as direct edits.",
+      "All changes must be delivered as copy/pasteable, inline 'Good Diff' format—meaning human-readable, visual/annotated diffs that can be directly applied in context (not raw patch or unified diff format). Raw patch/unified style outputs ('Bad Diffs') are strictly prohibited. Diffs must always be in a format suitable for direct review and copy/paste application, not requiring patch tooling.",
   },
   {
     id: "PROC-SPEC-SIMPLIFY-001",
