@@ -117,18 +117,24 @@ export type ActorTileProps = {
 };
 
 export function ActorTile(props: ActorTileProps) {
-  const [, dispatchTransients] = useTransients();
+  const [transients, dispatchTransients] = useTransients();
   const stageCtx = useStage() as { stageId?: string; soloId?: string };
-  const stageId = stageCtx?.stageId;
-  const soloId = stageCtx?.soloId;
+  const parentStageId = stageCtx?.stageId;
   const { id, headline, children, ...rest } = props;
-  const isSolo = soloId === id;
-  const hidden = soloId && soloId !== id;
+
+  let status: "solo" | "hidden" | "default";
+  if (transients.stageId === parentStageId && transients.soloId === id) {
+    status = "solo";
+  } else if (transients.stageId === parentStageId) {
+    status = "hidden";
+  } else {
+    status = "default";
+  }
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (isSolo) {
+    if (status === "solo") {
       dispatchTransients({
         kind: "CLEAR_TRANSIENTS",
         payload: { preserve: ["stageId", "soloId"] },
@@ -136,7 +142,7 @@ export function ActorTile(props: ActorTileProps) {
     } else {
       dispatchTransients({
         kind: "SET_SOLO",
-        payload: { stageId, soloId: id } as TransientState["solo"],
+        payload: { parentStageId, soloId: id } as TransientState["solo"],
       });
     }
   };
@@ -144,13 +150,12 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`actor-tile ${isSolo ? "solo" : ""}`}
+      className={`actor-tile ${status}`}
       onClick={handleClick}
-      style={{ display: hidden ? "none" : undefined }}
       {...rest}
     >
       <div className="actor-headline">{headline}</div>
-      {isSolo && <div className="actor-content">{children}</div>}
+      {status === "solo" && <div className="actor-content">{children}</div>}
     </Container>
   );
 }
@@ -191,6 +196,7 @@ export type PhaseProps = {
 // Inputs: PhaseProps
 // Outputs: JSX layout for a phase screen.
 import { PhaseProvider } from "../logic/Logic";
+import { stat } from "fs";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
   return (
     <PhaseProvider phaseId={phaseId}>

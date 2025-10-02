@@ -54,26 +54,13 @@ select {
 .stage {
   display: flex;
   flex-wrap: wrap;
+  flex: 1 1 100%;
+  width: 100%;
   gap: 1rem;
   min-height: var(--tile-size, 8rem);
   height: auto;
   max-height: 100%;
   background-color: darksalmon;
-
-  &.solo-mode {
-    .actor-tile.solo {
-      display: flex;
-      flex: 1 1 auto;
-      height: auto;
-      max-height: 100%;
-    }
-    .actor-tile.solo ~ .actor-tile {
-      display: none;
-    }
-    .actor-tile:not(.solo) {
-      display: none;
-    }
-  }
 }
 
 .actor-tile {
@@ -84,16 +71,25 @@ select {
   border: 1px solid #ccc;
   border-radius: 6px;
   cursor: pointer;
-  @include flex-center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .actor-headline {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .actor-content {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 
   &.solo {
     flex: 1 1 auto;
-    width: 100%;
     height: auto;
-    min-height: var(
-      --tile-size,
-      8rem
-    ); // never shrink below original tile height
+    min-height: var(--tile-size, 8rem);
   }
 }
 .footer {
