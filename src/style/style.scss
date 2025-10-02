@@ -58,16 +58,20 @@ select {
   min-height: var(--tile-size, 8rem);
   height: auto;
   max-height: 100%;
+  background-color: darksalmon;
 
   &.solo-mode {
-    .actor-tile {
-      display: none;
-    }
     .actor-tile.solo {
       display: flex;
       flex: 1 1 auto;
       height: auto;
       max-height: 100%;
+    }
+    .actor-tile.solo ~ .actor-tile {
+      display: none;
+    }
+    .actor-tile:not(.solo) {
+      display: none;
     }
   }
 }

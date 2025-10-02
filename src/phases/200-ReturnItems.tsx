@@ -1,7 +1,7 @@
 import React from "react";
 import { Phase } from "../components/Components";
 
-import { Card, Floorplan, ActorTile } from "../components/Components";
+import { Card, Floorplan, ActorTile, Stage } from "../components/Components";
 import { useTransaction, useReturnItemsPhase } from "../logic/Logic";
 
 //********************************************************************
@@ -22,22 +22,26 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQty = parseInt(e.target.value, 10) || 0;
     dispatch({
-      type: "REPO_ACTION",
-      repoAction: {
-        type: "EDIT",
-        target: "return-items",
-        payload: { id, changes: { qty: newQty } },
+      kind: "REPO_ACTION",
+      payload: {
+        repoAction: {
+          kind: "EDIT",
+          target: "return-items",
+          payload: { id, changes: { qty: newQty } },
+        },
       },
     });
   };
 
   const handleRemove = () => {
     dispatch({
-      type: "REPO_ACTION",
-      repoAction: {
-        type: "REMOVE",
-        target: "return-items",
-        payload: { id },
+      kind: "REPO_ACTION",
+      payload: {
+        repoAction: {
+          kind: "REMOVE",
+          target: "return-items",
+          payload: { id },
+        },
       },
     });
   };
@@ -47,21 +51,12 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
       <div className="item-id PLACEHOLDER">
         <strong>Item #{id}</strong>
       </div>
-      <ActorTile id={id}>
-        {/* ActorTile will render one of these based on solo state */}
-        {({ isSolo }: { isSolo: boolean }) =>
-          isSolo ? (
-            <input
-              type="number"
-              value={qty}
-              onChange={handleQtyChange}
-              min={0}
-            />
-          ) : (
-            <div className="qty-display">{qty}</div>
-          )
-        }
-      </ActorTile>
+      <Stage id={`item-${id}`}>
+        <ActorTile id={id} headline={<div className="qty-display">{qty}</div>}>
+          <input type="number" value={qty} onChange={handleQtyChange} min={0} />
+        </ActorTile>
+      </Stage>
+
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
       </button>
@@ -116,16 +111,24 @@ function ItemEntry() {
   const handleAdd = () => {
     if (!pendingItemId || pendingQty <= 0) return;
     dispatch({
-      type: "REPO_ACTION",
-      repoAction: {
-        type: "ADD",
-        target: "return-items",
-        payload: { id: pendingItemId, qty: pendingQty },
+      kind: "REPO_ACTION",
+      payload: {
+        repoAction: {
+          kind: "ADD",
+          target: "return-items",
+          payload: { id: pendingItemId, qty: pendingQty },
+        },
       },
     });
     // Reset local entry fields
-    dispatchPhase({ type: "SET_LOCAL", key: "pendingItemId", value: "" });
-    dispatchPhase({ type: "SET_LOCAL", key: "pendingQty", value: 1 });
+    dispatchPhase({
+      kind: "SET_LOCAL",
+      payload: { key: "pendingItemId", value: "" },
+    });
+    dispatchPhase({
+      kind: "SET_LOCAL",
+      payload: { key: "pendingQty", value: 1 },
+    });
   };
 
   return (
@@ -136,9 +139,8 @@ function ItemEntry() {
         value={pendingItemId}
         onChange={(e) =>
           dispatchPhase({
-            type: "SET_LOCAL",
-            key: "pendingItemId",
-            value: e.target.value,
+            kind: "SET_LOCAL",
+            payload: { key: "pendingItemId", value: e.target.value },
           })
         }
       />
@@ -148,9 +150,11 @@ function ItemEntry() {
         value={pendingQty}
         onChange={(e) =>
           dispatchPhase({
-            type: "SET_LOCAL",
-            key: "pendingQty",
-            value: parseInt(e.target.value, 10) || 1,
+            kind: "SET_LOCAL",
+            payload: {
+              key: "pendingQty",
+              value: parseInt(e.target.value, 10) || 1,
+            },
           })
         }
       />

@@ -36,11 +36,7 @@ export type PhaseState = {
  * TransientState: State for ephemeral UI overlays and transients (soloId, errorIds, dialogId, etc)
  * These are discarded on phase exit, and reset on navigation or explicit reset.
  */
-export type TransientState = {
-  soloId?: string | undefined;
-  errorIds?: string[] | undefined;
-  dialogId?: string | undefined;
-};
+export type TransientState = Record<string, any>;
 
 //********************************************************************
 //  TRANSACTION STATE CONTEXT
@@ -77,16 +73,16 @@ export type RepoActionType = "ADD" | "EDIT" | "REMOVE" | "DEDUCT";
  * RepoAction: Action for mutating a userInputs repo.
  */
 export type RepoAction = {
-  type: RepoActionType;
+  kind: RepoActionType;
   target: RepoTarget;
   payload: any;
 };
 
 type TransactionAction =
-  | { type: "SET_PHASE"; phaseId: string }
-  | { type: "SET_INPUT"; key: string; value: any }
-  | { type: "RESET" }
-  | { type: "REPO_ACTION"; repoAction: RepoAction };
+  | { kind: "SET_PHASE"; payload: { phaseId: string } }
+  | { kind: "SET_INPUT"; payload: { key: string; value: any } }
+  | { kind: "RESET" }
+  | { kind: "REPO_ACTION"; payload: { repoAction: RepoAction } };
 
 /**
  * Helper: handleRepoAction
@@ -102,7 +98,7 @@ function handleRepoAction(
   userInputs: Record<string, any>,
   action: RepoAction
 ): Record<string, any> {
-  const { type, target, payload } = action;
+  const { kind, target, payload } = action;
 
   // Ensure target is always a Map
   const currentRepo: Map<any, any> =
@@ -111,7 +107,7 @@ function handleRepoAction(
   // Clone Map immutably (React requires new reference)
   const newRepo = new Map(currentRepo);
 
-  switch (type) {
+  switch (kind) {
     case "ADD": {
       if (!payload.id) {
         throw new Error("⚠️ ADD requires payload.id");
@@ -176,20 +172,26 @@ function transactionReducer(
   state: TransactionState,
   action: TransactionAction
 ): TransactionState {
-  switch (action.type) {
+  switch (action.kind) {
     case "SET_PHASE":
-      return { ...state, currentPhase: action.phaseId };
+      return { ...state, currentPhase: action.payload.phaseId };
     case "SET_INPUT":
       return {
         ...state,
-        userInputs: { ...state.userInputs, [action.key]: action.value },
+        userInputs: {
+          ...state.userInputs,
+          [action.payload.key]: action.payload.value,
+        },
       };
     case "RESET":
       return initialTransactionState;
     case "REPO_ACTION":
       return {
         ...state,
-        userInputs: handleRepoAction(state.userInputs, action.repoAction),
+        userInputs: handleRepoAction(
+          state.userInputs,
+          action.payload.repoAction
+        ),
       };
     default:
       return state;
@@ -231,22 +233,25 @@ const initialPhaseState: PhaseState = {
 };
 
 type PhaseAction =
-  | { type: "SET_SCREEN"; screen: string }
-  | { type: "SET_LOCAL"; key: string; value: any }
-  | { type: "RESET"; phaseId?: string };
+  | { kind: "SET_SCREEN"; payload: { screen: string } }
+  | { kind: "SET_LOCAL"; payload: { key: string; value: any } }
+  | { kind: "RESET"; payload?: { phaseId?: string } };
 
 function phaseReducer(state: any, action: PhaseAction): any {
-  switch (action.type) {
+  switch (action.kind) {
     case "SET_SCREEN":
-      return { ...state, screen: action.screen };
+      return { ...state, screen: action.payload.screen };
     case "SET_LOCAL":
       // For generic PhaseState, just assign key/value at root; for ReturnItemsPhaseState, assign pendingItemId/pendingQty
-      if (action.key === "pendingItemId" || action.key === "pendingQty") {
-        return { ...state, [action.key]: action.value };
+      if (
+        action.payload.key === "pendingItemId" ||
+        action.payload.key === "pendingQty"
+      ) {
+        return { ...state, [action.payload.key]: action.payload.value };
       }
-      return { ...state, [action.key]: action.value };
+      return { ...state, [action.payload.key]: action.payload.value };
     case "RESET":
-      return { ...initialPhaseState, phaseId: action.phaseId ?? "" };
+      return { ...initialPhaseState, phaseId: action.payload?.phaseId ?? "" };
     default:
       return state;
   }
@@ -255,47 +260,40 @@ function phaseReducer(state: any, action: PhaseAction): any {
 //********************************************************************
 //  TRANSIENT STATE CONTEXT
 //********************************************************************
-const initialTransientState: TransientState = {
-  soloId: undefined,
-  errorIds: [],
-  dialogId: undefined,
-};
+const initialTransientState: TransientState = {};
 
 type TransientAction =
-  | { type: "SET_SOLO"; soloId?: string | undefined }
-  | { type: "SET_ERROR"; errorIds?: string[] }
-  | { type: "SET_DIALOG"; dialogId?: string }
-  | { type: "RESET_TRANSIENTS" }
-  | { type: "CLEAR_TRANSIENTS_EXCEPT"; preserve: (keyof TransientState)[] };
+  | { kind: "SET_SOLO"; payload?: { stageId?: string; soloId?: string } }
+  | { kind: "SET_ERROR"; payload?: { errorIds?: string[] } }
+  | { kind: "SET_DIALOG"; payload?: { dialogId?: string } }
+  | { kind: "RESET_TRANSIENTS" }
+  | { kind: "CLEAR_TRANSIENTS"; payload?: { preserve?: string[] } };
 
 function transientReducer(
   state: TransientState,
   action: TransientAction
 ): TransientState {
-  switch (action.type) {
+  switch (action.kind) {
     case "SET_SOLO":
-      return { ...state, soloId: action.soloId };
+      return {
+        ...state,
+        ...(action.payload ?? {}),
+      };
     case "SET_ERROR":
-      return { ...state, errorIds: action.errorIds ?? [] };
+      return { ...state, errorIds: action.payload?.errorIds ?? [] };
     case "SET_DIALOG":
-      return { ...state, dialogId: action.dialogId };
+      return { ...state, dialogId: action.payload?.dialogId };
     case "RESET_TRANSIENTS":
       return { ...initialTransientState };
-    case "CLEAR_TRANSIENTS_EXCEPT": {
-      const preserve = action.preserve || [];
-      let newState: Partial<TransientState> = {};
-      (action.preserve || []).forEach((key: keyof TransientState) => {
-        newState[key] = state[key];
-      });
-
+    case "CLEAR_TRANSIENTS": {
+      const preserve = action.payload?.preserve || [];
+      let newState: any = {};
       preserve.forEach((key) => {
-        const k = key as keyof TransientState;
-        if (state[k] !== undefined) {
-          newState[k] = state[k] as TransientState[typeof k];
+        if (state[key] !== undefined) {
+          newState[key] = state[key];
         }
       });
-
-      return newState as TransientState;
+      return newState;
     }
     default:
       return state;
@@ -426,9 +424,9 @@ export function useNavigatePhase(): (phaseId: string) => void {
     }
 
     // Update transaction-level state
-    dispatchTransaction({ type: "SET_PHASE", phaseId });
+    dispatchTransaction({ kind: "SET_PHASE", payload: { phaseId } });
 
     // Reset phase-level state to primary
-    dispatchPhase({ type: "RESET", phaseId });
+    dispatchPhase({ kind: "RESET", payload: { phaseId } });
   };
 }

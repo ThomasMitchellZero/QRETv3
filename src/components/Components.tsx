@@ -1,3 +1,70 @@
+import type { PhaseNode } from "../types/Types";
+import { StartPhase } from "../phases/050-Start";
+import { ReturnItemsPhase } from "../phases/200-ReturnItems";
+import { ReceiptsPhase } from "../phases/250-Receipts";
+
+import React from "react";
+import {
+  useTransaction,
+  useTransients,
+  useNavigatePhase,
+  type TransientState,
+} from "../logic/Logic";
+
+//********************************************************************
+//  CONTAINER (BASE PRIMITIVE)
+//********************************************************************
+/*
+
+*/
+
+export type ContainerProps = {
+  id?: string | undefined;
+  children?: React.ReactNode;
+  className?: string;
+  preserve?: string[] | undefined; // no keyof restriction during prototype
+  onClick?: React.MouseEventHandler;
+};
+
+export function Container(props: ContainerProps): JSX.Element {
+  const [, dispatchTransients] = useTransients();
+  const { children, className = "", preserve, onClick } = props;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatchTransients({ kind: "CLEAR_TRANSIENTS", payload: { preserve: [] } });
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <div className={className} onClick={handleClick}>
+      {children}
+    </div>
+  );
+}
+
+//********************************************************************
+//  TILE
+//********************************************************************
+// Component: Tile
+// Definition: Generic container component for displaying content in a tile-style UI.
+// Intent: Provide a reusable, stylized tile wrapper for content blocks.
+// Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
+//   - Click Policy: propagate (bubbles up)
+// Inputs: TileProps { children, onClick }
+// Outputs: JSX element wrapping children in a styled tile.
+export type TileProps = ContainerProps & {
+  children: React.ReactNode;
+};
+
+export function Tile(props: TileProps): JSX.Element {
+  return (
+    <Container className="tile" {...props}>
+      {props.children}
+    </Container>
+  );
+}
+
 //********************************************************************
 //  STAGE + ACTOR TILE
 //********************************************************************
@@ -11,57 +78,80 @@
 //   - Styling delegated to style.scss.
 //   - Click Policy: propagate (resets soloId on outside click)
 
-import { useTransients } from "../logic/Logic";
-
-export function Stage({ children }: { children: React.ReactNode }) {
-  const [transients, dispatchTransients] = useTransients();
-  const soloId = transients.soloId;
-
-  const handleStageClick = () => {
-    if (soloId) {
-      dispatchTransients({ type: "SET_SOLO", soloId: undefined });
-    }
-  };
-
-  return (
-    <div
-      className={`stage ${soloId ? "solo-mode" : ""}`}
-      onClick={handleStageClick}
-    >
-      {children}
-    </div>
-  );
+// ================================
+// StageContext — Local Solo Context for Stage/ActorTile
+// Definition: Provides stageId and soloId context to ActorTile children within a Stage.
+// Intent: Decouple solo state from global transients; allow nested Stage/ActorTile groups.
+// Constraints:
+//   - Only Stage provides this context; ActorTile must consume via useStage().
+// Inputs: { stageId?: string; soloId?: string }
+// Outputs: useStage() hook returns { stageId, soloId }
+const StageContext = React.createContext<object>({});
+export function useStage() {
+  return React.useContext(StageContext);
 }
 
-export function ActorTile({
+export function Stage({
   id,
   children,
 }: {
   id: string;
-  children: React.ReactNode | ((ctx: { isSolo: boolean }) => React.ReactNode);
+  children: React.ReactNode;
 }) {
-  const [transients, dispatchTransients] = useTransients();
-  const isSolo = transients.soloId === id;
+  const [transients] = useTransients();
+  const soloId = transients?.solo?.[id];
+  return (
+    <StageContext.Provider value={{ stageId: id, soloId }}>
+      <Container className={`stage ${soloId ? "solo-mode" : ""}`}>
+        {children}
+      </Container>
+    </StageContext.Provider>
+  );
+}
+
+export type ActorTileProps = {
+  id: string;
+  headline: React.ReactNode;
+  children?: React.ReactNode;
+  style?: string | React.CSSProperties | undefined;
+};
+
+export function ActorTile(props: ActorTileProps) {
+  const [, dispatchTransients] = useTransients();
+  const stageCtx = useStage() as { stageId?: string; soloId?: string };
+  const stageId = stageCtx?.stageId;
+  const soloId = stageCtx?.soloId;
+  const { id, headline, children, ...rest } = props;
+  const isSolo = soloId === id;
+  const hidden = soloId && soloId !== id;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
     if (isSolo) {
       dispatchTransients({
-        type: "CLEAR_TRANSIENTS_EXCEPT",
-        preserve: ["soloId"],
+        kind: "CLEAR_TRANSIENTS",
+        payload: { preserve: ["stageId", "soloId"] },
       });
     } else {
-      dispatchTransients({ type: "SET_SOLO", soloId: id });
+      dispatchTransients({
+        kind: "SET_SOLO",
+        payload: { stageId, soloId: id } as TransientState["solo"],
+      });
     }
   };
 
-  const content =
-    typeof children === "function" ? (children as any)({ isSolo }) : children;
-
   return (
-    <div className={`actor-tile ${isSolo ? "solo" : ""}`} onClick={handleClick}>
-      {content}
-    </div>
+    <Container
+      id={id}
+      className={`actor-tile ${isSolo ? "solo" : ""}`}
+      onClick={handleClick}
+      style={{ display: hidden ? "none" : undefined }}
+      {...rest}
+    >
+      <div className="actor-headline">{headline}</div>
+      {isSolo && <div className="actor-content">{children}</div>}
+    </Container>
   );
 }
 // Constraints:
@@ -77,18 +167,6 @@ export function ActorTile({
 // Inputs: Props as defined per component.
 // Outputs: Rendered UI React elements.
 // ================================
-
-import type { PhaseNode } from "../types/Types";
-import { StartPhase } from "../phases/050-Start";
-import { ReturnItemsPhase } from "../phases/200-ReturnItems";
-import { ReceiptsPhase } from "../phases/250-Receipts";
-
-import React from "react";
-import {
-  useTransaction,
-  useIsSelected,
-  useNavigatePhase,
-} from "../logic/Logic";
 
 // PhaseProps type and Phase component are globalized here for all phases.
 
@@ -127,7 +205,7 @@ function PhaseBase({ children }: { children: React.ReactNode }) {
   const [, dispatchTransients] = useTransients();
 
   const handleBackgroundClick = () => {
-    dispatchTransients({ type: "RESET_TRANSIENTS" });
+    dispatchTransients({ kind: "RESET_TRANSIENTS" });
   };
 
   return (
@@ -207,29 +285,6 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
       <div className="phase-node-id">
         <strong>{node.id}</strong>
       </div>
-    </div>
-  );
-}
-
-//********************************************************************
-//  TILE
-//********************************************************************
-// Component: Tile
-// Definition: Generic container component for displaying content in a tile-style UI.
-// Intent: Provide a reusable, stylized tile wrapper for content blocks.
-// Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
-//   - Click Policy: propagate (bubbles up)
-// Inputs: TileProps { children, onClick }
-// Outputs: JSX element wrapping children in a styled tile.
-export type TileProps = {
-  children: React.ReactNode;
-  onClick?: () => void;
-};
-
-export function Tile({ children, onClick }: TileProps): JSX.Element {
-  return (
-    <div className="tile" onClick={onClick}>
-      {children}
     </div>
   );
 }

@@ -27,7 +27,7 @@ export type PhaseNode = {
   id: string;
   url: string;
   status: "mandatory" | "conditional";
-  conditions?: string[];
+  conditions?: any[];
   selected?: boolean;
   enabled?: boolean;
   visible?: boolean;

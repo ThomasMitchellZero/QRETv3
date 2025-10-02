@@ -18,11 +18,13 @@ function ReceiptsCard({ id }: { id: string }) {
   const [, dispatch] = useTransaction();
   const handleRemove = () => {
     dispatch({
-      type: "REPO_ACTION",
-      repoAction: {
-        type: "REMOVE",
-        target: "receipts",
-        payload: { id },
+      kind: "REPO_ACTION",
+      payload: {
+        repoAction: {
+          kind: "REMOVE",
+          target: "receipts",
+          payload: { id },
+        },
       },
     });
   };
@@ -80,11 +82,13 @@ function ReceiptEntry() {
   const handleAdd = () => {
     if (!id) return;
     dispatch({
-      type: "REPO_ACTION",
-      repoAction: {
-        type: "ADD",
-        target: "receipts",
-        payload: { id },
+      kind: "REPO_ACTION",
+      payload: {
+        repoAction: {
+          kind: "ADD",
+          target: "receipts",
+          payload: { id },
+        },
       },
     });
     setId("");

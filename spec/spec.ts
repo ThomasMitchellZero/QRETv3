@@ -255,6 +255,38 @@ export const WorkingAgreement: Concept[] = [
       "Never infer user intent from selection alone.",
     ],
   },
+  {
+    id: "PROC-TYPING-001",
+    term: "PrototypeTypingPolicy",
+    layer: "universal",
+    definition:
+      "Typing discipline in prototype mode follows a pragmatic balance: only constrain where type safety delivers clear value (navigation, transaction, global wrappers). Looser typing is permitted in volatile or UI-local domains to maintain development velocity.",
+    intent:
+      "Prevent over-constraining during prototyping, reduce type churn, and reserve stricter enforcement for stable or cross-cutting structures.",
+    constraints: [
+      "Tight typing is mandatory for cross-cutting structures (e.g., PhaseNode, TransactionState, global wrapper props).",
+      "Moderate typing is recommended for phase states and transient state; key fields must be typed, but values may allow 'any' or undefined until stabilized.",
+      "Loose typing is acceptable for userInputs repos, payloads, and ephemeral UI props until patterns stabilize or repeated bugs emerge.",
+      "Payloads default to 'any' unless a recurring structure or bug indicates a need for refinement.",
+      "Spec must explicitly authorize tightening types as structures stabilize; silent escalation in strictness is prohibited.",
+      "PrototypeTypingPolicy is temporary; stricter enforcement may replace it in later milestones when app structure is more stable.",
+    ],
+  },
+  {
+    id: "PROC-COMPONENT-ID-001",
+    term: "ComponentIdentityRule",
+    layer: "universal",
+    definition:
+      "Component IDs become necessary when it becomes possible to create unique instances using ONLY configuration.",
+    intent:
+      "Prevent unnecessary ID clutter on containers while ensuring domain components that require unique instance tracking have it.",
+    constraints: [
+      "Structural/layout containers (Container, Tile, Card, Stage) must not define or require IDs.",
+      "Domain-level components (ActorTile, ReturnItemsCard, ReceiptCard, etc.) must accept IDs when logic depends on instance distinction.",
+      "React `key` props are always applied at the parent mapping site, not inside the container component.",
+      "This prevents ID bloat in generic containers while enforcing identity where behavior requires it.",
+    ],
+  },
 ];
 // APP-level rules defer to GLOBAL and UNIVERSAL rules unless explicitly overridden.
 /* ================================
