@@ -1,3 +1,72 @@
+//********************************************************************
+//  STAGE + ACTOR TILE
+//********************************************************************
+// Context-aware Stage and ActorTile components.
+// Definition: Stage is a container that manages layout of ActorTiles.
+// Intent: Provide standardized tile grid that supports "solo" expansion.
+// Constraints:
+//   - Solo state is stored in PhaseProvider (only one per Phase).
+//   - Stage adds/removes "solo-mode" class based on solo state.
+//   - ActorTile toggles soloId in Phase context on click.
+//   - Styling delegated to style.scss.
+//   - Click Policy: propagate (resets soloId on outside click)
+
+import { useTransients } from "../logic/Logic";
+
+export function Stage({ children }: { children: React.ReactNode }) {
+  const [transients, dispatchTransients] = useTransients();
+  const soloId = transients.soloId;
+
+  const handleStageClick = () => {
+    if (soloId) {
+      dispatchTransients({ type: "SET_SOLO", soloId: undefined });
+    }
+  };
+
+  return (
+    <div
+      className={`stage ${soloId ? "solo-mode" : ""}`}
+      onClick={handleStageClick}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function ActorTile({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode | ((ctx: { isSolo: boolean }) => React.ReactNode);
+}) {
+  const [transients, dispatchTransients] = useTransients();
+  const isSolo = transients.soloId === id;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSolo) {
+      dispatchTransients({
+        type: "CLEAR_TRANSIENTS_EXCEPT",
+        preserve: ["soloId"],
+      });
+    } else {
+      dispatchTransients({ type: "SET_SOLO", soloId: id });
+    }
+  };
+
+  const content =
+    typeof children === "function" ? (children as any)({ isSolo }) : children;
+
+  return (
+    <div className={`actor-tile ${isSolo ? "solo" : ""}`} onClick={handleClick}>
+      {content}
+    </div>
+  );
+}
+// Constraints:
+//   - Click Policy: isolate (stops bubbling; toggles soloId)
+
 // ================================
 // Components.tsx — Canonical Components Bucket
 // Definition: Central repository of reusable UI components for QRET.
@@ -45,7 +114,27 @@ export type PhaseProps = {
 // Outputs: JSX layout for a phase screen.
 import { PhaseProvider } from "../logic/Logic";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
-  return <PhaseProvider phaseId={phaseId}>{children}</PhaseProvider>;
+  return (
+    <PhaseProvider phaseId={phaseId}>
+      <PhaseBase>{children}</PhaseBase>
+    </PhaseProvider>
+  );
+}
+
+// Internal: PhaseBase
+// Definition: Wrapper div for phase screens that resets transients on background click.
+function PhaseBase({ children }: { children: React.ReactNode }) {
+  const [, dispatchTransients] = useTransients();
+
+  const handleBackgroundClick = () => {
+    dispatchTransients({ type: "RESET_TRANSIENTS" });
+  };
+
+  return (
+    <div className="phase-base" onClick={handleBackgroundClick}>
+      {children}
+    </div>
+  );
 }
 
 //********************************************************************
@@ -129,7 +218,7 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
 // Definition: Generic container component for displaying content in a tile-style UI.
 // Intent: Provide a reusable, stylized tile wrapper for content blocks.
 // Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
-//   Click Policy: propagates clicks (does not stop bubbling)
+//   - Click Policy: propagate (bubbles up)
 // Inputs: TileProps { children, onClick }
 // Outputs: JSX element wrapping children in a styled tile.
 export type TileProps = {
@@ -152,7 +241,7 @@ export function Tile({ children, onClick }: TileProps): JSX.Element {
 // Definition: Generic container component for displaying content in a card-style UI.
 // Intent: Provide a reusable, stylized card wrapper for content blocks, with optional custom styling and event isolation.
 // Constraints: Styling delegated to style.scss. Accepts children and optional className for additional styling. Stops click event propagation from its contents.
-//   Click Policy: isolates clicks (stops bubbling)
+//   - Click Policy: isolate (stops bubbling)
 // Inputs: CardProps { children, className? }
 // Outputs: JSX element wrapping children in a styled card that isolates click events.
 export type CardProps = {

@@ -1,13 +1,9 @@
-.footer {
+@mixin flex-center {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  text-align: left;
-  button {
-    text-align: right;
-  }
+  justify-content: center;
 }
+
 /* ================================
    style.scss — Canonical Styles Bucket
    Definition: Central SCSS file providing reset, baseline, and application-wide styling.
@@ -55,10 +51,56 @@ select {
 
 /* stable/styles/floorplan.scss — global layout with labeled debug colors */
 
-@mixin flex-center {
+.stage {
   display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-height: var(--tile-size, 8rem);
+  height: auto;
+  max-height: 100%;
+
+  &.solo-mode {
+    .actor-tile {
+      display: none;
+    }
+    .actor-tile.solo {
+      display: flex;
+      flex: 1 1 auto;
+      height: auto;
+      max-height: 100%;
+    }
+  }
+}
+
+.actor-tile {
+  flex: 0 0 var(--tile-size, 8rem);
+  height: var(--tile-size, 8rem);
+  min-height: var(--tile-size, 8rem);
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  @include flex-center;
+
+  &.solo {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: var(
+      --tile-size,
+      8rem
+    ); // never shrink below original tile height
+  }
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  width: 100%;
+  text-align: left;
+  button {
+    text-align: right;
+  }
 }
 
 .floorplan {
@@ -227,6 +269,12 @@ select {
     border-radius: 6px;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+    .item-id {
+      font-weight: bold;
+      font-size: 1.25rem;
+      height: 9rem;
+    }
   }
 
   .catalog-info {
@@ -242,4 +290,12 @@ select {
       border-radius: 4px;
     }
   }
+}
+
+.qty-display {
+  font-size: 2rem;
+  font-weight: bold;
+  height: 100%;
+  width: 100%;
+  @include flex-center;
 }

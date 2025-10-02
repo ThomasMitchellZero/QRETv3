@@ -118,7 +118,16 @@ export const WorkingAgreement: Concept[] = [
     term: "DiffsAreRequiredAndStandardized",
     layer: "universal",
     definition:
-      "All changes must be delivered as copy/pasteable, inline 'Good Diff' format—meaning human-readable, visual/annotated diffs that can be directly applied in context (not raw patch or unified diff format). Raw patch/unified style outputs ('Bad Diffs') are strictly prohibited. Diffs must always be in a format suitable for direct review and copy/paste application, not requiring patch tooling.",
+      "All changes must be delivered as inline, contextual, human-readable 'Good Diff' format. Diffs must show only the minimal number of changed lines with enough surrounding context for orientation, be directly copy/pasteable into the target file, and must not use raw patch/unified diff headers. Diffs should be segmented into small, reviewable blocks if large. The format must enable direct application by a human, not requiring any patch tooling.",
+    constraints: [
+      "Diffs must not use '---', '+++', or '@@' patch/unified diff headers anywhere in the output.",
+      "Each diff block must display enough context lines before and after changes to orient the reader, but must avoid dumping the entire file.",
+      "Diffs must be minimal: typically under ~6 consecutive added (+) lines per block; if more are needed, split into multiple blocks.",
+      "Every diff must be copy/pasteable as-is into the file, without requiring additional tooling.",
+      "If raw unified diff or patch headers are accidentally output, this must trigger a loud failure and escalation.",
+      "Diffs must be human-readable and visually clear, with inline annotations if needed for clarity.",
+      "Large diffs must be split into segmented blocks, each with clear context and minimal scope.",
+    ],
   },
   {
     id: "PROC-SPEC-SIMPLIFY-001",

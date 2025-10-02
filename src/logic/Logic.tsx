@@ -16,8 +16,31 @@ import React, {
   type ReactNode,
   type Dispatch,
 } from "react";
-import type { TransactionState, PhaseState } from "../types/Types";
+import type { TransactionState } from "../types/Types";
 import type { PhaseNode } from "../types/Types"; // make sure this is at the top
+
+// ================================
+// PhaseState and TransientState Types
+// ================================
+/**
+ * PhaseState: Phase-level state (persistent for the phase, but not for UI transients)
+ * Does NOT include soloId, errorIds, or dialogId (those are transient UI states).
+ */
+import type { ReturnItemsPhaseState } from "../types/Types";
+export type PhaseState = {
+  phaseId: string;
+  screen: string;
+};
+
+/**
+ * TransientState: State for ephemeral UI overlays and transients (soloId, errorIds, dialogId, etc)
+ * These are discarded on phase exit, and reset on navigation or explicit reset.
+ */
+export type TransientState = {
+  soloId?: string | undefined;
+  errorIds?: string[] | undefined;
+  dialogId?: string | undefined;
+};
 
 //********************************************************************
 //  TRANSACTION STATE CONTEXT
@@ -205,7 +228,6 @@ export function useTransaction(): [
 const initialPhaseState: PhaseState = {
   phaseId: "",
   screen: "primary",
-  localValues: {},
 };
 
 type PhaseAction =
@@ -213,17 +235,68 @@ type PhaseAction =
   | { type: "SET_LOCAL"; key: string; value: any }
   | { type: "RESET"; phaseId?: string };
 
-function phaseReducer(state: PhaseState, action: PhaseAction): PhaseState {
+function phaseReducer(state: any, action: PhaseAction): any {
   switch (action.type) {
     case "SET_SCREEN":
       return { ...state, screen: action.screen };
     case "SET_LOCAL":
-      return {
-        ...state,
-        localValues: { ...state.localValues, [action.key]: action.value },
-      };
+      // For generic PhaseState, just assign key/value at root; for ReturnItemsPhaseState, assign pendingItemId/pendingQty
+      if (action.key === "pendingItemId" || action.key === "pendingQty") {
+        return { ...state, [action.key]: action.value };
+      }
+      return { ...state, [action.key]: action.value };
     case "RESET":
       return { ...initialPhaseState, phaseId: action.phaseId ?? "" };
+    default:
+      return state;
+  }
+}
+
+//********************************************************************
+//  TRANSIENT STATE CONTEXT
+//********************************************************************
+const initialTransientState: TransientState = {
+  soloId: undefined,
+  errorIds: [],
+  dialogId: undefined,
+};
+
+type TransientAction =
+  | { type: "SET_SOLO"; soloId?: string | undefined }
+  | { type: "SET_ERROR"; errorIds?: string[] }
+  | { type: "SET_DIALOG"; dialogId?: string }
+  | { type: "RESET_TRANSIENTS" }
+  | { type: "CLEAR_TRANSIENTS_EXCEPT"; preserve: (keyof TransientState)[] };
+
+function transientReducer(
+  state: TransientState,
+  action: TransientAction
+): TransientState {
+  switch (action.type) {
+    case "SET_SOLO":
+      return { ...state, soloId: action.soloId };
+    case "SET_ERROR":
+      return { ...state, errorIds: action.errorIds ?? [] };
+    case "SET_DIALOG":
+      return { ...state, dialogId: action.dialogId };
+    case "RESET_TRANSIENTS":
+      return { ...initialTransientState };
+    case "CLEAR_TRANSIENTS_EXCEPT": {
+      const preserve = action.preserve || [];
+      let newState: Partial<TransientState> = {};
+      (action.preserve || []).forEach((key: keyof TransientState) => {
+        newState[key] = state[key];
+      });
+
+      preserve.forEach((key) => {
+        const k = key as keyof TransientState;
+        if (state[k] !== undefined) {
+          newState[k] = state[k] as TransientState[typeof k];
+        }
+      });
+
+      return newState as TransientState;
+    }
     default:
       return state;
   }
@@ -233,6 +306,10 @@ const PhaseContext = createContext<
   [PhaseState, Dispatch<PhaseAction>] | undefined
 >(undefined);
 
+const TransientContext = createContext<
+  [TransientState, Dispatch<TransientAction>] | undefined
+>(undefined);
+
 export function PhaseProvider({
   children,
   phaseId,
@@ -240,9 +317,19 @@ export function PhaseProvider({
   children: ReactNode;
   phaseId: string;
 }) {
-  const value = useReducer(phaseReducer, { ...initialPhaseState, phaseId });
+  const phaseValue = useReducer(phaseReducer, {
+    ...initialPhaseState,
+    phaseId,
+  });
+  const transientValue = useReducer(transientReducer, {
+    ...initialTransientState,
+  });
   return (
-    <PhaseContext.Provider value={value}>{children}</PhaseContext.Provider>
+    <PhaseContext.Provider value={phaseValue}>
+      <TransientContext.Provider value={transientValue}>
+        {children}
+      </TransientContext.Provider>
+    </PhaseContext.Provider>
   );
 }
 
@@ -250,6 +337,31 @@ export function usePhase(): [PhaseState, Dispatch<PhaseAction>] {
   const ctx = useContext(PhaseContext);
   if (!ctx) {
     throw new Error("usePhase must be used within PhaseProvider");
+  }
+  return ctx;
+}
+
+// Hook: useReturnItemsPhase
+// Definition: Returns phase state as ReturnItemsPhaseState for the Return Items phase.
+// Intent: Typed access for phase state with pendingItemId/pendingQty fields.
+// Outputs: [ReturnItemsPhaseState, Dispatch<PhaseAction>]
+
+export function useReturnItemsPhase(): [
+  ReturnItemsPhaseState,
+  Dispatch<PhaseAction>
+] {
+  const ctx = useContext(PhaseContext);
+  if (!ctx) {
+    throw new Error("useReturnItemsPhase must be used within PhaseProvider");
+  }
+  // Cast phase state as ReturnItemsPhaseState (safe: fields are optional)
+  return ctx as [ReturnItemsPhaseState, Dispatch<PhaseAction>];
+}
+
+export function useTransients(): [TransientState, Dispatch<TransientAction>] {
+  const ctx = useContext(TransientContext);
+  if (!ctx) {
+    throw new Error("useTransients must be used within PhaseProvider");
   }
   return ctx;
 }

@@ -1,8 +1,8 @@
 import React from "react";
 import { Phase } from "../components/Components";
 
-import { Card, Floorplan } from "../components/Components";
-import { useTransaction } from "../logic/Logic";
+import { Card, Floorplan, ActorTile } from "../components/Components";
+import { useTransaction, useReturnItemsPhase } from "../logic/Logic";
 
 //********************************************************************
 //  RETURN ITEMS CARD
@@ -15,6 +15,7 @@ import { useTransaction } from "../logic/Logic";
 //   - Props must match ReturnItems repo entry.
 // Inputs: { id: string; qty: number }
 // Outputs: JSX card with editable qty and remove button.
+
 export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   const [, dispatch] = useTransaction();
 
@@ -43,13 +44,24 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
 
   return (
     <Card className="return-items-card">
-      <div>
+      <div className="item-id PLACEHOLDER">
         <strong>Item #{id}</strong>
       </div>
-      <div>
-        Qty:{" "}
-        <input type="number" value={qty} onChange={handleQtyChange} min={0} />
-      </div>
+      <ActorTile id={id}>
+        {/* ActorTile will render one of these based on solo state */}
+        {({ isSolo }: { isSolo: boolean }) =>
+          isSolo ? (
+            <input
+              type="number"
+              value={qty}
+              onChange={handleQtyChange}
+              min={0}
+            />
+          ) : (
+            <div className="qty-display">{qty}</div>
+          )
+        }
+      </ActorTile>
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
       </button>
@@ -96,21 +108,24 @@ function ReturnItemsList() {
 // Outputs: Dispatches ADD action with { id, qty } payload.
 function ItemEntry() {
   const [, dispatch] = useTransaction();
-  const [id, setId] = React.useState("");
-  const [qty, setQty] = React.useState<number>(1);
+  const [phase, dispatchPhase] = useReturnItemsPhase();
+
+  const pendingItemId = phase.pendingItemId || "";
+  const pendingQty = phase.pendingQty || 1;
 
   const handleAdd = () => {
-    if (!id || qty <= 0) return;
+    if (!pendingItemId || pendingQty <= 0) return;
     dispatch({
       type: "REPO_ACTION",
       repoAction: {
         type: "ADD",
         target: "return-items",
-        payload: { id, qty },
+        payload: { id: pendingItemId, qty: pendingQty },
       },
     });
-    setId("");
-    setQty(1);
+    // Reset local entry fields
+    dispatchPhase({ type: "SET_LOCAL", key: "pendingItemId", value: "" });
+    dispatchPhase({ type: "SET_LOCAL", key: "pendingQty", value: 1 });
   };
 
   return (
@@ -118,14 +133,26 @@ function ItemEntry() {
       <input
         type="text"
         placeholder="Item #"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
+        value={pendingItemId}
+        onChange={(e) =>
+          dispatchPhase({
+            type: "SET_LOCAL",
+            key: "pendingItemId",
+            value: e.target.value,
+          })
+        }
       />
       <input
         type="number"
         min={1}
-        value={qty}
-        onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
+        value={pendingQty}
+        onChange={(e) =>
+          dispatchPhase({
+            type: "SET_LOCAL",
+            key: "pendingQty",
+            value: parseInt(e.target.value, 10) || 1,
+          })
+        }
       />
       <button onClick={handleAdd}>Add Item</button>
     </div>

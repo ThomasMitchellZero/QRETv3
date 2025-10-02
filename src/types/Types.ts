@@ -65,7 +65,17 @@ export type TransactionState = {
 export type PhaseState = {
   phaseId: string; // id of the current phase
   screen: string; // id of the current screen in this phase
-  localValues: Record<string, any>; // ephemeral inputs/flags
+};
+
+// Type: ReturnItemsPhaseState
+// Definition: PhaseState extension for Return Items phase, includes local entry fields.
+// Intent: Track item entry form state in phase context.
+// Constraints: pendingItemId and pendingQty are optional and ephemeral.
+// Inputs: Used by Return Items phase.
+// Outputs: Extended phase state for item entry.
+export type ReturnItemsPhaseState = PhaseState & {
+  pendingItemId?: string;
+  pendingQty?: number;
 };
 
 // src/types/Types.ts
