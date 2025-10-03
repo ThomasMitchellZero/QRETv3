@@ -34,6 +34,18 @@ function ReceiptsCard({ id }: { id: string }) {
   const items = receipt?.items ?? [];
   const totalQty = items.reduce((sum: number, item: any) => sum + item.qty, 0);
 
+  // Only render the item list as children if in solo mode (ActorTile handles this)
+  const actorTileChildren = (
+    <div className="receipt-items-list">
+      {items.map((item) => (
+        <button
+          key={item.id}
+          className="receipt-item-btn"
+        >{`ID: ${item.id} Qty: ${item.qty}`}</button>
+      ))}
+    </div>
+  );
+
   return (
     <Card className="return-items-card">
       <div>
@@ -45,14 +57,7 @@ function ReceiptsCard({ id }: { id: string }) {
           id={`receipt-${id}-items`}
           headline={<div className="qty-display">{totalQty}</div>}
         >
-          <div className="receipt-items-list">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                className="receipt-item-btn"
-              >{`${item.name} (x${item.qty})`}</button>
-            ))}
-          </div>
+          {actorTileChildren}
         </ActorTile>
       </Stage>
 
@@ -81,6 +86,9 @@ function ReceiptsList() {
       : new Map(repo && typeof repo === "object" ? Object.entries(repo) : []);
   return (
     <div className="return-items-list">
+      <div className="receipts-list-ids">
+        Available Receipt IDs: {Object.keys(fakeInvoices).join(", ")}
+      </div>
       {Array.from(receiptsMap.values()).map((receipt: any) => (
         <ReceiptsCard key={receipt.id} id={receipt.id} />
       ))}

@@ -48,19 +48,19 @@ export type Invoice = {
   items: (BaseItem & { qty: number; valueCents: number })[];
 };
 
-export const fakeInvoices: Invoice[] = [
-  {
-    id: "INV-001",
+export const fakeInvoices: Record<string, Invoice> = {
+  "999001": {
+    id: "999001",
     items: [
       { id: "1001", qty: 2, valueCents: 1299 }, // Blue Widget
       { id: "1005", qty: 1, valueCents: 499 }, // Mini Widget
     ],
   },
-  {
-    id: "INV-002",
+  "999002": {
+    id: "999002",
     items: [
       { id: "1003", qty: 3, valueCents: 999 }, // Green Widget
       { id: "1004", qty: 1, valueCents: 3499 }, // Widget Pro Max
     ],
   },
-];
+};
