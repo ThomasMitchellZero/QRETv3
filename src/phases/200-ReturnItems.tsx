@@ -2,7 +2,11 @@ import React from "react";
 import { Phase } from "../components/Components";
 
 import { Card, Floorplan, ActorTile, Stage } from "../components/Components";
-import { useTransaction, useReturnItemsPhase } from "../logic/Logic";
+import {
+  useTransaction,
+  useReturnItemsPhase,
+  useTransients,
+} from "../logic/Logic";
 
 //********************************************************************
 //  RETURN ITEMS CARD
@@ -18,6 +22,7 @@ import { useTransaction, useReturnItemsPhase } from "../logic/Logic";
 
 export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   const [, dispatch] = useTransaction();
+  const [, dispatchTransients] = useTransients();
 
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQty = parseInt(e.target.value, 10) || 0;
@@ -46,14 +51,28 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
     });
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatchTransients({ kind: "CLEAR_TRANSIENTS", payload: { preserve: [] } });
+  };
+
   return (
-    <Card className="return-items-card">
+    <Card className="return-items-card" onClick={handleCardClick}>
       <div className="item-id PLACEHOLDER">
         <strong>Item #{id}</strong>
       </div>
       <Stage id={`item-${id}`}>
-        <ActorTile id={id} headline={<div className="qty-display">{qty}</div>}>
+        <ActorTile
+          id={`item-${id}-qty`}
+          headline={<div className="qty-display">{qty}</div>}
+        >
           <input type="number" value={qty} onChange={handleQtyChange} min={0} />
+        </ActorTile>
+        <ActorTile
+          id={`item-${id}-refund`}
+          headline={<div className="qty-display">{"Refund"}</div>}
+        >
+          <div className="refund-amount PLACEHOLDER">$XX.XX</div>
         </ActorTile>
       </Stage>
 

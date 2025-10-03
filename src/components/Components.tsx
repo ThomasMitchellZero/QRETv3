@@ -99,10 +99,10 @@ export function Stage({
   children: React.ReactNode;
 }) {
   const [transients] = useTransients();
-  const soloId = transients?.solo?.[id];
+  const activeSoloId = transients?.activeSolo?.[id];
   return (
-    <StageContext.Provider value={{ stageId: id, soloId }}>
-      <Container className={`stage ${soloId ? "solo-mode" : ""}`}>
+    <StageContext.Provider value={{ stageId: id, activeSoloId }}>
+      <Container className={`stage ${activeSoloId ? "solo-mode" : ""}`}>
         {children}
       </Container>
     </StageContext.Provider>
@@ -118,44 +118,38 @@ export type ActorTileProps = {
 
 export function ActorTile(props: ActorTileProps) {
   const [transients, dispatchTransients] = useTransients();
-  const stageCtx = useStage() as { stageId?: string; soloId?: string };
-  const parentStageId = stageCtx?.stageId;
+  const { activeStageId, activeSoloId } = transients;
+  const stageCtx = useStage() as { stageId?: string; activeSoloId?: string };
+  const parentStageId = stageCtx.stageId || "defaultStage";
   const { id, headline, children, ...rest } = props;
 
-  let status: "solo" | "hidden" | "default";
-  if (transients.stageId === parentStageId && transients.soloId === id) {
-    status = "solo";
-  } else if (transients.stageId === parentStageId) {
-    status = "hidden";
-  } else {
-    status = "default";
-  }
+  const tileState =
+    activeSoloId === id
+      ? "solo"
+      : activeSoloId && activeStageId === parentStageId
+      ? "hidden"
+      : "default";
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    if (status === "solo") {
-      dispatchTransients({
-        kind: "CLEAR_TRANSIENTS",
-        payload: { preserve: ["stageId", "soloId"] },
-      });
-    } else {
-      dispatchTransients({
-        kind: "SET_SOLO",
-        payload: { parentStageId, soloId: id } as TransientState["solo"],
-      });
-    }
+    dispatchTransients({
+      kind: "SET_SOLO",
+      payload: {
+        activeStageId: parentStageId,
+        activeSoloId: id,
+      },
+    });
   };
 
   return (
     <Container
       id={id}
-      className={`actor-tile ${status}`}
+      className={`actor-tile ${tileState}`}
       onClick={handleClick}
       {...rest}
     >
       <div className="actor-headline">{headline}</div>
-      {status === "solo" && <div className="actor-content">{children}</div>}
+      {tileState === "solo" && <div className="actor-content">{children}</div>}
     </Container>
   );
 }
@@ -196,7 +190,6 @@ export type PhaseProps = {
 // Inputs: PhaseProps
 // Outputs: JSX layout for a phase screen.
 import { PhaseProvider } from "../logic/Logic";
-import { stat } from "fs";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
   return (
     <PhaseProvider phaseId={phaseId}>
@@ -305,14 +298,11 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
 //   - Click Policy: isolate (stops bubbling)
 // Inputs: CardProps { children, className? }
 // Outputs: JSX element wrapping children in a styled card that isolates click events.
-export type CardProps = {
-  children: React.ReactNode;
-  className?: string;
-};
+export type CardProps = ContainerProps;
 
 export function Card({ children, className }: CardProps): JSX.Element {
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    //e.stopPropagation();
   };
   return (
     <div

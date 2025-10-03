@@ -91,6 +91,10 @@ select {
     height: auto;
     min-height: var(--tile-size, 8rem);
   }
+
+  &.hidden {
+    display: none;
+  }
 }
 .footer {
   display: flex;

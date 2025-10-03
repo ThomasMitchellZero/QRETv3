@@ -263,7 +263,10 @@ function phaseReducer(state: any, action: PhaseAction): any {
 const initialTransientState: TransientState = {};
 
 type TransientAction =
-  | { kind: "SET_SOLO"; payload?: { stageId?: string; soloId?: string } }
+  | {
+      kind: "SET_SOLO";
+      payload?: { activeStageId?: string; activeSoloId?: string };
+    }
   | { kind: "SET_ERROR"; payload?: { errorIds?: string[] } }
   | { kind: "SET_DIALOG"; payload?: { dialogId?: string } }
   | { kind: "RESET_TRANSIENTS" }
