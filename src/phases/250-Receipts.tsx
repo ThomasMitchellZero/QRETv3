@@ -1,6 +1,7 @@
+import { fakeInvoices } from "../api/fakeApi";
 import React from "react";
 import { Phase } from "../components/Components";
-import { Card, Floorplan } from "../components/Components";
+import { Card, Floorplan, Stage, ActorTile } from "../components/Components";
 import { useTransaction } from "../logic/Logic";
 
 //********************************************************************
@@ -28,11 +29,33 @@ function ReceiptsCard({ id }: { id: string }) {
       },
     });
   };
+
+  const receipt = fakeInvoices[id];
+  const items = receipt?.items ?? [];
+  const totalQty = items.reduce((sum: number, item: any) => sum + item.qty, 0);
+
   return (
     <Card className="return-items-card">
       <div>
         <strong>Receipt #{id}</strong>
       </div>
+
+      <Stage id={`receipt-${id}`}>
+        <ActorTile
+          id={`receipt-${id}-items`}
+          headline={<div className="qty-display">{totalQty}</div>}
+        >
+          <div className="receipt-items-list">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                className="receipt-item-btn"
+              >{`${item.name} (x${item.qty})`}</button>
+            ))}
+          </div>
+        </ActorTile>
+      </Stage>
+
       <button onClick={handleRemove} aria-label="Remove receipt">
         🗑️
       </button>
