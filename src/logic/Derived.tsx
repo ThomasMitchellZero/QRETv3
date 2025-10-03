@@ -22,15 +22,56 @@ function toMap(repo: any): Map<string, any> {
   return repo instanceof Map ? repo : new Map(Object.entries(repo));
 }
 
+/*
+
+Monkey Fling Poo
+
+    -A standard type for all atoms?  Maybe not necessary?  But it would be nice if the logic functions could be typed to expect a certain shape.
+        -If nothing else, I want the Atoms to have an atomization ID, distinct from the item ID.  The whole idea of this process is to reduce it to singular units, so of course we're going to have fully-identical instances.
+        -Maybe a standard ID and a type to expect?  
+        -Or maybe this is just an extension of each type?
+
+    -"Are We Related?": Compare Atom({ FirstAtom, SecondAtom, matchingFn(FirstAtom, SecondAtom)   }) -> boolean
+        /A function that will compare two atoms against a definition of 'the same item' and return true if they are the same, false otherwise./
+
+    -Some way (maybe a reducer?) to will perform pre-defined (or user-specified?) operations on 2 atoms.
+
+    -A function that will take two sets of atoms and an AreWeRelatedFn, and return 3 sets:
+        -Atoms that are in both sets (intersection)
+        -Atoms that are only in the first set
+        -Atoms that are only in the second set
+
+        -We probably have to do something to the output, although I suppose if we are REALLY clever with our typing we could just merge that shit without logic.
+            -Also, if there are values that lose critical info when stored... that means we're making a mistake in how we capture data, right?
+
+        The goal would be that at the end, you have identified all instances that are the same and joined them.  The result would have all the properties of both parents, for future atomization.
+
+    The other things I do in the Repos is store ONLY data that comes from the users.  We would still use the TYPE, but we should never be duplicating 
+
+    
+    
+    returns 3 maps: The intersection, the items only in the first map, and the items only in the second map.
+
+
+*/
+
 //------------------------------
 // Layer 1: Normalized Views
 //------------------------------
-export function deriveReceiptedItems(receiptsRepo: any): Map<string, BaseItem> {
-  const receipts = toMap(receiptsRepo);
+
+// Extracts the Items sold on receipts currently in the transaction State (TransactionState.receipts).
+export function deriveReceiptedItems(
+  receiptsInput: Map<string, Invoice> | Record<string, Invoice> | undefined
+): Map<string, BaseItem> {
+  const receiptsMap: Map<string, Invoice> =
+    receiptsInput instanceof Map
+      ? receiptsInput
+      : new Map(receiptsInput ? Object.entries(receiptsInput) : []);
+
   const itemsMap = new Map<string, BaseItem>();
 
-  receipts.forEach((receipt: any) => {
-    receipt.items.forEach((item: any) => {
+  receiptsMap.forEach((invoice) => {
+    invoice.items.forEach((item) => {
       const existing = itemsMap.get(item.id);
       if (existing) {
         const newQty = (existing.qty || 0) + item.qty;
@@ -216,24 +257,18 @@ export function deriveRefundSummary(eligible: Map<string, BaseItem>) {
  * Inputs: receiptsRepo (Map<string, Invoice> or Record<string, Invoice>)
  * Outputs: { items: BaseItem[], totalItems: number, totalValue: number }
  */
-export function summarizeReceiptedItems() {
-  const [transaction] = useTransaction();
-  const receiptsRepo = transaction.receipts || new Map<string, Invoice>();
+
+export function summarizeReceiptedItems(
+  receiptsRepo: TransactionState["receipts"]
+) {
   const receipted = deriveReceiptedItems(receiptsRepo);
 
-  const totalItems = Array.from(receipted.values()).reduce(
-    (sum, item) => sum + (item.qty || 0),
-    0
-  );
-
-  const totalValue = Array.from(receipted.values()).reduce(
+  const items = Array.from(receipted.values());
+  const totalItems = items.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const totalValue = items.reduce(
     (sum, item) => sum + (item.qty || 0) * (item.valueCents || 0),
     0
   );
 
-  return {
-    items: Array.from(receipted.values()),
-    totalItems,
-    totalValue,
-  };
+  return { items, totalItems, totalValue };
 }

@@ -74,6 +74,7 @@ export const WorkingAgreement: Concept[] = [
     constraints: [
       "The spec declares the crown; content is always pulled directly from delegated artifacts.",
       "Delegated artifacts must include authoritative inline design headers (definition, intent, constraints).",
+      "Text in files marked TEXTCANON is authoritative for that domain.",
       "No duplication or shadow definitions in the spec for delegated domains.",
       "All delegation follows artifact buckets:",
       "  - App.tsx → canonical runtime container.",
@@ -255,6 +256,7 @@ export const WorkingAgreement: Concept[] = [
       "Never infer user intent from selection alone.",
     ],
   },
+
   {
     id: "PROC-TYPING-001",
     term: "PrototypeTypingPolicy",

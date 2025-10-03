@@ -389,12 +389,9 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
     }
   };
 
-  const totalValue = summarizeReceiptedItems().totalValue;
-  console.log(totalValue);
-
   return (
     <div className="footer">
-      <span>{label || `Refund Value: ${totalValue}`}</span>
+      <span>{label || `Refund Value: $`}</span>
       <button onClick={handleContinue} disabled={!nextPhase}>
         Continue
       </button>
