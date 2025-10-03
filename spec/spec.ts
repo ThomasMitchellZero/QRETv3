@@ -406,6 +406,21 @@ export const Dictionary: Record<string, Concept> = {
     definition:
       "Interactive conversation between human and model, not authoritative.",
   },
+  "CAN": {
+    id: "DICT-CAN-001",
+    term: "CanonicalAtomicNormalization",
+    layer: "universal",
+    definition:
+      "The process of atomizing values into their smallest indistinguishable units, ensuring that each quantity represents a set of truly identical items. Once normalized, all rollups can be derived with simple filters and aggregations.",
+    intent:
+      "Prevent ambiguity and double-counting by enforcing a canonical, unambiguous representation of items at the most atomic level.",
+    constraints: [
+      "Atomization must produce units that are indistinguishable within their equivalence class.",
+      "Qty always means 'count of identical atoms' post-normalization.",
+      "All filters and rollups must operate only on atomized values.",
+      "Normalization is progressive: successive derivations may further refine identity (e.g., by receipt, by promotion, by price).",
+    ],
+  },
   "Conditional": {
     id: "DICT-CONDITIONAL-001",
     term: "Conditional",

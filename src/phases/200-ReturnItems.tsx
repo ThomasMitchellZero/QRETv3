@@ -1,5 +1,6 @@
 import React from "react";
 import { Phase } from "../components/Components";
+import { fakeCatalog } from "../api/fakeApi";
 
 import { Card, Floorplan, ActorTile, Stage } from "../components/Components";
 import {
@@ -102,6 +103,9 @@ function ReturnItemsList() {
 
   return (
     <div className="return-items-list">
+      <div className="catalog-items-list">
+        Available Item IDs: {Object.keys(fakeCatalog).join(", ")}
+      </div>
       {Array.from(itemsMap.values()).map((item: any) => (
         <ReturnItemsCard key={item.id} id={item.id} qty={item.qty} />
       ))}

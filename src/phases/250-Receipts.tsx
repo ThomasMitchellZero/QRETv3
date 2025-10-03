@@ -1,4 +1,4 @@
-import { fakeInvoices } from "../api/fakeApi";
+import { fakeInvoices, fakeCatalog } from "../api/fakeApi";
 import React from "react";
 import { Phase } from "../components/Components";
 import { Card, Floorplan, Stage, ActorTile } from "../components/Components";
