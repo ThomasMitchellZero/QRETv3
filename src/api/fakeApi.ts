@@ -1,4 +1,4 @@
-import type { BaseItem } from "../types/Types";
+import type { BaseItem, Invoice } from "../types/Types";
 
 // Catalog entries = metadata only (not regular repo items)
 export type CatalogEntry = {
@@ -40,12 +40,6 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     valueCents: 499,
     picture: "/images/catalog/mini-widget.png",
   },
-};
-
-// Invoice = list of BaseItems with qty + valueCents
-export type Invoice = {
-  id: string;
-  items: (BaseItem & { qty: number; valueCents: number })[];
 };
 
 export const fakeInvoices: Record<string, Invoice> = {

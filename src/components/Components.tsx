@@ -2,8 +2,10 @@ import type { PhaseNode } from "../types/Types";
 import { StartPhase } from "../phases/050-Start";
 import { ReturnItemsPhase } from "../phases/200-ReturnItems";
 import { ReceiptsPhase } from "../phases/250-Receipts";
+import { summarizeReceiptedItems } from "../logic/Derived";
 
 import React from "react";
+
 import {
   useTransaction,
   useTransients,
@@ -387,9 +389,12 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
     }
   };
 
+  const totalValue = summarizeReceiptedItems().totalValue;
+  console.log(totalValue);
+
   return (
     <div className="footer">
-      <span>{label || "Refund Value"}</span>
+      <span>{label || `Refund Value: ${totalValue}`}</span>
       <button onClick={handleContinue} disabled={!nextPhase}>
         Continue
       </button>

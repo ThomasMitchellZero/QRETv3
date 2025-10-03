@@ -44,11 +44,15 @@ export type PhaseNode = {
 //   - May include flexible input maps for modularity.
 // Inputs: User-provided inputs, navigation state.
 // Outputs: State available across all phases until reset.
+
 export type TransactionState = {
   currentPhase: string; // id of current Phase/NavNode
   userInputs: Record<string, any>; // flexible map for user input values
   transactionId?: string; // optional identifier for persistence/debug
   phases: PhaseNode[]; // ordered list of phases in this transaction
+  // Canonical transaction-level repos:
+  returnItems?: Map<string, BaseItem>;
+  receipts?: Map<string, Invoice>;
 };
 
 //********************************************************************
@@ -83,4 +87,10 @@ export type BaseItem = {
   id: string;
   valueCents?: number;
   qty?: number;
+};
+
+// Invoice = list of BaseItems with qty + valueCents
+export type Invoice = {
+  id: string;
+  items: (BaseItem & { qty: number; valueCents: number })[];
 };

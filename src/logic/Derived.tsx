@@ -11,8 +11,8 @@
 // ================================
 
 import { fakeCatalog } from "../api/fakeApi";
-import type { BaseItem } from "../types/Types";
-import type { TransactionState } from "../types/Types";
+import type { BaseItem, Invoice, TransactionState } from "../types/Types";
+import { useTransaction } from "./Logic";
 
 //--------------------------------------
 // Helpers
@@ -200,4 +200,40 @@ export function deriveRefundSummary(eligible: Map<string, BaseItem>) {
   );
   const refundTotal = deriveRefundTotal(eligible);
   return { totalItems, refundTotal };
+}
+
+//======================================
+// Layer 4: Summaries
+//======================================
+
+/**
+ * summarizeReceiptedItems
+ * Definition: Produce a flattened list of receipted items with aggregate totals.
+ * Intent: Provide UI-ready data for rendering receipts summary.
+ * Constraints:
+ *   - Pure function, no state mutation.
+ *   - Input must be a receipts repo (TransactionState.receipts).
+ * Inputs: receiptsRepo (Map<string, Invoice> or Record<string, Invoice>)
+ * Outputs: { items: BaseItem[], totalItems: number, totalValue: number }
+ */
+export function summarizeReceiptedItems() {
+  const [transaction] = useTransaction();
+  const receiptsRepo = transaction.receipts || new Map<string, Invoice>();
+  const receipted = deriveReceiptedItems(receiptsRepo);
+
+  const totalItems = Array.from(receipted.values()).reduce(
+    (sum, item) => sum + (item.qty || 0),
+    0
+  );
+
+  const totalValue = Array.from(receipted.values()).reduce(
+    (sum, item) => sum + (item.qty || 0) * (item.valueCents || 0),
+    0
+  );
+
+  return {
+    items: Array.from(receipted.values()),
+    totalItems,
+    totalValue,
+  };
 }
