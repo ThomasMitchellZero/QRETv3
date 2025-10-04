@@ -3,6 +3,7 @@ import React from "react";
 import { Phase } from "../components/Components";
 import { Card, Floorplan, Stage, ActorTile } from "../components/Components";
 import { useTransaction } from "../logic/Logic";
+import { useDerivation, RefundDebugger } from "../logic/Derivation";
 
 //********************************************************************
 //  RECEIPTS CARD
@@ -155,6 +156,7 @@ export function ReceiptsPhase() {
     <Phase phaseId="receipts" title="Receipts">
       <Floorplan
         pageTitle="Receipts"
+        leftColumn={<RefundDebugger />}
         mainContent={<ReceiptsList />}
         rightColumn={<ReceiptEntry />}
       />

@@ -9,6 +9,8 @@ import {
   useTransients,
 } from "../logic/Logic";
 
+import { useDerivation, RefundDebugger } from "../logic/Derivation";
+
 //********************************************************************
 //  RETURN ITEMS CARD
 //********************************************************************
@@ -203,7 +205,7 @@ export function ReturnItemsPhase() {
     <Phase phaseId="return-items" title="Return Items">
       <Floorplan
         pageTitle="Return Items"
-        leftColumn={null}
+        leftColumn={<RefundDebugger />}
         mainContent={<ReturnItemsList />}
         rightColumn={<ItemEntry />}
       />
