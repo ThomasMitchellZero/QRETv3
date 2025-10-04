@@ -10,7 +10,6 @@ import {
   useTransaction,
   useTransients,
   useNavigatePhase,
-  type TransientState,
 } from "../logic/Logic";
 
 //********************************************************************
@@ -67,27 +66,6 @@ export function Tile(props: TileProps): JSX.Element {
   );
 }
 
-//********************************************************************
-//  STAGE + ACTOR TILE
-//********************************************************************
-// Context-aware Stage and ActorTile components.
-// Definition: Stage is a container that manages layout of ActorTiles.
-// Intent: Provide standardized tile grid that supports "solo" expansion.
-// Constraints:
-//   - Solo state is stored in PhaseProvider (only one per Phase).
-//   - Stage adds/removes "solo-mode" class based on solo state.
-//   - ActorTile toggles soloId in Phase context on click.
-//   - Styling delegated to style.scss.
-//   - Click Policy: propagate (resets soloId on outside click)
-
-// ================================
-// StageContext — Local Solo Context for Stage/ActorTile
-// Definition: Provides stageId and soloId context to ActorTile children within a Stage.
-// Intent: Decouple solo state from global transients; allow nested Stage/ActorTile groups.
-// Constraints:
-//   - Only Stage provides this context; ActorTile must consume via useStage().
-// Inputs: { stageId?: string; soloId?: string }
-// Outputs: useStage() hook returns { stageId, soloId }
 const StageContext = React.createContext<object>({});
 export function useStage() {
   return React.useContext(StageContext);
@@ -284,7 +262,7 @@ export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
   return (
     <div className="tile">
       <div className="phase-node-id">
-        <strong>{node.id}</strong>
+        <strong>{node.phaseId}</strong>
       </div>
     </div>
   );
@@ -333,11 +311,11 @@ export function NavBar(): JSX.Element {
   return (
     <div className="nav-bar">
       {transaction.phases.map((node) => {
-        const isSelected = node.id === selectedId;
+        const isSelected = node.phaseId === selectedId;
         return (
           <div
-            key={node.id}
-            onClick={() => navigate(node.id)}
+            key={node.phaseId}
+            onClick={() => navigate(node.phaseId)}
             style={{
               border: isSelected ? "2px solid blue" : "1px solid #ccc",
               cursor: "pointer",
@@ -374,7 +352,7 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
   const navigate = useNavigatePhase();
   const phases = transaction.phases;
   const currentIndex = phases.findIndex(
-    (p) => p.id === transaction.currentPhase
+    (p) => p.phaseId === transaction.currentPhase
   );
   const nextPhase =
     currentIndex >= 0 && currentIndex < phases.length - 1
@@ -385,7 +363,7 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
     if (onContinue) {
       onContinue();
     } else if (nextPhase) {
-      navigate(nextPhase.id);
+      navigate(nextPhase.phaseId);
     }
   };
 

@@ -16,27 +16,15 @@ import React, {
   type ReactNode,
   type Dispatch,
 } from "react";
-import type { TransactionState } from "../types/Types";
-import type { PhaseNode } from "../types/Types"; // make sure this is at the top
-
-// ================================
-// PhaseState and TransientState Types
-// ================================
-/**
- * PhaseState: Phase-level state (persistent for the phase, but not for UI transients)
- * Does NOT include soloId, errorIds, or dialogId (those are transient UI states).
- */
-import type { ReturnItemsPhaseState } from "../types/Types";
-export type PhaseState = {
-  phaseId: string;
-  screen: string;
-};
-
-/**
- * TransientState: State for ephemeral UI overlays and transients (soloId, errorIds, dialogId, etc)
- * These are discarded on phase exit, and reset on navigation or explicit reset.
- */
-export type TransientState = Record<string, any>;
+import type {
+  TransactionState,
+  PhaseNode,
+  Item,
+  Invoice,
+  PhaseState,
+  TransientState,
+  ReturnItemsPhaseState,
+} from "../types/Types";
 
 //********************************************************************
 //  TRANSACTION STATE CONTEXT
@@ -45,9 +33,9 @@ const initialTransactionState: TransactionState = {
   currentPhase: "start",
   userInputs: {},
   phases: [
-    { id: "start", url: "/start", status: "mandatory" },
-    { id: "return-items", url: "/return-items", status: "mandatory" },
-    { id: "receipts", url: "/receipts", status: "mandatory" },
+    { phaseId: "start", url: "/start", status: "mandatory" },
+    { phaseId: "return-items", url: "/return-items", status: "mandatory" },
+    { phaseId: "receipts", url: "/receipts", status: "mandatory" },
   ],
 };
 
@@ -60,13 +48,6 @@ const initialTransactionState: TransactionState = {
  */
 export type RepoTarget = string; // For generality, allow any string key in userInputs
 
-/**
- * RepoActionType: Supported actions for a repo.
- * - ADD: Add a new item to the repo array.
- * - EDIT: Edit an item in the repo array by id or index.
- * - REMOVE: Remove an item from the repo array by id or index.
- * - DEDUCT: Deduct (decrement) a property (e.g., quantity) from an item by id or index.
- */
 export type RepoActionType = "ADD" | "EDIT" | "REMOVE" | "DEDUCT";
 
 /**
@@ -94,6 +75,7 @@ type TransactionAction =
  * - Throws clear errors if required id/property is missing.
  * - Returns updated userInputs with { ...userInputs, [target]: newRepo }.
  */
+
 function handleRepoAction(
   userInputs: Record<string, any>,
   action: RepoAction
@@ -229,7 +211,7 @@ export function useTransaction(): [
 //********************************************************************
 const initialPhaseState: PhaseState = {
   phaseId: "",
-  screen: "primary",
+  activeScreen: "primary",
 };
 
 type PhaseAction =
@@ -275,7 +257,7 @@ type TransientAction =
 function transientReducer(
   state: TransientState,
   action: TransientAction
-): TransientState {
+): Object {
   switch (action.kind) {
     case "SET_SOLO":
       return {
@@ -290,8 +272,8 @@ function transientReducer(
       return { ...initialTransientState };
     case "CLEAR_TRANSIENTS": {
       const preserve = action.payload?.preserve || [];
-      let newState: any = {};
-      preserve.forEach((key) => {
+      let newState: TransientState = {};
+      preserve.forEach((key: string) => {
         if (state[key] !== undefined) {
           newState[key] = state[key];
         }
@@ -383,7 +365,7 @@ export function useTransients(): [TransientState, Dispatch<TransientAction>] {
  */
 export function useSelectedPhase(): PhaseNode | undefined {
   const [state] = useTransaction();
-  return state.phases.find((p) => p.id === state.currentPhase);
+  return state.phases.find((p) => p.phaseId === state.currentPhase);
 }
 
 /**
@@ -419,7 +401,7 @@ export function useNavigatePhase(): (phaseId: string) => void {
   const [, dispatchPhase] = usePhase();
 
   return (phaseId: string) => {
-    const exists = transaction.phases.some((p) => p.id === phaseId);
+    const exists = transaction.phases.some((p) => p.phaseId === phaseId);
     if (!exists) {
       throw new Error(
         `⚠️ Attempted to navigate to invalid phaseId: ${phaseId}`

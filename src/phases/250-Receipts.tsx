@@ -39,9 +39,9 @@ function ReceiptsCard({ id }: { id: string }) {
     <div className="receipt-items-list">
       {items.map((item) => (
         <button
-          key={item.id}
+          key={item.itemId}
           className="receipt-item-btn"
-        >{`ID: ${item.id} Qty: ${item.qty}`}</button>
+        >{`ID: ${item.itemId} Qty: ${item.qty}`}</button>
       ))}
     </div>
   );
