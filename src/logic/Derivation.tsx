@@ -155,8 +155,7 @@ export function useDerivation() {
   // ================================
   // These functions treat all inputs as flat objects (Record<string, any>).
   // They make no assumptions about shape, type, or domain semantics.
-  // Purpose: Attach new properties from one or more "mixer" layers
-  //           onto the persistent blend, without altering its length.
+  // Purpose: Attach new properties from one or more "mixer" layers onto the persistent blend, without altering its length.
   // No business logic. No type knowledge. Just dumb data merging.
 
   /**
@@ -167,18 +166,6 @@ export function useDerivation() {
     return b.itemId === m.itemId;
   }
 
-  function collapse(
-    blend: Record<string, any>,
-    mixer: Record<string, any>
-  ): Record<string, any> {
-    return areEqual(blend, mixer) ? blend : mixer;
-  }
-
-  /**
-   * Blenderize — applies one or more mixer arrays to a blend array,
-   * enriching each element in the blend with properties from the first
-   * matching record in each mixer. Quantity and order are preserved.
-   */
   function blenderize(
     blend: Record<string, any>[],
     mixer: Record<string, any>[]
@@ -186,17 +173,16 @@ export function useDerivation() {
     // Make a mutable copy of the mixer pool
     const remaining = [...mixer];
     const result: Record<string, any>[] = [];
-  
+
     // Outer loop: iterate through every atom in the Blend
     for (const b of blend) {
       let matched = false;
-  
+
       // Inner loop: iterate through the remaining Mixer atoms
       for (let i = 0; i < remaining.length; i++) {
-        
         const m = remaining[i];
         if (!m) continue; // ✅ skip if undefined
-  
+
         // If they are canonically identical, collapse them
         if (areEqual(b, m)) {
           result.push(m); // the Mix atom replaces the Blend atom
@@ -205,13 +191,13 @@ export function useDerivation() {
           break; // stop searching once collapsed
         }
       }
-  
+
       // If no match found, keep the original Blend atom
       if (!matched) {
         result.push(b);
       }
     }
-  
+
     return result;
   }
 
@@ -243,17 +229,17 @@ export function useDerivation() {
   }
 
   function distillizer<T extends Record<string, any>>(
-    atoms: T[],
-    groupKeys: (keyof T)[] // must specify which fields define identity
+    items: T[],
+    keys: (keyof T)[]
   ): T[] {
-    if (atoms.length === 0) return [];
+    if (items.length === 0) return [];
 
     // Map from composite key string → aggregated record
     const grouped = new Map<string, T>();
 
-    atoms.forEach((atom) => {
+    items.forEach((atom) => {
       // Build unique key from grouping fields
-      const key = groupKeys.map((k) => String(atom[k] ?? "null")).join("|");
+      const key = keys.map((k) => String(atom[k] ?? "null")).join("|");
       const existing = grouped.get(key);
 
       if (existing) {
@@ -276,19 +262,50 @@ export function useDerivation() {
   }
 
   // total Return value
-  const totalReturnCents = distillizer(returnItemsBlend, [
-    "itemId",
-    "invoId",
-  ]).reduce((sum, item) => sum + (item.valueCents ?? 0), 0);
+  const totalReturnCents = distillizer<Item>(
+    returnItemsBlend as Item[],
+    ["itemId", "invoId"]
+  ).reduce((sum, item) => sum + (item.valueCents ?? 0), 0);
 
-  const refundItems: Record<string, any>[] = distillizer(returnItemsBlend, [
-    "itemId",
-    "invoId",
-  ]);
-  const perItemRefunds = distillizer(refundItems, ["itemId"]);
+  const refundItems = distillizer<Item>(
+    returnItemsBlend as Item[],
+    ["itemId", "invoId"]
+  );
+  const perItemRefunds = distillizer<Item>(refundItems, ["itemId"]);
   const sanityCheck = distillizerStringTest();
 
+  /**
+    
+    -itemReceipts: Each item needs to show how it's being refunded (or not).  
+      For each itemId, return the array of distillized RefundItems with matching itemID
+
+
+    -ReceiptItemsSold: For each receipt, return the array of distillized RefundItems with matching invoId
+   */
+
   // Rollup of all
+
+  // ================================
+  // Layer : Secondary Rollups (Relational Views)
+  // ================================
+
+  // itemReceipts — Map<itemId, Item[]>
+  // For each itemId, collect all refund records (i.e., per receipt) where that item appears.
+  const itemReceipts: Map<string, Item[]> = new Map();
+  refundItems.forEach((item) => {
+    const list = itemReceipts.get(item.itemId) ?? [];
+    list.push(item);
+    itemReceipts.set(item.itemId, list);
+  });
+
+  // receiptItemsSold — Map<invoId, Item[]>
+  // For each receipt (invoice ID), collect all items refunded under that receipt.
+  const receiptItemsSold: Map<string, Item[]> = new Map();
+  refundItems.forEach((item) => {
+    const list = receiptItemsSold.get(item.invoId ?? "unknown") ?? [];
+    list.push(item);
+    receiptItemsSold.set(item.invoId ?? "unknown", list);
+  });
 
   return {
     refundItems,

@@ -1,8 +1,80 @@
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@layer reset, tokens, base, components, utilities, overrides;
+
+/* ===============================================
+   01. DESIGN TOKENS — Canonical Base
+   =============================================== */
+@layer tokens {
+  :root {
+    /// ==============================================
+    /// 01. DESIGN TOKENS — rpx Spacing System
+    /// ----------------------------------------------
+    /// Spacing tokens now use rpx units (1rpx = 1/16 rem).
+    /// Use --space-4rpx, --space-8rpx, etc. for modular spacing.
+    /// Example: --space-16rpx = 1rem.
+    /// ==============================================
+    --rpx: calc(1rem / 16);
+    --space-4rpx: calc(var(--rpx) * 4);   /// 4rpx = 0.25rem (4/16)
+    --space-8rpx: calc(var(--rpx) * 8);   /// 8rpx = 0.5rem (8/16)
+    --space-12rpx: calc(var(--rpx) * 12); /// 12rpx = 0.75rem (12/16)
+    --space-16rpx: calc(var(--rpx) * 16); /// 16rpx = 1rem (16/16)
+    --space-24rpx: calc(var(--rpx) * 24); /// 24rpx = 1.5rem (24/16)
+    --space-32rpx: calc(var(--rpx) * 32); /// 32rpx = 2rem (32/16)
+
+    // 🎨 Color (Semantic Prototypes)
+    --color-bg: #f0f0f0;
+    --color-surface: #ffffff;
+    --color-border: #ccc;
+    --color-primary: #99ccff;
+    --color-success: #ccffcc;
+    --color-error: #ffcccc;
+    --color-warning: #ffe0b3;
+    --color-text: #222;
+
+    // 🔲 Radii
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+
+    // ⏱ Animation / Motion
+    --motion-fast: 0.12s;
+    --motion-medium: 0.25s;
+    --motion-slow: 0.4s;
+  }
+  /* ===============================================
+     02. TYPOGRAPHY TOKENS — Prototype Edition
+     =============================================== */
+  :root {
+    // 🗣️ FONT FAMILIES
+    --font-display: "Comic Sans MS", "Comic Sans", cursive;
+    --font-body: "Comic Sans MS", "Comic Sans", cursive;
+
+    // 🧱 FONT SIZES — minimal responsive set
+    --font-xs: 0.75rem;
+    --font-sm: 0.875rem;
+    --font-md: 1rem;
+    --font-lg: 1.25rem;
+    --font-xl: 1.5rem;
+
+    // 🧩 FONT WEIGHTS
+    --weight-regular: 400;
+    --weight-bold: 700;
+  }
 }
+
+/* ===============================================
+   01b. MIXINS — Canonical Reusables (moved to utilities)
+   =============================================== */
+
+/* ===============================================
+   01c. NAMING CONVENTIONS — Canonical SCSS
+   =============================================== */
+// Project Naming Conventions:
+//  • Hyphenated class names are used for DOM elements (e.g. `.return-items-card`, `.main-content-row`).
+//  • camelCase is used for SCSS mixins and variables (e.g. `@mixin flex-center`, `$tileSize`).
+//  • BEM-like nesting is preferred for scoped selectors (e.g. `.card .card-title {}`).
+//  • UI component classes start with `ui-` (e.g. `.ui-refund-details`).
+//  • Layout classes use nouns reflecting their structure (e.g. `.floorplan`, `.stage`, `.footer`).
+//  • Temporary debug or dev colors should include a comment like `// DEBUG-COLOR`.
 
 /* ================================
    style.scss — Canonical Styles Bucket
@@ -15,270 +87,157 @@
    Outputs: Global and component-specific visual styles.
    ================================ */
 
-/* CSS RESET / BASELINE — Ensures consistent rendering across browsers */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  font-family: sans-serif;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-/* stable/styles/floorplan.scss — global layout with labeled debug colors */
-
-.stage {
-  display: flex;
-  flex-wrap: wrap;
-  flex: 1 1 100%;
-  width: 100%;
-  gap: 1rem;
-  min-height: var(--tile-size, 8rem);
-  height: auto;
-  max-height: 100%;
-  background-color: darksalmon;
-}
-
-.actor-tile {
-  flex: 0 0 var(--tile-size, 8rem);
-  height: var(--tile-size, 8rem);
-  min-height: var(--tile-size, 8rem);
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  .actor-headline {
-    flex: 0 0 auto;
-    width: 100%;
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  .actor-content {
-    flex: 1 1 auto;
-    width: 100%;
+  html,
+  body {
+    height: 100%;
+    font-family: sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-
-  &.solo {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: var(--tile-size, 8rem);
-  }
-
-  &.hidden {
-    display: none;
-  }
-}
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  text-align: left;
-  button {
-    text-align: right;
-  }
+  /* etc... */
 }
 
-.floorplan {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f0f0f0;
-
-  .top-bar {
-    height: 60px;
-    background-color: #d0eaff;
-    @include flex-center;
-    flex: 0 0 auto;
-    width: 100%;
+@layer base {
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
   }
 
-  .body-row {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    min-height: 0;
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
   }
 
-  .left-column {
-    flex: 0 0 25%;
-    max-width: 25%;
-    background-color: #ffe0e0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
+  /* Apply globally */
+  body {
+    font-family: var(--font-body);
+    font-size: var(--font-md);
+    font-weight: var(--weight-regular);
+    color: var(--color-text);
+  }
 
-    .left-column-title {
-      height: 40px;
-      background-color: #ffcccc;
-      @include flex-center;
+  /* Allow easy upgrade later */
+  [data-theme="final"] {
+    --font-display: "Inter", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @layer base {
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-primary);
+      color: var(--color-text);
+      padding: var(--space-8rpx) var(--space-16rpx);
+      font-weight: var(--weight-bold);
+      transition: background var(--motion-fast);
+  
+      &:hover {
+        background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
+      }
+  
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
-  }
-
-  .right-column {
-    flex: 0 0 25%;
-    max-width: 25%;
-    background-color: #e0ffe0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-
-    .right-column-title {
-      height: 40px;
-      background-color: #ccffcc;
-      @include flex-center;
-    }
-  }
-
-  .main-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #e0e0ff;
-    min-width: 0;
-
-    .page-title-row {
-      height: 50px;
-      background-color: #ccccff;
-      @include flex-center;
-      justify-content: space-between;
-      padding: 0 1rem;
-      flex: 0 0 auto;
-    }
-
-    .nav-bar-row {
-      flex: 0 0 auto;
-      background-color: #99ccff;
-      padding: 0.5rem 1rem;
-    }
-
-    .nav-bar {
-      display: flex;
-      flex-direction: row;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .main-content-row {
-      display: flex;
-      flex: 1 1 0%;
-      height: 100%;
-      background-color: #eeeeff;
-      align-items: flex-start;
-      min-height: 0;
-    }
-
-    .footer-row {
-      height: 50px;
-      background-color: #cccccc;
-      @include flex-center;
-      justify-content: space-between;
-      padding: 0 1rem;
-      flex: 0 0 auto;
+  
+    input,
+    select,
+    textarea {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-8rpx);
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: border var(--motion-fast), box-shadow var(--motion-fast);
+  
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 50%, transparent);
+      }
     }
   }
 }
 
-.tile {
-  border: 1px solid #d5d5d5;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  &:hover {
-    transform: translateY(-2px) scale(1.012);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-  }
-}
-
-.item-entry {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0;
-
-  input {
-    padding: 0.25rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+@layer components {
+  .stage {
+    background-color: var(--color-bg);
   }
 
-  input[type="text"] {
-    width: 8rem;
+  .actor-tile {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
-  input[type="number"] {
-    width: 4rem;
+  .footer {
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
   }
 
-  button {
-    padding: 0.25rem 0.75rem;
+  /// ==============================================
+  /// Floorplan Layout — BEM-style selectors
+  /// ==============================================
+  .floorplan {
+    background-color: var(--color-bg);
   }
-}
+  .floorplan__top-bar {
+    background-color: var(--color-surface);
+  }
+  .floorplan__left-column {
+    background-color: var(--color-surface);
+  }
+  .floorplan__left-column-title {
+    background-color: var(--color-primary);
+  }
+  .floorplan__right-column {
+    background-color: var(--color-surface);
+  }
+  .floorplan__right-column-title {
+    background-color: var(--color-success);
+  }
+  .floorplan__main-column {
+    background-color: var(--color-surface);
+  }
+  .floorplan__page-title-row {
+    background-color: var(--color-primary);
+  }
+  .floorplan__nav-bar-row {
+    background-color: var(--color-primary);
+  }
+  .floorplan__main-content-row {
+    background-color: var(--color-bg);
+  }
+  .floorplan__footer-row {
+    background-color: var(--color-surface);
+  }
 
-.return-items-list {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  flex: 1 1 0rem;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  align-items: stretch; // children expand full width
-  justify-content: flex-start; // align cards at the top
-  overflow-y: auto;
+  .tile {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
 
   .return-items-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    // Remove or override flex so card doesn't stretch/shrink unexpectedly
-    // flex: 1 1 0rem;
-    width: 100%; // card spans container width
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-
-    .item-id {
-      font-weight: bold;
-      font-size: 1.25rem;
-      height: 9rem;
-    }
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
   .catalog-info {
@@ -294,12 +253,96 @@ select {
       border-radius: 4px;
     }
   }
+
+  .qty-display {
+    font-size: 2rem;
+    font-weight: bold;
+    height: 100%;
+    width: 100%;
+  }
+
+  /// ==============================================
+  /// Button Variants — Hierarchy of Loudness
+  /// ==============================================
+  .btn--primary {
+    background-color: var(--color-primary);
+    color: var(--color-text);
+    font-weight: var(--weight-bold);
+    border: none;
+    &:hover {
+      background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
+    }
+  }
+
+  .btn--secondary {
+    background-color: var(--color-success);
+    color: var(--color-text);
+    font-weight: var(--weight-regular);
+    border: none;
+    &:hover {
+      background-color: color-mix(in srgb, var(--color-success) 85%, black 15%);
+    }
+  }
+
+  .btn--outline {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-weight: var(--weight-regular);
+    &:hover {
+      background-color: var(--color-bg);
+    }
+  }
+
+  .btn--text {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    padding: 0;
+    font-weight: var(--weight-regular);
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
-.qty-display {
-  font-size: 2rem;
-  font-weight: bold;
-  height: 100%;
-  width: 100%;
-  @include flex-center;
+/* ===============================================
+   UTILITIES LAYER — Canonical Utilities & Mixins
+   =============================================== */
+@layer utilities {
+  /// ==============================================
+  /// Mixins — Canonical Reusables
+  /// ==============================================
+  @mixin card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @mixin hover-lift {
+    &:hover {
+      transform: translateY(-2px) scale(1.012);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+    }
+  }
+
+  /// ==============================================
+  /// Utility Classes — Layout & Alignment
+  /// ==============================================
+  .flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .text-right {
+    text-align: right;
+  }
+  .pad-md {
+    padding: var(--space-16rpx);
+  }
 }
+
+/* @layer overrides: for dev/debug helpers. None present, but reserved. */

@@ -2,6 +2,7 @@ import type { PhaseNode } from "../types/Types";
 import { StartPhase } from "../phases/050-Start";
 import { ReturnItemsPhase } from "../phases/200-ReturnItems";
 import { ReceiptsPhase } from "../phases/250-Receipts";
+import { useDerivation } from "../logic/Derivation";
 
 import React from "react";
 
@@ -132,30 +133,7 @@ export function ActorTile(props: ActorTileProps) {
     </Container>
   );
 }
-// Constraints:
-//   - Click Policy: isolate (stops bubbling; toggles soloId)
 
-// ================================
-// Components.tsx — Canonical Components Bucket
-// Definition: Central repository of reusable UI components for QRET.
-// Intent: Provide modular UI pieces (layouts, widgets, utilities) that can be composed into pages.
-// Constraints:
-//   - All components here must have artifact-level headers.
-//   - Must not redefine canonical logic or styling (delegates to Logic.ts and style.scss).
-// Inputs: Props as defined per component.
-// Outputs: Rendered UI React elements.
-// ================================
-
-// PhaseProps type and Phase component are globalized here for all phases.
-
-//********************************************************************
-//  PHASE (GLOBAL WRAPPER)
-//********************************************************************
-// Type: PhaseProps
-// Definition: Props for the global Phase wrapper component.
-// Intent: Standardize per-phase layout and context.
-// Inputs: phaseId (string), title (ReactNode), children (ReactNode)
-// Outputs: JSX structure with PhaseProvider and Floorplan.
 export type PhaseProps = {
   phaseId: string;
   title: React.ReactNode;
@@ -349,6 +327,8 @@ export type FooterProps = {
 export function Footer({ onContinue, label }: FooterProps): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
+  const { totalReturnCents } = useDerivation(); // 👈 derive live refund total
+
   const phases = transaction.phases;
   const currentIndex = phases.findIndex(
     (p) => p.phaseId === transaction.currentPhase
@@ -366,9 +346,12 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
     }
   };
 
+  // Convert cents → dollars with 2 decimals
+  const refundDollars = (totalReturnCents / 100).toFixed(2);
+
   return (
     <div className="footer">
-      <span>{label || `Refund Value: $`}</span>
+      <span>{label || `Refund Value: $${refundDollars}`}</span>
       <button onClick={handleContinue} disabled={!nextPhase}>
         Continue
       </button>

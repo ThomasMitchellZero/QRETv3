@@ -9,6 +9,8 @@ import {
   useTransients,
 } from "../logic/Logic";
 
+import type { Item } from "../types/Types";
+
 import { useDerivation, RefundDebugger } from "../logic/Derivation";
 
 //********************************************************************
@@ -16,27 +18,115 @@ import { useDerivation, RefundDebugger } from "../logic/Derivation";
 //********************************************************************
 // Component: ReturnItemsCard
 // Definition: UI card for a single returned item entry.
-// Intent: Allow user to view and edit item quantity or remove the item.
-// Constraints:
-//   - Pure UI + dispatch to transaction state.
-//   - Props must match ReturnItems repo entry.
-// Inputs: { id: string; qty: number }
-// Outputs: JSX card with editable qty and remove button.
+// Now expects an `item: Item` prop.
 
-export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
-  const [transaction, dispatch] = useTransaction(); // ✅ move here
+export function UiRefundDetails({ item }: { item: Item }) {
+  const { itemId } = item;
+  const { perItemRefunds, refundItems } = useDerivation();
+
+  // Derived data
+  const refundRecord = perItemRefunds.find((r) => r.itemId === itemId);
+  const matchingRefunds = refundItems.filter((r) => r.itemId === itemId);
+  const receiptedQty = matchingRefunds.reduce(
+    (sum, i) => sum + (i.qty ?? 0),
+    0
+  );
+  const totalQty = item.qty ?? 0;
+  const baseValue = refundRecord?.valueCents ?? 0;
+  const totalRefundValue = receiptedQty * baseValue;
+  const hasReceipts = receiptedQty > 0;
+
+  return (
+    <ActorTile
+      id={`item-${itemId}-refund-details`}
+      headline={
+        <div className="qty-display">
+          ${((totalRefundValue ?? 0) / 100).toFixed(2)}
+        </div>
+      }
+    >
+      {/* SOLO CONTENT */}
+      <div className="ui-refund-details">
+        <div className="ui-refund-section">
+          <div className="ui-refund-label">Receipted Items</div>
+          <div className="ui-refund-qty">
+            {receiptedQty} / {totalQty}
+          </div>
+          {hasReceipts ? (
+            <ul className="ui-refund-receipts">
+              {matchingRefunds.map((r, idx) => (
+                <li key={`${r.invoId}-${idx}`}>
+                  Receipt #{r.invoId} — ${((r.valueCents ?? 0) / 100).toFixed(2)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="ui-refund-no-receipts">No Receipts</div>
+          )}
+        </div>
+
+        <div className="ui-refund-section">
+          <div className="ui-refund-label">Refund Details</div>
+          <div className="ui-refund-breakdown">
+            <div>Receipted Qty: {receiptedQty}</div>
+            <div>Base Value: ${(baseValue / 100).toFixed(2)}</div>
+            <div>Total Refund: ${(totalRefundValue / 100).toFixed(2)}</div>
+          </div>
+        </div>
+      </div>
+    </ActorTile>
+  );
+}
+
+  /*
+
+  - This is a configured ActorTile that shows refund details for a returned item.
+  - It takes an `item` prop of type `Item`.
+  - It uses the `useDerivation` hook to get the refund amount for the item.
+
+  - We need to show:
+
+    
+    - Left Side:
+      - Label: "Receipted Items": 
+      - Big Value:  Total qty with receipts "/"  Total qty of item,   ---probably just looking for undefined.
+      -Solo Mode: Below that, a consolidated list of all Receipts applied to this item.
+
+    - Right Side:
+      - Label: "Refund Details"
+      - Amount: "$XX.XX" (calculated refund amount)
+    - Solo Mode: Below that, in a row
+
+    Solo Mode:///////////////
+
+    -left side:
+      - List of all all receiptIDs matched to this item.
+    right side:
+      - Refund amount breakdown row:
+        -Receipted qty
+        - Base Price: $XX.XX
+        
+
+    - Non-receipted items show "No Receipts" where 
+  
+  
+  
+  */
+
+
+export function ReturnItemsCard({ item }: { item: Item }) {
+  const [transaction, dispatch] = useTransaction();
   const [, dispatchTransients] = useTransients();
+  const { itemId, qty } = item;
 
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQty = parseInt(e.target.value, 10) || 0;
     const current = transaction.returnItems || new Map();
     const newMap = new Map(current);
-
-    if (newMap.has(id)) {
-      const item = newMap.get(id);
-      newMap.set(id, { ...item, qty: newQty });
+    if (newMap.has(itemId)) {
+      const existingItem = newMap.get(itemId);
+      newMap.set(itemId, { ...existingItem, qty: newQty });
     }
-
     dispatch({
       kind: "SET_INPUT",
       payload: { key: "returnItems", value: newMap },
@@ -46,8 +136,7 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   const handleRemove = () => {
     const current = transaction.returnItems || new Map();
     const newMap = new Map(current);
-    newMap.delete(id);
-
+    newMap.delete(itemId);
     dispatch({
       kind: "SET_INPUT",
       payload: { key: "returnItems", value: newMap },
@@ -62,23 +151,17 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
   return (
     <Card className="return-items-card" onClick={handleCardClick}>
       <div className="item-id PLACEHOLDER">
-        <strong>Item #{id}</strong>
+        <strong>Item #{itemId}</strong>
       </div>
-      <Stage id={`item-${id}`}>
+      <Stage id={`item-${itemId}`}>
         <ActorTile
-          id={`item-${id}-qty`}
+          id={`item-${itemId}-qty`}
           headline={<div className="qty-display">{qty}</div>}
         >
           <input type="number" value={qty} onChange={handleQtyChange} min={0} />
         </ActorTile>
-        <ActorTile
-          id={`item-${id}-refund`}
-          headline={<div className="qty-display">{"Refund"}</div>}
-        >
-          <div className="refund-amount PLACEHOLDER">$XX.XX</div>
-        </ActorTile>
+        <UiRefundDetails item={item} />
       </Stage>
-
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
       </button>
@@ -90,22 +173,15 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
 // ================================
 // Component: ReturnItemsList
 // Definition: List of all return items currently in the transaction repo.
-// Intent: Map the "return-items" repo and display each item using ReturnItemsCard.
-// Constraints:
-//   - Must read from transaction.userInputs["return-items"].
-//   - Must coerce repo to a Map if needed.
-// Inputs: none
-// Outputs: List of ReturnItemsCard components.
 function ReturnItemsList() {
-  const [transaction, dispatch] = useTransaction();
+  const [transaction] = useTransaction();
   const repo = transaction.returnItems;
-  const itemsMap: Map<string, any> =
+  const itemsMap: Map<string, Item> =
     repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
-
   return (
     <div className="return-items-list">
-      {Array.from(itemsMap.values()).map((item: any) => (
-        <ReturnItemsCard key={item.id} id={item.id} qty={item.qty} />
+      {Array.from(itemsMap.values()).map((item: Item) => (
+        <ReturnItemsCard key={item.itemId} item={item} />
       ))}
     </div>
   );
