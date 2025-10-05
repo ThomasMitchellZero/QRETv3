@@ -1,4 +1,4 @@
-import type { PhaseNode } from "../types/Types";
+import type { PhaseNode, Item } from "../types/Types";
 import { StartPhase } from "../phases/050-Start";
 import { ReturnItemsPhase } from "../phases/200-ReturnItems";
 import { ReceiptsPhase } from "../phases/250-Receipts";
@@ -199,7 +199,7 @@ export function Floorplan({
   footer = <Footer />,
 }: FloorplanProps): JSX.Element {
   return (
-    <div className="floorplan">
+    <div className="floorplan debug">
       {<div className="top-bar"></div>}
       <div className="body-row">
         {leftColumn && <div className="left-column">{leftColumn}</div>}
@@ -271,6 +271,38 @@ export function Card({ children, className }: CardProps): JSX.Element {
   );
 }
 
+import type { CatalogEntry } from "../api/fakeApi";
+import { fakeCatalog } from "../api/fakeApi";
+
+export type ItemDetailsTileProps = {
+  item: Item;
+  extraContent?: React.ReactNode; // Optional slot for custom info or actions
+};
+
+export function ItemDetailsTile({ item, extraContent }: ItemDetailsTileProps) {
+  // Look up the catalog entry using itemId; fallback to placeholder if not found
+  const catalogEntry = (fakeCatalog[item.itemId] ??
+    fakeCatalog["0000"]) as CatalogEntry;
+
+  return (
+    <div className="ui-item-details-tile">
+      <div className="ui-item-details__image">
+        <img src={catalogEntry.picture} alt={catalogEntry.description} />
+      </div>
+      <div className="ui-item-details__info">
+        <div className="ui-item-details__title">{catalogEntry.description}</div>
+        <div className="ui-item-details__id">Item #{item.itemId}</div>
+        <div className="ui-item-details__price">
+          ${(catalogEntry.valueCents / 100).toFixed(2)}
+        </div>
+        {extraContent && (
+          <div className="ui-item-details__extra">{extraContent}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 //********************************************************************
 //  NAV BAR
 //********************************************************************
@@ -286,7 +318,7 @@ export function NavBar(): JSX.Element {
   const selectedId = transaction.currentPhase; // derive once, no hooks-in-loop
 
   return (
-    <div className="nav-bar">
+    <div className="navbar">
       {transaction.phases.map((node) => {
         const isSelected = node.phaseId === selectedId;
         return (

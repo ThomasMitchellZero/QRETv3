@@ -1,3 +1,19 @@
+@mixin card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@mixin hover-lift {
+  &:hover {
+    transform: translateY(-2px) scale(1.012);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+  }
+}
+
 @layer reset, tokens, base, components, utilities, overrides;
 
 /* ===============================================
@@ -13,8 +29,8 @@
     /// Example: --space-16rpx = 1rem.
     /// ==============================================
     --rpx: calc(1rem / 16);
-    --space-4rpx: calc(var(--rpx) * 4);   /// 4rpx = 0.25rem (4/16)
-    --space-8rpx: calc(var(--rpx) * 8);   /// 8rpx = 0.5rem (8/16)
+    --space-4rpx: calc(var(--rpx) * 4); /// 4rpx = 0.25rem (4/16)
+    --space-8rpx: calc(var(--rpx) * 8); /// 8rpx = 0.5rem (8/16)
     --space-12rpx: calc(var(--rpx) * 12); /// 12rpx = 0.75rem (12/16)
     --space-16rpx: calc(var(--rpx) * 16); /// 16rpx = 1rem (16/16)
     --space-24rpx: calc(var(--rpx) * 24); /// 24rpx = 1.5rem (24/16)
@@ -148,17 +164,21 @@
       padding: var(--space-8rpx) var(--space-16rpx);
       font-weight: var(--weight-bold);
       transition: background var(--motion-fast);
-  
+
       &:hover {
-        background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
+        background-color: color-mix(
+          in srgb,
+          var(--color-primary) 85%,
+          black 15%
+        );
       }
-  
+
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
     }
-  
+
     input,
     select,
     textarea {
@@ -168,11 +188,12 @@
       background: var(--color-surface);
       color: var(--color-text);
       transition: border var(--motion-fast), box-shadow var(--motion-fast);
-  
+
       &:focus {
         outline: none;
         border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 50%, transparent);
+        box-shadow: 0 0 0 2px
+          color-mix(in srgb, var(--color-primary) 50%, transparent);
       }
     }
   }
@@ -193,116 +214,257 @@
     border-top: 1px solid var(--color-border);
   }
 
-  /// ==============================================
-  /// Floorplan Layout — BEM-style selectors
-  /// ==============================================
+  /* ===============================================
+   FLOORPLAN — Canonical 3-Column Layout
+   =============================================== */
   .floorplan {
-    background-color: var(--color-bg);
-  }
-  .floorplan__top-bar {
-    background-color: var(--color-surface);
-  }
-  .floorplan__left-column {
-    background-color: var(--color-surface);
-  }
-  .floorplan__left-column-title {
-    background-color: var(--color-primary);
-  }
-  .floorplan__right-column {
-    background-color: var(--color-surface);
-  }
-  .floorplan__right-column-title {
-    background-color: var(--color-success);
-  }
-  .floorplan__main-column {
-    background-color: var(--color-surface);
-  }
-  .floorplan__page-title-row {
-    background-color: var(--color-primary);
-  }
-  .floorplan__nav-bar-row {
-    background-color: var(--color-primary);
-  }
-  .floorplan__main-content-row {
-    background-color: var(--color-bg);
-  }
-  .floorplan__footer-row {
-    background-color: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; // ✅ prevents body scroll
+
+    .body-row {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      gap: var(--space-16rpx);
+      padding: var(--space-16rpx);
+      overflow: hidden; // ✅ prevent nested overflows fighting
+    }
+
+    .left-column,
+    .right-column {
+      flex: 0 0 18rem;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-12rpx);
+      overflow-y: auto; // ✅ independent scroll
+    }
+
+    .main-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-12rpx);
+      overflow: hidden; // ✅ keeps only the content region scrollable
+    }
+
+    .main-content-row {
+      flex: 1;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-12rpx);
+      overflow-y: auto; // ✅ scrolls only main content
+    }
   }
 
-  .tile {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+  // Layout Rhythm & Spacing
+  .page-title-row,
+  .nav-bar-row,
+  .main-content-row {
+    margin-bottom: var(--space-12rpx);
+  }
+  .footer-row {
+    margin-bottom: var(--space-12rpx);
   }
 
+  .nav-bar-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  // Typography polish for page title
+  .page-title-row {
+    font-family: var(--font-display);
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+  }
+
+  // Card polish for visual depth
   .return-items-card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
+    @include card;
+    @include hover-lift;
+  }
+  .tile {
+    @include card;
+    @include hover-lift;
   }
 
-  .catalog-info {
+  .ui-item-details-tile {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-16rpx);
+    padding: var(--space-12rpx);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 
     img {
-      width: 40px;
-      height: 40px;
+      width: 64px;
+      height: 64px;
       object-fit: contain;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: #fff;
+    }
+
+    .ui-item-details__info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4rpx);
+    }
+
+    .ui-item-details__title {
+      font-weight: var(--weight-bold);
+      font-size: var(--font-md);
+    }
+
+    .ui-item-details__id {
+      font-size: var(--font-sm);
+      opacity: 0.8;
+    }
+
+    .ui-item-details__price {
+      font-size: var(--font-md);
+      color: var(--color-text);
+    }
+
+    .ui-item-details__extra {
+      margin-top: var(--space-8rpx);
     }
   }
 
-  .qty-display {
-    font-size: 2rem;
-    font-weight: bold;
-    height: 100%;
+  .navbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16rpx;
     width: 100%;
-  }
-
-  /// ==============================================
-  /// Button Variants — Hierarchy of Loudness
-  /// ==============================================
-  .btn--primary {
-    background-color: var(--color-primary);
-    color: var(--color-text);
+    padding: 8rpx 16rpx;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 48rpx;
+    align-items: center;
     font-weight: var(--weight-bold);
-    border: none;
-    &:hover {
-      background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
-    }
   }
 
-  .btn--secondary {
-    background-color: var(--color-success);
-    color: var(--color-text);
-    font-weight: var(--weight-regular);
-    border: none;
-    &:hover {
-      background-color: color-mix(in srgb, var(--color-success) 85%, black 15%);
-    }
+  .navbar__item {
+    padding: 8rpx 12rpx;
+    cursor: pointer;
+    font-weight: var(--weight-bold);
+    transition: 0.2s ease color;
+    align-items: center;
+    height: 100%;
+    display: flex;
   }
 
-  .btn--outline {
-    background-color: transparent;
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    font-weight: var(--weight-regular);
-    &:hover {
-      background-color: var(--color-bg);
-    }
+  .navbar__item:hover {
+    color: color-mix(in srgb, var(--color-primary) 80%, black 20%);
   }
+}
 
-  .btn--text {
-    background: none;
-    border: none;
-    color: var(--color-primary);
-    padding: 0;
-    font-weight: var(--weight-regular);
-    &:hover {
-      text-decoration: underline;
-    }
+/* ===============================================
+   FLOORPLAN — Visual Debug Helpers
+   =============================================== */
+.floorplan.debug {
+  .top-bar {
+    background-color: rgba(0, 128, 255, 0.1);
+  }
+  .left-column {
+    background-color: rgba(0, 255, 128, 0.1);
+  }
+  .main-column {
+    background-color: rgba(255, 255, 0, 0.1);
+  }
+  .right-column {
+    background-color: rgba(255, 128, 0, 0.1);
+  }
+  .footer-row {
+    background-color: rgba(128, 0, 255, 0.1);
+  }
+}
+
+.tile {
+  // see components layer for card/hover-lift
+}
+
+.return-items-card {
+  // see components layer for card/hover-lift
+}
+
+.catalog-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+}
+
+.qty-display {
+  font-size: 2rem;
+  font-weight: bold;
+  height: 100%;
+  width: 100%;
+}
+
+/// ==============================================
+/// Button Variants — Hierarchy of Loudness
+/// ==============================================
+.btn--primary {
+  background-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: var(--weight-bold);
+  border: none;
+  &:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
+  }
+}
+
+.btn--secondary {
+  background-color: var(--color-success);
+  color: var(--color-text);
+  font-weight: var(--weight-regular);
+  border: none;
+  &:hover {
+    background-color: color-mix(in srgb, var(--color-success) 85%, black 15%);
+  }
+}
+
+.btn--outline {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: var(--weight-regular);
+  &:hover {
+    background-color: var(--color-bg);
+  }
+}
+
+.btn--text {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  padding: 0;
+  font-weight: var(--weight-regular);
+  &:hover {
+    text-decoration: underline;
   }
 }
 
@@ -313,21 +475,6 @@
   /// ==============================================
   /// Mixins — Canonical Reusables
   /// ==============================================
-  @mixin card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  @mixin hover-lift {
-    &:hover {
-      transform: translateY(-2px) scale(1.012);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-    }
-  }
 
   /// ==============================================
   /// Utility Classes — Layout & Alignment
@@ -345,4 +492,49 @@
   }
 }
 
-/* @layer overrides: for dev/debug helpers. None present, but reserved. */
+@layer overrides {
+  /* ===============================
+     VISUAL DEBUG HELPERS
+     Toggle as needed for layout auditing
+     =============================== */
+
+  /* Outline all layout sections */
+  .debug-outline * {
+    outline: 1px dashed rgba(255, 0, 0, 0.3);
+  }
+
+  /* Highlight each major zone distinctly */
+  .debug-floorplan .floorplan__left-column {
+    background-color: rgba(0, 128, 255, 0.1);
+  }
+  .debug-floorplan .floorplan__main-column {
+    background-color: rgba(0, 255, 128, 0.1);
+  }
+  .debug-floorplan .floorplan__right-column {
+    background-color: rgba(255, 128, 0, 0.1);
+  }
+
+  /* Actor tiles and cards */
+  .debug-tiles .actor-tile {
+    outline: 2px solid magenta;
+  }
+  .debug-tiles .return-items-card {
+    outline: 2px solid orange;
+  }
+
+  /* Spacing audit */
+  .debug-spacing * {
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 0, 0, 0.05) 1px,
+      transparent 1px
+    );
+    background-size: 100% var(--space-16rpx);
+  }
+
+  /* Quick toggle for hover animations */
+  .debug-no-motion * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

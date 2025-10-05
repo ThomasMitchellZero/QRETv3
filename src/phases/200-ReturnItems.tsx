@@ -11,7 +11,7 @@ import {
 
 import type { Item } from "../types/Types";
 
-import { useDerivation, RefundDebugger } from "../logic/Derivation";
+import { useDerivation } from "../logic/Derivation";
 
 //********************************************************************
 //  RETURN ITEMS CARD
@@ -288,7 +288,6 @@ export function ReturnItemsPhase() {
     <Phase phaseId="return-items" title="Return Items">
       <Floorplan
         pageTitle="Return Items"
-        leftColumn={<RefundDebugger />}
         mainContent={<ReturnItemsList />}
         rightColumn={<ItemEntry />}
       />
