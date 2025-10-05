@@ -5,37 +5,25 @@ import { Card, Floorplan, Stage, ActorTile } from "../components/Components";
 import { useTransaction } from "../logic/Logic";
 import { useDerivation, RefundDebugger } from "../logic/Derivation";
 
-//********************************************************************
-//  RECEIPTS CARD
-//********************************************************************
-// Component: ReceiptsCard
-// Definition: UI card for a single receipt entry.
-// Intent: Allow user to view the receipt id and remove it.
-// Constraints:
-//   - Pure UI + dispatch to transaction state.
-//   - Props: { id: string }
-// Inputs: { id: string }
-// Outputs: JSX card with receipt id and remove button.
-function ReceiptsCard({ id }: { id: string }) {
-  const [, dispatch] = useTransaction();
+// ================================
+// RECEIPTS CARD
+// ================================
+function ReceiptsCard({ invoId }: { invoId: string }) {
+  const [transaction, dispatch] = useTransaction();
+  const items = fakeInvoices[invoId]?.items ?? [];
+  const totalQty = items.reduce((sum: number, item: any) => sum + item.qty, 0);
+
   const handleRemove = () => {
+    const current = transaction.receipts || new Map();
+    const newMap = new Map(current);
+    newMap.delete(invoId);
+
     dispatch({
-      kind: "REPO_ACTION",
-      payload: {
-        repoAction: {
-          kind: "REMOVE",
-          target: "receipts",
-          payload: { id },
-        },
-      },
+      kind: "SET_INPUT",
+      payload: { key: "receipts", value: newMap },
     });
   };
 
-  const receipt = fakeInvoices[id];
-  const items = receipt?.items ?? [];
-  const totalQty = items.reduce((sum: number, item: any) => sum + item.qty, 0);
-
-  // Only render the item list as children if in solo mode (ActorTile handles this)
   const actorTileChildren = (
     <div className="receipt-items-list">
       {items.map((item) => (
@@ -50,18 +38,17 @@ function ReceiptsCard({ id }: { id: string }) {
   return (
     <Card className="return-items-card">
       <div>
-        <strong>Receipt #{id}</strong>
+        <strong>Receipt #{invoId}</strong>
       </div>
-
-      <Stage id={`receipt-${id}`}>
+      <Stage key={`receipt-${invoId}`} id={`receipt-${invoId}`}>
         <ActorTile
-          id={`receipt-${id}-items`}
+          key={`receipt-${invoId}-items`}
+          id={`receipt-${invoId}-items`}
           headline={<div className="qty-display">{totalQty}</div>}
         >
           {actorTileChildren}
         </ActorTile>
       </Stage>
-
       <button onClick={handleRemove} aria-label="Remove receipt">
         🗑️
       </button>
@@ -72,26 +59,16 @@ function ReceiptsCard({ id }: { id: string }) {
 // ================================
 // RECEIPTS LIST
 // ================================
-// Component: ReceiptsList
-// Definition: List of all receipts currently in the transaction repo.
-// Intent: Map the "receipts" repo and display each using ReceiptsCard.
-// Constraints:
-//   - Must read from transaction.userInputs["receipts"].
-//   - Must coerce repo to a Map if needed.
 function ReceiptsList() {
   const [transaction] = useTransaction();
-  const repo = transaction.userInputs["receipts"];
+  const repo = transaction.receipts;
   const receiptsMap: Map<string, any> =
-    repo instanceof Map
-      ? repo
-      : new Map(repo && typeof repo === "object" ? Object.entries(repo) : []);
+    repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
+
   return (
     <div className="return-items-list">
-      <div className="receipts-list-ids">
-        Available Receipt IDs: {Object.keys(fakeInvoices).join(", ")}
-      </div>
       {Array.from(receiptsMap.values()).map((receipt: any) => (
-        <ReceiptsCard key={receipt.id} id={receipt.id} />
+        <ReceiptsCard key={receipt.invoId} invoId={receipt.invoId} />
       ))}
     </div>
   );
@@ -100,57 +77,45 @@ function ReceiptsList() {
 // ================================
 // RECEIPT ENTRY
 // ================================
-// Component: ReceiptEntry
-// Definition: Local form for adding a receipt by id.
-// Intent: Collect receipt id, then push to TransactionState when valid.
-// Constraints:
-//   - Local state only until Add button pressed.
-// Inputs: none
-// Outputs: Dispatches ADD action with { id } payload.
 function ReceiptEntry() {
-  const [, dispatch] = useTransaction();
+  const [transaction, dispatch] = useTransaction();
   const [id, setId] = React.useState("");
 
   const handleAdd = () => {
     if (!id) return;
+    const current = transaction.receipts || new Map();
+    const newMap = new Map(current);
+
+    if (!newMap.has(id)) {
+      newMap.set(id, { invoId: id, items: [] });
+    }
+
     dispatch({
-      kind: "REPO_ACTION",
-      payload: {
-        repoAction: {
-          kind: "ADD",
-          target: "receipts",
-          payload: { id },
-        },
-      },
+      kind: "SET_INPUT",
+      payload: { key: "receipts", value: newMap },
     });
+
     setId("");
   };
 
   return (
-    <div className="item-entry">
-      <input
-        type="text"
-        placeholder="Receipt #"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
-      />
-      <button onClick={handleAdd}>Add Receipt</button>
-    </div>
+    <>
+      <div className="receipts-list-ids">
+        Available Receipt IDs: {Object.keys(fakeInvoices).join(", ")}
+      </div>
+      <div className="item-entry">
+        <input
+          type="text"
+          placeholder="Receipt #"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+        />
+        <button onClick={handleAdd}>Add Receipt</button>
+      </div>
+    </>
   );
 }
 
-//********************************************************************
-//  RECEIPTS PHASE SCAFFOLD
-//********************************************************************
-// Component: ReceiptsPhase
-// Definition: Scaffold wrapper for the "receipts" phase of the QRET workflow.
-// Intent: Provide a canonical container for the Receipts phase, ensuring correct phaseId and structure.
-// Constraints:
-//   - Must wrap children in the canonical Phase container.
-//   - phaseId must be "receipts".
-//   - No business logic or navigation; render only.
-// Inputs: children (React.ReactNode)
-// Outputs: JSX structure for the Receipts phase.
 export function ReceiptsPhase() {
   return (
     <Phase phaseId="receipts" title="Receipts">

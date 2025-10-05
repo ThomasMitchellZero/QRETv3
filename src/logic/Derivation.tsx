@@ -47,7 +47,7 @@ deferred to explicit downstream helpers.
 
 */
 import React from "react";
-import { fakeCatalog, fakeInvoices } from "../api/fakeApi";
+import { fakeInvoices } from "../api/fakeApi";
 import type { Item, Invoice, TransactionState } from "../types/Types";
 import { useTransaction } from "./Logic";
 
@@ -59,49 +59,49 @@ export function useDerivation() {
   //--------------------------------------
 
   // Pull repos from TransactionState
+  const refTransaction: TransactionState = transaction;
   const trxnReturnItems = transaction?.returnItems ?? new Map();
   const trxnReceipts = transaction?.receipts ?? new Map();
+
+  console.log(trxnReturnItems, trxnReceipts);
 
   //------------------------------
   // Layer 0: Collect Data
   //------------------------------
 
-  // Mock API lookups
-  const apiReceipts = fakeInvoices;
-  const apiCatalog = fakeCatalog;
-
   //------------------------------
   // Layer 1: Normalize Data
   //------------------------------
 
-  const normalizeReturnItems = (items: Map<string, Item>): Item[] =>
-    Array.from(items.values()).map((item) => ({ ...item }));
+  function normalizeReturnItems(): Item[] {
+    return Array.from(trxnReturnItems.values());
+  }
 
-  const normalizeReceiptedItems = (invoices: Map<string, Invoice>): Item[] => {
-    const collected: Item[] = [];
+  function normalizeReceiptedItems(): Item[] {
+    const items: Item[] = [];
+    const receipts = trxnReceipts; // from TransactionState
+    const invoices = fakeInvoices; // canonical source of item details
 
-    invoices.forEach((invoice, invoId) => {
-      const canonicalInvoice = fakeInvoices[invoId];
-      if (!canonicalInvoice) {
-        console.warn(`⚠️ Invoice ${invoId} not found in fakeInvoices`);
-        return;
-      }
+    receipts.forEach((_, invoId) => {
+      const invoice = invoices[invoId];
+      if (!invoice || !invoice.items) return;
 
-      canonicalInvoice.items.forEach((item) => {
-        collected.push({
-          itemId: item.itemId,
-          qty: item.qty,
-          valueCents: item.valueCents,
-          invoId, // record provenance
+      invoice.items.forEach((item) => {
+        items.push({
+          ...item,
+          invoId, // attach parent invoice ID
         });
       });
     });
 
-    return collected;
-  };
+    return items;
+  }
 
-  const rawReceiptedItems = normalizeReturnItems(trxnReceipts);
-  const rawReturnItems = normalizeReceiptedItems(trxnReturnItems);
+  const rawReceiptedItems = normalizeReceiptedItems();
+  const rawReturnItems = normalizeReturnItems();
+
+  console.log("Raw Return Items:", rawReturnItems);
+  console.log("Raw Receipted Items:", rawReceiptedItems);
 
   //------------------------------
   // Layer 2: Atomize Data
@@ -120,10 +120,7 @@ export function useDerivation() {
         const atom = {
           ...item,
           qty: 1,
-          // Optionally normalize per-unit value if present
-          ...(item.valueInCents && qty > 0
-            ? { valueInCents: item.valueInCents / qty }
-            : {}),
+          valueCents: item.valueCents ?? undefined, // already per unit
         };
         atoms.push(atom);
       }
@@ -136,6 +133,9 @@ export function useDerivation() {
 
   const atomizedReturnItems = atomize(rawReturnItems);
   const atomizedReceiptedItems = atomize(rawReceiptedItems);
+
+  console.log("Atomized Return Items:", atomizedReturnItems);
+  console.log("Atomized Receipted Items:", atomizedReceiptedItems);
 
   //------------------------------
   // Layer 3: Blending
@@ -163,21 +163,15 @@ export function useDerivation() {
    * Equality check — determines whether two records are equal
    * based only on their shared keys.
    */
-  function areEqual(a: Record<string, any>, b: Record<string, any>): boolean {
-    const sharedKeys = Object.keys(a).filter((key) => key in b);
-    return sharedKeys.every((key) => a[key] === b[key]);
+  function areEqual(b: Record<string, any>, m: Record<string, any>): boolean {
+    return b.itemId === m.itemId;
   }
 
-  /**
-   * Collapse — merges two records if they are equal on shared keys,
-   * otherwise applies a default mixer record (empty enrichment).
-   */
   function collapse(
-    a: Record<string, any>,
-    b: Record<string, any>,
-    defaultMixer: Record<string, any> = {}
+    blend: Record<string, any>,
+    mixer: Record<string, any>
   ): Record<string, any> {
-    return areEqual(a, b) ? { ...a, ...b } : { ...a, ...defaultMixer };
+    return areEqual(blend, mixer) ? blend : mixer;
   }
 
   /**
@@ -187,32 +181,48 @@ export function useDerivation() {
    */
   function blenderize(
     blend: Record<string, any>[],
-    mixers: Record<string, any>[][],
-    defaultMixer: Record<string, any> = {}
+    mixer: Record<string, any>[]
   ): Record<string, any>[] {
-    return blend.map((b) => {
-      let enriched = { ...b };
-
-      mixers.forEach((mixer) => {
-        const match = mixer.find((m) => areEqual(b, m));
-        enriched = match
-          ? { ...enriched, ...match }
-          : { ...enriched, ...defaultMixer };
-      });
-
-      return enriched;
-    });
+    // Make a mutable copy of the mixer pool
+    const remaining = [...mixer];
+    const result: Record<string, any>[] = [];
+  
+    // Outer loop: iterate through every atom in the Blend
+    for (const b of blend) {
+      let matched = false;
+  
+      // Inner loop: iterate through the remaining Mixer atoms
+      for (let i = 0; i < remaining.length; i++) {
+        
+        const m = remaining[i];
+        if (!m) continue; // ✅ skip if undefined
+  
+        // If they are canonically identical, collapse them
+        if (areEqual(b, m)) {
+          result.push(m); // the Mix atom replaces the Blend atom
+          remaining.splice(i, 1); // remove that Mix atom from the pool
+          matched = true;
+          break; // stop searching once collapsed
+        }
+      }
+  
+      // If no match found, keep the original Blend atom
+      if (!matched) {
+        result.push(b);
+      }
+    }
+  
+    return result;
   }
 
   // RETURNS BLEND
 
-  // Inital ReturnItems blend = empty Map.
+  const returnItemsBlend = blenderize(
+    atomizedReturnItems,
+    atomizedReceiptedItems
+  );
 
-  const returnItemsBlend = blenderize(atomizedReturnItems, [
-    atomizedReceiptedItems,
-  ]);
-
-  // Blend ReceiptedItems
+  console.log("Return Items Blend:", returnItemsBlend);
 
   //--------------------------------------
   // Layer : Rollups
@@ -271,7 +281,10 @@ export function useDerivation() {
     "invoId",
   ]).reduce((sum, item) => sum + (item.valueCents ?? 0), 0);
 
-  const refundItems = distillizer(returnItemsBlend, ["itemId", "invoId"]);
+  const refundItems: Record<string, any>[] = distillizer(returnItemsBlend, [
+    "itemId",
+    "invoId",
+  ]);
   const perItemRefunds = distillizer(refundItems, ["itemId"]);
   const sanityCheck = distillizerStringTest();
 
@@ -291,25 +304,31 @@ export function useDerivation() {
 // -------------------------------------------------------
 
 export const RefundDebugger: React.FC = () => {
-  const result = useDerivation();
+  const [transaction] = useTransaction();
+  const derivation = useDerivation();
 
-  React.useEffect(() => {
-    console.log("🧩 Derivation Test Output:", result);
-  }, [result]);
+  console.log("🧪 Derivation Test Running", derivation);
 
   return (
-    <div style={{ fontFamily: "monospace", padding: "0.5rem" }}>
-      <div>🧪 Derivation Test Running</div>
-      <pre>{JSON.stringify(result, null, 2)}</pre>
+    <div
+      style={{
+        background: "#ffe4e1",
+        padding: "1rem",
+        fontFamily: "monospace",
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        whiteSpace: "pre-wrap",
+      }}
+    >
+      <div>
+        🧾 <strong>Transaction State</strong>
+        <pre>{JSON.stringify(transaction, null, 2)}</pre>
+      </div>
+      <div>
+        🧪 <strong>Derivation Output</strong>
+        <pre>{JSON.stringify(derivation, null, 2)}</pre>
+      </div>
     </div>
   );
 };
-
-try {
-  // ✅ correct: just use the object returned by the hook directly
-  const result = useDerivation();
-  console.log("🧩 Derivation Test Output:");
-  console.log(JSON.stringify(result, null, 2));
-} catch (err) {
-  console.error("❌ Derivation error:", err);
-}

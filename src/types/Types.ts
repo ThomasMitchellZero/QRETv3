@@ -21,10 +21,10 @@ export type Item = {
   invoId?: string; // only for items sourced from an invoice
 };
 
-// Invoice = list of BaseItems with qty + valueCents
+// Invoice =
 export type Invoice = {
   invoId: string;
-  items: (Item & { qty: number; valueCents: number })[];
+  items: Item[];
 };
 
 ////////////////////////////////
@@ -49,7 +49,6 @@ export type TransientState = Record<string, any>; // This saves us some validity
 
 export type TransactionState = {
   currentPhase: string; // id of current Phase/NavNode
-  userInputs: Record<string, any>; // flexible map for user input values
   phases: PhaseNode[]; // ordered list of phases in this transaction. In state b/c this can vary.
   // Canonical transaction-level repos:
   returnItems?: Map<string, Item>;

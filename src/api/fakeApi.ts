@@ -41,19 +41,20 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
   },
 };
 
+// Post-process to ensure each item includes its parent invoId
 export const fakeInvoices: Record<string, Invoice> = {
-  "999001": {
-    invoId: "999001",
+  "99988": {
+    invoId: "99988",
     items: [
-      { itemId: "1001", qty: 2, valueCents: 1299 }, // Blue Widget
-      { itemId: "1005", qty: 1, valueCents: 499 }, // Mini Widget
+      { itemId: "1001", qty: 2, valueCents: 1299, invoId: "99988" } as Item, // Blue Widget
+      { itemId: "1005", qty: 1, valueCents: 499, invoId: "99988" } as Item, // Mini Widget
     ],
   },
-  "999002": {
-    invoId: "999002",
+  "99977": {
+    invoId: "99977",
     items: [
-      { itemId: "1003", qty: 3, valueCents: 999 }, // Green Widget
-      { itemId: "1004", qty: 1, valueCents: 3499 }, // Widget Pro Max
+      { itemId: "1003", qty: 3, valueCents: 999, invoId: "99977" } as Item, // Green Widget
+      { itemId: "1004", qty: 1, valueCents: 3499, invoId: "99977" } as Item, // Widget Pro Max
     ],
   },
 };

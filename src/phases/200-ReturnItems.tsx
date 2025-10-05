@@ -24,33 +24,33 @@ import { useDerivation, RefundDebugger } from "../logic/Derivation";
 // Outputs: JSX card with editable qty and remove button.
 
 export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
-  const [, dispatch] = useTransaction();
+  const [transaction, dispatch] = useTransaction(); // ✅ move here
   const [, dispatchTransients] = useTransients();
 
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQty = parseInt(e.target.value, 10) || 0;
+    const current = transaction.returnItems || new Map();
+    const newMap = new Map(current);
+
+    if (newMap.has(id)) {
+      const item = newMap.get(id);
+      newMap.set(id, { ...item, qty: newQty });
+    }
+
     dispatch({
-      kind: "REPO_ACTION",
-      payload: {
-        repoAction: {
-          kind: "EDIT",
-          target: "return-items",
-          payload: { id, changes: { qty: newQty } },
-        },
-      },
+      kind: "SET_INPUT",
+      payload: { key: "returnItems", value: newMap },
     });
   };
 
   const handleRemove = () => {
+    const current = transaction.returnItems || new Map();
+    const newMap = new Map(current);
+    newMap.delete(id);
+
     dispatch({
-      kind: "REPO_ACTION",
-      payload: {
-        repoAction: {
-          kind: "REMOVE",
-          target: "return-items",
-          payload: { id },
-        },
-      },
+      kind: "SET_INPUT",
+      payload: { key: "returnItems", value: newMap },
     });
   };
 
@@ -85,7 +85,6 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
     </Card>
   );
 }
-
 // ================================
 // RETURN ITEMS LIST
 // ================================
@@ -98,16 +97,13 @@ export function ReturnItemsCard({ id, qty }: { id: string; qty: number }) {
 // Inputs: none
 // Outputs: List of ReturnItemsCard components.
 function ReturnItemsList() {
-  const [transaction] = useTransaction();
-  const repo = transaction.userInputs["return-items"];
+  const [transaction, dispatch] = useTransaction();
+  const repo = transaction.returnItems;
   const itemsMap: Map<string, any> =
     repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
 
   return (
     <div className="return-items-list">
-      <div className="catalog-items-list">
-        Available Item IDs: {Object.keys(fakeCatalog).join(", ")}
-      </div>
       {Array.from(itemsMap.values()).map((item: any) => (
         <ReturnItemsCard key={item.id} id={item.id} qty={item.qty} />
       ))}
@@ -127,7 +123,7 @@ function ReturnItemsList() {
 // Inputs: none
 // Outputs: Dispatches ADD action with { id, qty } payload.
 function ItemEntry() {
-  const [, dispatch] = useTransaction();
+  const [transaction, dispatch] = useTransaction();
   const [phase, dispatchPhase] = useReturnItemsPhase();
 
   const pendingItemId = phase.pendingItemId || "";
@@ -135,17 +131,22 @@ function ItemEntry() {
 
   const handleAdd = () => {
     if (!pendingItemId || pendingQty <= 0) return;
+    const current = transaction.returnItems || new Map();
+    const newMap = new Map(current);
+
+    if (newMap.has(pendingItemId)) {
+      const item = newMap.get(pendingItemId);
+      newMap.set(pendingItemId, { ...item, qty: item.qty + pendingQty });
+    } else {
+      newMap.set(pendingItemId, { itemId: pendingItemId, qty: pendingQty });
+    }
+
     dispatch({
-      kind: "REPO_ACTION",
-      payload: {
-        repoAction: {
-          kind: "ADD",
-          target: "return-items",
-          payload: { id: pendingItemId, qty: pendingQty },
-        },
-      },
+      kind: "SET_INPUT",
+      payload: { key: "returnItems", value: newMap },
     });
-    // Reset local entry fields
+
+    // Reset the local phase fields
     dispatchPhase({
       kind: "SET_LOCAL",
       payload: { key: "pendingItemId", value: "" },
@@ -156,35 +157,41 @@ function ItemEntry() {
     });
   };
 
+  // Why is the Muggle's model of the time involved in UI work so skewed?
   return (
-    <div className="item-entry">
-      <input
-        type="text"
-        placeholder="Item #"
-        value={pendingItemId}
-        onChange={(e) =>
-          dispatchPhase({
-            kind: "SET_LOCAL",
-            payload: { key: "pendingItemId", value: e.target.value },
-          })
-        }
-      />
-      <input
-        type="number"
-        min={1}
-        value={pendingQty}
-        onChange={(e) =>
-          dispatchPhase({
-            kind: "SET_LOCAL",
-            payload: {
-              key: "pendingQty",
-              value: parseInt(e.target.value, 10) || 1,
-            },
-          })
-        }
-      />
-      <button onClick={handleAdd}>Add Item</button>
-    </div>
+    <>
+      <div className="catalog-items-list">
+        Available Item IDs: {Object.keys(fakeCatalog).join(", ")}
+      </div>
+      <div className="item-entry">
+        <input
+          type="text"
+          placeholder="Item #"
+          value={pendingItemId}
+          onChange={(e) =>
+            dispatchPhase({
+              kind: "SET_LOCAL",
+              payload: { key: "pendingItemId", value: e.target.value },
+            })
+          }
+        />
+        <input
+          type="number"
+          min={1}
+          value={pendingQty}
+          onChange={(e) =>
+            dispatchPhase({
+              kind: "SET_LOCAL",
+              payload: {
+                key: "pendingQty",
+                value: parseInt(e.target.value, 10) || 1,
+              },
+            })
+          }
+        />
+        <button onClick={handleAdd}>Add Item</button>
+      </div>
+    </>
   );
 }
 
