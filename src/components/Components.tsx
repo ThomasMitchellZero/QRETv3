@@ -1,3 +1,5 @@
+import PLACEHOLDER from "../assets/product-images/PLACEHOLDER.png";
+
 import type { PhaseNode, Item } from "../types/Types";
 import { StartPhase } from "../phases/050-Start";
 import { ReturnItemsPhase } from "../phases/200-ReturnItems";
@@ -182,36 +184,41 @@ function PhaseBase({ children }: { children: React.ReactNode }) {
 // Inputs: FloorplanProps (topBar, leftColumn, rightColumn, pageTitle, navBar, mainContent, footer).
 // Outputs: JSX layout with correct placement of sections.
 export type FloorplanProps = {
+  topBar?: React.ReactNode; // optional: ecosystem bar
+  navBar?: React.ReactNode; // optional: navigation row
+  pageTitle?: React.ReactNode; // page header
   leftColumn?: React.ReactNode;
   rightColumn?: React.ReactNode;
-  pageTitle?: React.ReactNode;
-  navBar?: React.ReactNode; // now required, but will default in destructure
   mainContent?: React.ReactNode;
   footer?: React.ReactNode;
 };
 
 export function Floorplan({
+  topBar = <div className="ecosystem-bar">Ecosystem Placeholder</div>,
+  navBar = <NavBar />,
+  pageTitle,
   leftColumn,
   rightColumn,
-  pageTitle,
-  navBar = <NavBar />,
   mainContent,
   footer = <Footer />,
 }: FloorplanProps): JSX.Element {
   return (
-    <div className="floorplan debug">
-      {<div className="top-bar"></div>}
-      <div className="body-row">
-        {leftColumn && <div className="left-column">{leftColumn}</div>}
-        <div className="main-column">
-          {pageTitle && <div className="page-title-row">{pageTitle}</div>}
-          {navBar && <div className="nav-bar-row">{navBar}</div>}
-          {<div className="main-content-row">{mainContent}</div>}
-          {footer && <div className="footer-row">{footer}</div>}
+    <>
+      <div className="floorplan">
+        <div className="body-row">
+          {leftColumn && <div className="left-column">{leftColumn}</div>}
+          <div className="main-column">
+            {topBar}
+            {pageTitle && <div className="page-title-row">{pageTitle}</div>}
+            {navBar && <div className="navbar-row">{navBar}</div>}
+            {mainContent}
+          </div>
+          {rightColumn && <div className="right-column">{rightColumn}</div>}
         </div>
-        {rightColumn && <div className="right-column">{rightColumn}</div>}
+
+        {footer}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -280,23 +287,23 @@ export type ItemDetailsTileProps = {
 };
 
 export function ItemDetailsTile({ item, extraContent }: ItemDetailsTileProps) {
-  // Look up the catalog entry using itemId; fallback to placeholder if not found
+  // Lookup still fine for description/value
   const catalogEntry = (fakeCatalog[item.itemId] ??
     fakeCatalog["0000"]) as CatalogEntry;
 
   return (
-    <div className="ui-item-details-tile">
-      <div className="ui-item-details__image">
-        <img src={catalogEntry.picture} alt={catalogEntry.description} />
+    <div className="item-details-tile">
+      <div className="item-details__image">
+        <img src={PLACEHOLDER} alt={catalogEntry.description} />
       </div>
-      <div className="ui-item-details__info">
-        <div className="ui-item-details__title">{catalogEntry.description}</div>
-        <div className="ui-item-details__id">Item #{item.itemId}</div>
-        <div className="ui-item-details__price">
+      <div className="item-details__info">
+        <div className="item-details__title">{catalogEntry.description}</div>
+        <div className="item-details__id">Item #{item.itemId}</div>
+        <div className="item-details__price">
           ${(catalogEntry.valueCents / 100).toFixed(2)}
         </div>
         {extraContent && (
-          <div className="ui-item-details__extra">{extraContent}</div>
+          <div className="item-details__extra">{extraContent}</div>
         )}
       </div>
     </div>

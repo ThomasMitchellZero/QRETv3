@@ -1,540 +1,278 @@
-@mixin card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow var(--motion-fast) cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* style.scss  |  Simplified + Layered + DRY */
+// WE DO NOT use Ui-anything as a prefix.  It is redundant.
 
-@mixin hover-lift {
-  &:hover {
-    transform: translateY(-2px) scale(1.012);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-  }
-}
-
-@layer reset, tokens, base, components, utilities, overrides;
-
-/* ===============================================
-   01. DESIGN TOKENS — Canonical Base
-   =============================================== */
-@layer tokens {
-  :root {
-    /// ==============================================
-    /// 01. DESIGN TOKENS — rpx Spacing System
-    /// ----------------------------------------------
-    /// Spacing tokens now use rpx units (1rpx = 1/16 rem).
-    /// Use --space-4rpx, --space-8rpx, etc. for modular spacing.
-    /// Example: --space-16rpx = 1rem.
-    /// ==============================================
-    --rpx: calc(1rem / 16);
-    --space-4rpx: calc(var(--rpx) * 4); /// 4rpx = 0.25rem (4/16)
-    --space-8rpx: calc(var(--rpx) * 8); /// 8rpx = 0.5rem (8/16)
-    --space-12rpx: calc(var(--rpx) * 12); /// 12rpx = 0.75rem (12/16)
-    --space-16rpx: calc(var(--rpx) * 16); /// 16rpx = 1rem (16/16)
-    --space-24rpx: calc(var(--rpx) * 24); /// 24rpx = 1.5rem (24/16)
-    --space-32rpx: calc(var(--rpx) * 32); /// 32rpx = 2rem (32/16)
-
-    // 🎨 Color (Semantic Prototypes)
-    --color-bg: #f0f0f0;
-    --color-surface: #ffffff;
-    --color-border: #ccc;
-    --color-primary: #99ccff;
-    --color-success: #ccffcc;
-    --color-error: #ffcccc;
-    --color-warning: #ffe0b3;
-    --color-text: #222;
-
-    // 🔲 Radii
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 10px;
-
-    // ⏱ Animation / Motion
-    --motion-fast: 0.12s;
-    --motion-medium: 0.25s;
-    --motion-slow: 0.4s;
-  }
-  /* ===============================================
-     02. TYPOGRAPHY TOKENS — Prototype Edition
-     =============================================== */
-  :root {
-    // 🗣️ FONT FAMILIES
-    --font-display: "Comic Sans MS", "Comic Sans", cursive;
-    --font-body: "Comic Sans MS", "Comic Sans", cursive;
-
-    // 🧱 FONT SIZES — minimal responsive set
-    --font-xs: 0.75rem;
-    --font-sm: 0.875rem;
-    --font-md: 1rem;
-    --font-lg: 1.25rem;
-    --font-xl: 1.5rem;
-
-    // 🧩 FONT WEIGHTS
-    --weight-regular: 400;
-    --weight-bold: 700;
-  }
-}
-
-/* ===============================================
-   01b. MIXINS — Canonical Reusables (moved to utilities)
-   =============================================== */
-
-/* ===============================================
-   01c. NAMING CONVENTIONS — Canonical SCSS
-   =============================================== */
-// Project Naming Conventions:
-//  • Hyphenated class names are used for DOM elements (e.g. `.return-items-card`, `.main-content-row`).
-//  • camelCase is used for SCSS mixins and variables (e.g. `@mixin flex-center`, `$tileSize`).
-//  • BEM-like nesting is preferred for scoped selectors (e.g. `.card .card-title {}`).
-//  • UI component classes start with `ui-` (e.g. `.ui-refund-details`).
-//  • Layout classes use nouns reflecting their structure (e.g. `.floorplan`, `.stage`, `.footer`).
-//  • Temporary debug or dev colors should include a comment like `// DEBUG-COLOR`.
-
-/* ================================
-   style.scss — Canonical Styles Bucket
-   Definition: Central SCSS file providing reset, baseline, and application-wide styling.
-   Intent: Ensure consistent design, debugging visibility, and final styling authority.
-   Constraints:
-     - This is the single authoritative styling source.
-     - No inline styles in components may override these definitions.
-   Inputs: Classnames referenced in React components.
-   Outputs: Global and component-specific visual styles.
-   ================================ */
+/* ─────────── RESET ─────────── */
+@layer reset, foundation, components, utilities;
 
 @layer reset {
   *,
   *::before,
   *::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
   }
 
   html,
   body {
     height: 100%;
-    font-family: sans-serif;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    line-height: 1.4;
   }
-  /* etc... */
 }
 
-@layer base {
-  img,
-  picture,
-  video,
-  canvas,
-  svg {
-    display: block;
-    max-width: 100%;
+/* ─────────── BASE ─────────── */
+@layer foundation {
+  :root {
+    --rpx-base: 1rem;
+    --radius-s: 0.25rem;
+    --radius-m: 0.5rem;
+    --radius-l: 1rem;
+
+    --color-shartreuse: #a2ea2e;
+    --color-bg: #fafafa;
+    --color-fg: #222;
+    --color-border: #ddd;
+    --color-primary: #4a90e2;
+    --color-secondary: #888;
+    --color-accent: #f5a623;
+    --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.1);
+
+    --4rpx: 0.25rem;
+    --8rpx: 0.5rem;
+    --16rpx: 1rem;
+    --24rpx: 1.5rem;
+    --32rpx: 2rem;
+    --48rpx: 3rem;
+    --64rpx: 4rem;
+    --128rpx: 8rem;
+    --160rpx: 10rem;
+    --192rpx: 12rem;
+    --256rpx: 16rem;
   }
 
-  input,
-  button,
-  textarea,
-  select {
-    font: inherit;
-  }
+  /* $vars from chat???? 
+$padding: var(--16rpx);
+$gap: var(--16rpx);
+$bg: var(--color-bg);
+$align: flex-start;
+$justify: flex-start; 
+*/
 
-  /* Apply globally */
   body {
-    font-family: var(--font-body);
-    font-size: var(--font-md);
-    font-weight: var(--weight-regular);
-    color: var(--color-text);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
 
-  /* Allow easy upgrade later */
-  [data-theme="final"] {
-    --font-display: "Inter", "Helvetica Neue", Arial, sans-serif;
-    --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+    margin-bottom: calc(var(--rpx-base) * 0.5);
   }
 
-  @layer base {
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: var(--radius-sm);
-      background-color: var(--color-primary);
-      color: var(--color-text);
-      padding: var(--space-8rpx) var(--space-16rpx);
-      font-weight: var(--weight-bold);
-      transition: background var(--motion-fast);
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
 
-      &:hover {
-        background-color: color-mix(
-          in srgb,
-          var(--color-primary) 85%,
-          black 15%
-        );
-      }
+  .hbox {
+    display: flex;
+    flex-direction: row;
+    gap: var(--16rpx);
+  }
 
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    input,
-    select,
-    textarea {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      padding: var(--space-8rpx);
-      background: var(--color-surface);
-      color: var(--color-text);
-      transition: border var(--motion-fast), box-shadow var(--motion-fast);
-
-      &:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px
-          color-mix(in srgb, var(--color-primary) 50%, transparent);
-      }
-    }
+  .vbox {
+    display: flex;
+    flex-direction: column;
+    gap: var(--16rpx);
   }
 }
 
+/* ─────────── COMPONENTS ─────────── */
 @layer components {
-  .stage {
-    background-color: var(--color-bg);
+  /* Mixins */
+
+  /* ─────────── MIXINS ─────────── */
+
+  /* Base layout container */
+
+  /* Buttons */
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--rpx-base) * 0.75) calc(var(--rpx-base) * 1.25);
+    border-radius: var(--radius-s);
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease background-color;
+    border: none;
+
+    .btn--primary {
+      background: var(--color-primary);
+      color: white;
+    }
+    .btn--secondary {
+      background: var(--color-secondary);
+      color: white;
+    }
+    .btn--outline {
+      background: none;
+      border: 2px solid var(--color-primary);
+      color: var(--color-primary);
+    }
+    .btn--text {
+      background: none;
+      color: var(--color-primary);
+    }
+
+    &:hover {
+      filter: brightness(0.9);
+    }
   }
 
-  .actor-tile {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-  }
-
-  .footer {
-    background-color: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-  }
-
-  /* ===============================================
-   FLOORPLAN — Canonical 3-Column Layout
-   =============================================== */
+  /* Floorplan Layout */
   .floorplan {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden; // ✅ prevents body scroll
-
-    .body-row {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      gap: var(--space-16rpx);
-      padding: var(--space-16rpx);
-      overflow: hidden; // ✅ prevent nested overflows fighting
-    }
-
-    .left-column,
-    .right-column {
-      flex: 0 0 18rem;
-      display: flex;
-      flex-direction: column;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      padding: var(--space-12rpx);
-      overflow-y: auto; // ✅ independent scroll
-    }
-
-    .main-column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-12rpx);
-      overflow: hidden; // ✅ keeps only the content region scrollable
-    }
-
-    .main-content-row {
-      flex: 1;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      padding: var(--space-12rpx);
-      overflow-y: auto; // ✅ scrolls only main content
-    }
+    background: var(--color-bg);
+    overflow: hidden;
   }
 
-  // Layout Rhythm & Spacing
-  .page-title-row,
-  .nav-bar-row,
-  .main-content-row {
-    margin-bottom: var(--space-12rpx);
-  }
-  .footer-row {
-    margin-bottom: var(--space-12rpx);
-  }
-
-  .nav-bar-row {
+  /* Card — visually elevated container */
+  .card {
     display: flex;
     flex-direction: row;
-    align-items: center;
-  }
-
-  // Typography polish for page title
-  .page-title-row {
-    font-family: var(--font-display);
-    font-size: var(--font-lg);
-    font-weight: var(--weight-bold);
-  }
-
-  // Card polish for visual depth
-  .return-items-card {
-    @include card;
-    @include hover-lift;
-  }
-  .tile {
-    @include card;
-    @include hover-lift;
-  }
-
-  .ui-item-details-tile {
-    display: flex;
-    align-items: center;
-    gap: var(--space-16rpx);
-    padding: var(--space-12rpx);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-
-    img {
-      width: 64px;
-      height: 64px;
-      object-fit: contain;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-border);
-      background-color: #fff;
-    }
-
-    .ui-item-details__info {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4rpx);
-    }
-
-    .ui-item-details__title {
-      font-weight: var(--weight-bold);
-      font-size: var(--font-md);
-    }
-
-    .ui-item-details__id {
-      font-size: var(--font-sm);
-      opacity: 0.8;
-    }
-
-    .ui-item-details__price {
-      font-size: var(--font-md);
-      color: var(--color-text);
-    }
-
-    .ui-item-details__extra {
-      margin-top: var(--space-8rpx);
-    }
-  }
-
-  .navbar {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 16rpx;
-    width: 100%;
-    padding: 8rpx 16rpx;
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    height: 48rpx;
-    align-items: center;
-    font-weight: var(--weight-bold);
-  }
-
-  .navbar__item {
-    padding: 8rpx 12rpx;
-    cursor: pointer;
-    font-weight: var(--weight-bold);
-    transition: 0.2s ease color;
-    align-items: center;
-    height: 100%;
-    display: flex;
-  }
-
-  .navbar__item:hover {
-    color: color-mix(in srgb, var(--color-primary) 80%, black 20%);
-  }
-}
-
-/* ===============================================
-   FLOORPLAN — Visual Debug Helpers
-   =============================================== */
-.floorplan.debug {
-  .top-bar {
-    background-color: rgba(0, 128, 255, 0.1);
-  }
-  .left-column {
-    background-color: rgba(0, 255, 128, 0.1);
-  }
-  .main-column {
-    background-color: rgba(255, 255, 0, 0.1);
-  }
-  .right-column {
-    background-color: rgba(255, 128, 0, 0.1);
-  }
-  .footer-row {
-    background-color: rgba(128, 0, 255, 0.1);
-  }
-}
-
-.tile {
-  // see components layer for card/hover-lift
-}
-
-.return-items-card {
-  // see components layer for card/hover-lift
-}
-
-.catalog-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-}
-
-.qty-display {
-  font-size: 2rem;
-  font-weight: bold;
-  height: 100%;
-  width: 100%;
-}
-
-/// ==============================================
-/// Button Variants — Hierarchy of Loudness
-/// ==============================================
-.btn--primary {
-  background-color: var(--color-primary);
-  color: var(--color-text);
-  font-weight: var(--weight-bold);
-  border: none;
-  &:hover {
-    background-color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
-  }
-}
-
-.btn--secondary {
-  background-color: var(--color-success);
-  color: var(--color-text);
-  font-weight: var(--weight-regular);
-  border: none;
-  &:hover {
-    background-color: color-mix(in srgb, var(--color-success) 85%, black 15%);
-  }
-}
-
-.btn--outline {
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-weight: var(--weight-regular);
-  &:hover {
+    gap: var(--16rpx);
     background-color: var(--color-bg);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
   }
-}
 
-.btn--text {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  padding: 0;
-  font-weight: var(--weight-regular);
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-/* ===============================================
-   UTILITIES LAYER — Canonical Utilities & Mixins
-   =============================================== */
-@layer utilities {
-  /// ==============================================
-  /// Mixins — Canonical Reusables
-  /// ==============================================
-
-  /// ==============================================
-  /// Utility Classes — Layout & Alignment
-  /// ==============================================
-  .flex-center {
+  .tile {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    gap: var(--16rpx);
+    background-color: var(--color-bg);
+    &:hover {
+      filter: brightness(0.9);
+    }
   }
-  .text-right {
-    text-align: right;
+
+  /* Image placeholder — for product tiles or item details */
+  .img-thumb {
+    // I would like this extended to have 3 size options, rpx if possible.
+    display: flex;
   }
-  .pad-md {
-    padding: var(--space-16rpx);
+
+  /* Stage / ActorTile */
+  .stage {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex: 1;
+
+    .solo {
+      transform: scale(1.02);
+      border: 2px solid var(--color-accent);
+    }
   }
+
+  /* ItemDetailsTile — Horizontal Flex Layout */
+  .item-details-tile {
+    @extend .card;
+  }
+
+  .catelog-image {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-s);
+    object-fit: cover;
+    box-shadow: var(--shadow-card);
+
+    // this should have variable sizes.
+  }
+
+  /* ─────────── RETURN ITEMS ─────────── */
 }
 
-@layer overrides {
-  /* ===============================
-     VISUAL DEBUG HELPERS
-     Toggle as needed for layout auditing
-     =============================== */
-
-  /* Outline all layout sections */
-  .debug-outline * {
-    outline: 1px dashed rgba(255, 0, 0, 0.3);
+/* ─────────── UTILITIES ─────────── */
+@layer utilities {
+  .flex {
+    display: flex;
+  }
+  .padding-8rpx {
+    padding: var(--8rpx);
+  }
+  .padding-16rpx {
+    padding: var(--16rpx);
+  }
+  .padding-24rpx {
+    padding: var(--24);
+  }
+  .padding-32rpx {
+    padding: var(--32rpx);
+  }
+  .gap-8rpx {
+    gap: var(--8rpx);
   }
 
-  /* Highlight each major zone distinctly */
-  .debug-floorplan .floorplan__left-column {
-    background-color: rgba(0, 128, 255, 0.1);
-  }
-  .debug-floorplan .floorplan__main-column {
-    background-color: rgba(0, 255, 128, 0.1);
-  }
-  .debug-floorplan .floorplan__right-column {
-    background-color: rgba(255, 128, 0, 0.1);
-  }
-
-  /* Actor tiles and cards */
-  .debug-tiles .actor-tile {
-    outline: 2px solid magenta;
-  }
-  .debug-tiles .return-items-card {
-    outline: 2px solid orange;
+  /* Flex Sizing Utilities
+     These utilities adapt automatically to both horizontal (row) and vertical (column) flex contexts.
+     Use `.flex-grow-max` to make a flex child expand to fill available space (stretching along the cross-axis).
+     Use `.flex-grow-min` to make a flex child shrink to its minimum size, aligned to the start.
+  */
+  .flex-grow-max {
+    flex: 1 1 auto; /* Grow to fill available space, shrink if needed */
+    align-self: stretch; /* Stretch along the cross-axis automatically */
   }
 
-  /* Spacing audit */
-  .debug-spacing * {
-    background-image: linear-gradient(
-      to bottom,
-      rgba(255, 0, 0, 0.05) 1px,
-      transparent 1px
-    );
-    background-size: 100% var(--space-16rpx);
+  .flex-grow-min {
+    flex: 0 0 auto; /* Stay as small as possible */
+    align-self: flex-start; /* Stick to natural size, aligned to start */
   }
 
-  /* Quick toggle for hover animations */
-  .debug-no-motion * {
-    transition: none !important;
-    animation: none !important;
+  /* H/V containers define direction */
+  .hbox {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .vbox {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Main-axis Fill/Hug */
+  .FillMain {
+    flex: 1 1 auto;
+  } /* fills along flex direction */
+  .HugMain {
+    flex: 0 0 auto;
+  } /* hugs content along flex direction */
+
+  /* Cross-axis Fill/Hug */
+  .FillCross {
+    align-self: stretch;
+  } /* fills perpendicular direction */
+  .HugCross {
+    align-self: flex-start;
+  } /* hugs content perpendicular direction */
+
+  /* Compound shorthands for convenience */
+  .Fill {
+    flex: 1 1 auto;
+    align-self: stretch;
+  }
+  .Hug {
+    flex: 0 0 auto;
+    align-self: flex-start;
   }
 }

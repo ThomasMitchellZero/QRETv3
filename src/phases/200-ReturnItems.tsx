@@ -2,7 +2,14 @@ import React from "react";
 import { Phase } from "../components/Components";
 import { fakeCatalog } from "../api/fakeApi";
 
-import { Card, Floorplan, ActorTile, Stage } from "../components/Components";
+import {
+  Card,
+  Floorplan,
+  ActorTile,
+  Stage,
+  ItemDetailsTile,
+  type ItemDetailsTileProps,
+} from "../components/Components";
 import {
   useTransaction,
   useReturnItemsPhase,
@@ -56,7 +63,8 @@ export function UiRefundDetails({ item }: { item: Item }) {
             <ul className="ui-refund-receipts">
               {matchingRefunds.map((r, idx) => (
                 <li key={`${r.invoId}-${idx}`}>
-                  Receipt #{r.invoId} — ${((r.valueCents ?? 0) / 100).toFixed(2)}
+                  Receipt #{r.invoId} — $
+                  {((r.valueCents ?? 0) / 100).toFixed(2)}
                 </li>
               ))}
             </ul>
@@ -77,42 +85,6 @@ export function UiRefundDetails({ item }: { item: Item }) {
     </ActorTile>
   );
 }
-
-  /*
-
-  - This is a configured ActorTile that shows refund details for a returned item.
-  - It takes an `item` prop of type `Item`.
-  - It uses the `useDerivation` hook to get the refund amount for the item.
-
-  - We need to show:
-
-    
-    - Left Side:
-      - Label: "Receipted Items": 
-      - Big Value:  Total qty with receipts "/"  Total qty of item,   ---probably just looking for undefined.
-      -Solo Mode: Below that, a consolidated list of all Receipts applied to this item.
-
-    - Right Side:
-      - Label: "Refund Details"
-      - Amount: "$XX.XX" (calculated refund amount)
-    - Solo Mode: Below that, in a row
-
-    Solo Mode:///////////////
-
-    -left side:
-      - List of all all receiptIDs matched to this item.
-    right side:
-      - Refund amount breakdown row:
-        -Receipted qty
-        - Base Price: $XX.XX
-        
-
-    - Non-receipted items show "No Receipts" where 
-  
-  
-  
-  */
-
 
 export function ReturnItemsCard({ item }: { item: Item }) {
   const [transaction, dispatch] = useTransaction();
@@ -150,9 +122,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
 
   return (
     <Card className="return-items-card" onClick={handleCardClick}>
-      <div className="item-id PLACEHOLDER">
-        <strong>Item #{itemId}</strong>
-      </div>
+      <ItemDetailsTile item={item} />
       <Stage id={`item-${itemId}`}>
         <ActorTile
           id={`item-${itemId}-qty`}

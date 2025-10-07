@@ -1,5 +1,5 @@
 import type { Item, Invoice } from "../types/Types";
-import  "../assets/product-images/PLACEHOLDER.png";
+import PLACEHOLDER from "../assets/product-images/PLACEHOLDER.png";
 
 // Catalog entries = metadata only (not regular repo items)
 export type CatalogEntry = Item & {
@@ -14,7 +14,7 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     itemId: "_placeholder",
     description: "Unknown Item",
     valueCents: 0,
-    picture: "../assets/product-images/PLACEHOLDER.png",
+    picture: PLACEHOLDER,
   },
   "1001": {
     itemId: "1001",
