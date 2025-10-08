@@ -27,8 +27,14 @@ export function StartPhase() {
       sampleItems.map((item) => [item.itemId, item])
     );
 
-    dispatch({ kind: "SET_INPUT", payload: { key: "receipts", value: receipts } });
-    dispatch({ kind: "SET_INPUT", payload: { key: "returnItems", value: returnItems } });
+    dispatch({
+      kind: "SET_INPUT",
+      payload: { key: "receipts", value: receipts },
+    });
+    dispatch({
+      kind: "SET_INPUT",
+      payload: { key: "returnItems", value: returnItems },
+    });
 
     console.log("🚀 FastFill complete", { receipts, returnItems });
   };
@@ -37,11 +43,7 @@ export function StartPhase() {
     <Phase phaseId="start" title="Start">
       <Floorplan
         pageTitle="Start"
-        mainContent={
-          <Tile>
-            <button onClick={handleFastFill}>⚡ FastFill</button>
-          </Tile>
-        }
+        mainContent={<button onClick={handleFastFill}>⚡ FastFill</button>}
       />
     </Phase>
   );

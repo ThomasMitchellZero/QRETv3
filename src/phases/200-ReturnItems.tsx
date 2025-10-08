@@ -3,11 +3,11 @@ import { Phase } from "../components/Components";
 import { fakeCatalog } from "../api/fakeApi";
 
 import {
-  Card,
   Floorplan,
   ActorTile,
   Stage,
   ItemDetailsTile,
+  Container,
   type ItemDetailsTileProps,
 } from "../components/Components";
 import {
@@ -121,7 +121,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
   };
 
   return (
-    <Card className="return-items-card" onClick={handleCardClick}>
+    <Container className="card hbox" onClick={handleCardClick}>
       <ItemDetailsTile item={item} />
       <Stage id={`item-${itemId}`}>
         <ActorTile
@@ -135,7 +135,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
       </button>
-    </Card>
+    </Container>
   );
 }
 // ================================

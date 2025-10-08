@@ -30,7 +30,9 @@
     --radius-l: 1rem;
 
     --color-shartreuse: #a2ea2e;
-    --color-bg: #fafafa;
+    --color-bg-main: #fff;
+    --color-bg-alt: #f4f6fa;
+
     --color-fg: #222;
     --color-border: #ddd;
     --color-primary: #4a90e2;
@@ -54,13 +56,13 @@
   /* $vars from chat???? 
 $padding: var(--16rpx);
 $gap: var(--16rpx);
-$bg: var(--color-bg);
+$bg: var(--color-bg-main);
 $align: flex-start;
 $justify: flex-start; 
 */
 
   body {
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-main);
     color: var(--color-fg);
   }
 
@@ -76,12 +78,12 @@ $justify: flex-start;
     text-decoration: none;
   }
 
+  /* H/V containers define direction */
   .hbox {
     display: flex;
     flex-direction: row;
     gap: var(--16rpx);
   }
-
   .vbox {
     display: flex;
     flex-direction: column;
@@ -99,12 +101,15 @@ $justify: flex-start;
 
   /* Buttons */
   button {
-    display: inline-flex;
+    flex: 0 0 auto; /* prevents flex parent from stretching the button */
+    width: fit-content; /* size exactly to the content + padding */
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: calc(var(--rpx-base) * 0.75) calc(var(--rpx-base) * 1.25);
     border-radius: var(--radius-s);
     font-weight: 600;
+    background-color: var(--color-shartreuse);
     cursor: pointer;
     transition: 0.2s ease background-color;
     border: none;
@@ -137,8 +142,18 @@ $justify: flex-start;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: var(--color-bg);
+    background: var(--color-bg-main);
     overflow: hidden;
+
+    .column {
+      @extend .vbox;
+      min-width: 0; /* Prevent overflow in flex children */
+      flex: 0 0 25%;
+      gap: var(--16rpx);
+      border-right: 1px solid var(--color-border);
+      overflow-y: auto;
+      background-color: var(--color-bg-alt);
+    }
   }
 
   /* Card — visually elevated container */
@@ -146,7 +161,7 @@ $justify: flex-start;
     display: flex;
     flex-direction: row;
     gap: var(--16rpx);
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-main);
 
     &:hover {
       transform: translateY(-2px);
@@ -154,11 +169,16 @@ $justify: flex-start;
     }
   }
 
+  .card-ctnr {
+    @extend .vbox;
+    padding: var(--24rpx);
+  }
+
   .tile {
     display: flex;
     flex-direction: column;
     gap: var(--16rpx);
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-main);
     &:hover {
       filter: brightness(0.9);
     }
@@ -238,41 +258,92 @@ $justify: flex-start;
     align-self: flex-start; /* Stick to natural size, aligned to start */
   }
 
-  /* H/V containers define direction */
-  .hbox {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .vbox {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   /* Main-axis Fill/Hug */
-  .FillMain {
+  .fill-main {
     flex: 1 1 auto;
   } /* fills along flex direction */
-  .HugMain {
+  .hug-main {
     flex: 0 0 auto;
   } /* hugs content along flex direction */
 
   /* Cross-axis Fill/Hug */
-  .FillCross {
+  .fill-cross {
     align-self: stretch;
   } /* fills perpendicular direction */
-  .HugCross {
+  .hug-cross {
     align-self: flex-start;
   } /* hugs content perpendicular direction */
 
   /* Compound shorthands for convenience */
-  .Fill {
+  .fill {
     flex: 1 1 auto;
     align-self: stretch;
   }
-  .Hug {
+  .hug {
     flex: 0 0 auto;
     align-self: flex-start;
+  }
+
+  /* === TEXT COLORS === */
+  .text-fg {
+    color: var(--color-fg);
+  }
+  .text-border {
+    color: var(--color-border);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .text-bg-main {
+    color: var(--color-bg-main);
+  }
+  .text-bg-alt {
+    color: var(--color-bg-alt);
+  }
+  .text-shartreuse {
+    color: var(--color-shartreuse);
+  }
+
+  /* === BACKGROUND COLORS === */
+  .bg-fg {
+    background-color: var(--color-fg);
+  }
+  .bg-border {
+    background-color: var(--color-border);
+  }
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .bg-bg-main {
+    background-color: var(--color-bg-main);
+  }
+  .bg-bg-alt {
+    background-color: var(--color-bg-alt);
+  }
+  .bg-shartreuse {
+    background-color: var(--color-shartreuse);
+  }
+
+  /* Optional hover helpers */
+  .hover-bg-primary:hover {
+    background-color: var(--color-primary);
+  }
+  .hover-bg-secondary:hover {
+    background-color: var(--color-secondary);
+  }
+  .hover-bg-accent:hover {
+    background-color: var(--color-accent);
   }
 }

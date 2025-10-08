@@ -1,10 +1,10 @@
-import PLACEHOLDER from "../assets/product-images/PLACEHOLDER.png";
-
 import type { PhaseNode, Item } from "../types/Types";
 import { StartPhase } from "../phases/050-Start";
 import { ReturnItemsPhase } from "../phases/200-ReturnItems";
 import { ReceiptsPhase } from "../phases/250-Receipts";
 import { useDerivation } from "../logic/Derivation";
+import { type CatalogEntry, fakeCatalog } from "../api/fakeApi";
+import { ProductImage } from "../assets/product-images/ProductImage";
 
 import React from "react";
 
@@ -46,16 +46,6 @@ export function Container(props: ContainerProps): JSX.Element {
   );
 }
 
-//********************************************************************
-//  TILE
-//********************************************************************
-// Component: Tile
-// Definition: Generic container component for displaying content in a tile-style UI.
-// Intent: Provide a reusable, stylized tile wrapper for content blocks.
-// Constraints: Styling delegated to style.scss. Accepts children and optional onClick.
-//   - Click Policy: propagate (bubbles up)
-// Inputs: TileProps { children, onClick }
-// Outputs: JSX element wrapping children in a styled tile.
 export type TileProps = ContainerProps & {
   children: React.ReactNode;
 };
@@ -90,6 +80,10 @@ export function Stage({
     </StageContext.Provider>
   );
 }
+
+////////////////////////////////////////////////////////////////////////////////////
+//  UI COMPS
+////////////////////////////////////////////////////////////////////////////////////
 
 export type ActorTileProps = {
   id: string;
@@ -126,12 +120,12 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`actor-tile ${tileState}`}
+      className={`tile vbox${tileState}`}
       onClick={handleClick}
       {...rest}
     >
-      <div className="actor-headline">{headline}</div>
-      {tileState === "solo" && <div className="actor-content">{children}</div>}
+      <div className="vbox">{headline}</div>
+      {tileState === "solo" && <div>{children}</div>}
     </Container>
   );
 }
@@ -142,12 +136,6 @@ export type PhaseProps = {
   children: React.ReactNode;
 };
 
-// Component: Phase
-// Definition: Global wrapper for all phase screens, providing PhaseProvider and Floorplan.
-// Intent: Ensure every phase screen uses consistent structure and context.
-// Constraints: Must wrap children in PhaseProvider, render Floorplan with canonical slots.
-// Inputs: PhaseProps
-// Outputs: JSX layout for a phase screen.
 import { PhaseProvider } from "../logic/Logic";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
   return (
@@ -167,22 +155,60 @@ function PhaseBase({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="phase-base" onClick={handleBackgroundClick}>
+    <div className="hbox Fill" onClick={handleBackgroundClick}>
       {children}
     </div>
   );
 }
 
+export type PhaseNodeTileProps = {
+  node: PhaseNode;
+};
+
+export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
+  return (
+    <div className="tile">
+      <strong>{node.phaseId}</strong>
+    </div>
+  );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+export type ItemDetailsTileProps = {
+  item: Item;
+  extraContent?: React.ReactNode; // Optional slot for custom info or actions
+};
+
+export function ItemDetailsTile({ item, extraContent }: ItemDetailsTileProps) {
+  // Lookup still fine for description/value
+
+  const catalogEntry = (fakeCatalog[item.itemId] ??
+    fakeCatalog["0000"]) as CatalogEntry;
+
+  return (
+    <div className="tile">
+      <div className="hbox cross-hug">
+        <ProductImage itemId={item.itemId} alt={catalogEntry.description} />
+      </div>
+      <div className="item-details__info">
+        <div className="item-details__title">{catalogEntry.description}</div>
+        <div className="item-details__id">Item #{item.itemId}</div>
+        <div className="item-details__price">
+          ${(catalogEntry.valueCents / 100).toFixed(2)}
+        </div>
+        {extraContent && (
+          <div className="item-details__extra">{extraContent}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 //********************************************************************
-//  FLOORPLAN
+//  LAYOUT COMPS
 //********************************************************************
 
-// Component: Floorplan
-// Definition: High-level layout component for page structure.
-// Intent: Provide consistent 3-column + header/footer layout for pages.
-// Constraints: Sections rendered only if props are passed; styling delegated to style.scss.
-// Inputs: FloorplanProps (topBar, leftColumn, rightColumn, pageTitle, navBar, mainContent, footer).
-// Outputs: JSX layout with correct placement of sections.
 export type FloorplanProps = {
   topBar?: React.ReactNode; // optional: ecosystem bar
   navBar?: React.ReactNode; // optional: navigation row
@@ -204,128 +230,30 @@ export function Floorplan({
 }: FloorplanProps): JSX.Element {
   return (
     <>
-      <div className="floorplan">
-        <div className="body-row">
-          {leftColumn && <div className="left-column">{leftColumn}</div>}
-          <div className="main-column">
+      <div className="floorplan hbox fill">
+        <div className="hbox fill">
+          {leftColumn && <div className="column ">{leftColumn}</div>}
+          <div className="vbox fill main-column">
             {topBar}
-            {pageTitle && <div className="page-title-row">{pageTitle}</div>}
-            {navBar && <div className="navbar-row">{navBar}</div>}
-            {mainContent}
+            {pageTitle}
+            {navBar}
+            <div className="hbox card-ctnr fill">{mainContent}</div>
+            {footer}
           </div>
-          {rightColumn && <div className="right-column">{rightColumn}</div>}
+          {rightColumn && <div className="column">{rightColumn}</div>}
         </div>
-
-        {footer}
       </div>
     </>
   );
 }
 
-//********************************************************************
-//  PHASE NODE TILE
-//********************************************************************
-// Component: PhaseNodeTile
-// Definition: Simple card/tile UI for displaying a PhaseNode's metadata.
-// ...
-
-//********************************************************************
-//  PHASE NODE TILE
-//********************************************************************
-// Component: PhaseNodeTile
-// Definition: Simple card/tile UI for displaying a PhaseNode's metadata.
-// Intent: Show phase metadata in a compact, reusable UI.
-// Constraints: Pure UI; no logic. Styling delegated to style.scss.
-// Inputs: PhaseNodeTileProps { node }
-// Outputs: JSX element for phase node.
-export type PhaseNodeTileProps = {
-  node: PhaseNode;
-};
-
-export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
-  return (
-    <div className="tile">
-      <div className="phase-node-id">
-        <strong>{node.phaseId}</strong>
-      </div>
-    </div>
-  );
-}
-
-//********************************************************************
-//  CARD
-//********************************************************************
-// Component: Card
-// Definition: Generic container component for displaying content in a card-style UI.
-// Intent: Provide a reusable, stylized card wrapper for content blocks, with optional custom styling and event isolation.
-// Constraints: Styling delegated to style.scss. Accepts children and optional className for additional styling. Stops click event propagation from its contents.
-//   - Click Policy: isolate (stops bubbling)
-// Inputs: CardProps { children, className? }
-// Outputs: JSX element wrapping children in a styled card that isolates click events.
-export type CardProps = ContainerProps;
-
-export function Card({ children, className }: CardProps): JSX.Element {
-  const handleClick = (e: React.MouseEvent) => {
-    //e.stopPropagation();
-  };
-  return (
-    <div
-      className={["card", className].filter(Boolean).join(" ")}
-      onClick={handleClick}
-    >
-      {children}
-    </div>
-  );
-}
-
-import type { CatalogEntry } from "../api/fakeApi";
-import { fakeCatalog } from "../api/fakeApi";
-
-export type ItemDetailsTileProps = {
-  item: Item;
-  extraContent?: React.ReactNode; // Optional slot for custom info or actions
-};
-
-export function ItemDetailsTile({ item, extraContent }: ItemDetailsTileProps) {
-  // Lookup still fine for description/value
-  const catalogEntry = (fakeCatalog[item.itemId] ??
-    fakeCatalog["0000"]) as CatalogEntry;
-
-  return (
-    <div className="item-details-tile">
-      <div className="item-details__image">
-        <img src={PLACEHOLDER} alt={catalogEntry.description} />
-      </div>
-      <div className="item-details__info">
-        <div className="item-details__title">{catalogEntry.description}</div>
-        <div className="item-details__id">Item #{item.itemId}</div>
-        <div className="item-details__price">
-          ${(catalogEntry.valueCents / 100).toFixed(2)}
-        </div>
-        {extraContent && (
-          <div className="item-details__extra">{extraContent}</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-//********************************************************************
-//  NAV BAR
-//********************************************************************
-// Component: NavBar
-// Definition: Navigation bar for phase navigation.
-// Intent: Render clickable navigation items for each phase in the transaction.
-// Constraints: Uses useTransaction, useIsSelected, useNavigatePhase; wraps each PhaseNodeTile in a clickable div.
-// Inputs: none (reads transaction context)
-// Outputs: JSX navigation bar.
 export function NavBar(): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
   const selectedId = transaction.currentPhase; // derive once, no hooks-in-loop
 
   return (
-    <div className="navbar">
+    <div className="hbox">
       {transaction.phases.map((node) => {
         const isSelected = node.phaseId === selectedId;
         return (
@@ -347,17 +275,6 @@ export function NavBar(): JSX.Element {
   );
 }
 
-//********************************************************************
-//  FOOTER
-//********************************************************************
-// Component: Footer
-// Definition: Footer bar with label and continue button to advance to the next phase.
-// Intent: Provide a canonical footer with left-aligned label and right-aligned continue navigation.
-// Constraints:
-//   - Uses useTransaction and useNavigatePhase to determine and perform navigation.
-//   - Styling follows .footer-row structure in style.scss.
-// Inputs: FooterProps { onContinue?: () => void, label?: string }
-// Outputs: JSX footer row with label and continue button.
 export type FooterProps = {
   onContinue?: () => void;
   label?: string;
@@ -389,8 +306,10 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
   const refundDollars = (totalReturnCents / 100).toFixed(2);
 
   return (
-    <div className="footer">
-      <span>{label || `Refund Value: $${refundDollars}`}</span>
+    <div className="hbox">
+      <div className="vbox fill-main">
+        <span>{label || `Refund Value: $${refundDollars}`}</span>
+      </div>
       <button onClick={handleContinue} disabled={!nextPhase}>
         Continue
       </button>
@@ -430,3 +349,7 @@ export function PagesRouter(): JSX.Element {
       );
   }
 }
+
+//********************************************************************
+//  DEPRECATED
+//********************************************************************

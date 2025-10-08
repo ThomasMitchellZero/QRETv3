@@ -1,7 +1,12 @@
 import { fakeInvoices, fakeCatalog } from "../api/fakeApi";
 import React from "react";
 import { Phase } from "../components/Components";
-import { Card, Floorplan, Stage, ActorTile } from "../components/Components";
+import {
+  Container,
+  Floorplan,
+  Stage,
+  ActorTile,
+} from "../components/Components";
 import { useTransaction } from "../logic/Logic";
 import { useDerivation } from "../logic/Derivation";
 
@@ -36,7 +41,7 @@ function ReceiptsCard({ invoId }: { invoId: string }) {
   );
 
   return (
-    <Card className="return-items-card">
+    <Container className="card">
       <div>
         <strong>Receipt #{invoId}</strong>
       </div>
@@ -52,7 +57,7 @@ function ReceiptsCard({ invoId }: { invoId: string }) {
       <button onClick={handleRemove} aria-label="Remove receipt">
         🗑️
       </button>
-    </Card>
+    </Container>
   );
 }
 
@@ -121,7 +126,6 @@ export function ReceiptsPhase() {
     <Phase phaseId="receipts" title="Receipts">
       <Floorplan
         pageTitle="Receipts"
-
         mainContent={<ReceiptsList />}
         rightColumn={<ReceiptEntry />}
       />
