@@ -120,7 +120,7 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`tile vbox${tileState}`}
+      className={`tile vbox ${tileState}`}
       onClick={handleClick}
       {...rest}
     >
@@ -146,62 +146,35 @@ export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
 }
 
 // Internal: PhaseBase
-// Definition: Wrapper div for phase screens that resets transients on background click.
-function PhaseBase({ children }: { children: React.ReactNode }) {
-  const [, dispatchTransients] = useTransients();
-
-  const handleBackgroundClick = () => {
-    dispatchTransients({ kind: "RESET_TRANSIENTS" });
-  };
-
-  return (
-    <div className="hbox Fill" onClick={handleBackgroundClick}>
-      {children}
-    </div>
-  );
-}
-
-export type PhaseNodeTileProps = {
-  node: PhaseNode;
-};
-
-export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
-  return (
-    <div className="tile">
-      <strong>{node.phaseId}</strong>
-    </div>
-  );
-}
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-export type ItemDetailsTileProps = {
+export type ProductDetailsTileProps = {
   item: Item;
   extraContent?: React.ReactNode; // Optional slot for custom info or actions
 };
 
-export function ItemDetailsTile({ item, extraContent }: ItemDetailsTileProps) {
+export function ProductDetailsTile({
+  item,
+  extraContent,
+}: ProductDetailsTileProps) {
   // Lookup still fine for description/value
 
   const catalogEntry = (fakeCatalog[item.itemId] ??
     fakeCatalog["0000"]) as CatalogEntry;
 
   return (
-    <div className="tile">
-      <div className="hbox cross-hug">
-        <ProductImage itemId={item.itemId} alt={catalogEntry.description} />
-      </div>
-      <div className="item-details__info">
-        <div className="item-details__title">{catalogEntry.description}</div>
-        <div className="item-details__id">Item #{item.itemId}</div>
-        <div className="item-details__price">
-          ${(catalogEntry.valueCents / 100).toFixed(2)}
-        </div>
+    <Container className="product-details">
+      <ProductImage itemId={item.itemId} alt={catalogEntry.description} />
+      <div className="vbox fill item-details">
+        <div className="">{catalogEntry.description}</div>
+        <div className="">Item #{item.itemId}</div>
+        <div className="">${(catalogEntry.valueCents / 100).toFixed(2)}</div>
         {extraContent && (
           <div className="item-details__extra">{extraContent}</div>
         )}
       </div>
-    </div>
+    </Container>
   );
 }
 
@@ -237,7 +210,7 @@ export function Floorplan({
             {topBar}
             {pageTitle}
             {navBar}
-            <div className="hbox card-ctnr fill">{mainContent}</div>
+            {mainContent || <div className="fill" />}
             {footer}
           </div>
           {rightColumn && <div className="column">{rightColumn}</div>}
@@ -271,6 +244,33 @@ export function NavBar(): JSX.Element {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Definition: Wrapper div for phase screens that resets transients on background click.
+function PhaseBase({ children }: { children: React.ReactNode }) {
+  const [, dispatchTransients] = useTransients();
+
+  const handleBackgroundClick = () => {
+    dispatchTransients({ kind: "RESET_TRANSIENTS" });
+  };
+
+  return (
+    <div className="hbox Fill" onClick={handleBackgroundClick}>
+      {children}
+    </div>
+  );
+}
+
+export type PhaseNodeTileProps = {
+  node: PhaseNode;
+};
+
+export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
+  return (
+    <div className="tile">
+      <strong>{node.phaseId}</strong>
     </div>
   );
 }

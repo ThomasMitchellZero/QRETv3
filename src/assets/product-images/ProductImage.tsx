@@ -1,5 +1,10 @@
-import PLACEHOLDER from "./PLACEHOLDER.png";
 import { fakeCatalog } from "../../api/fakeApi";
+
+import PLACEHOLDER from "./PLACEHOLDER.png";
+import kobalt_hammer from "./kobalt_hammer.png";
+import craftstman_wrench from "./craftsman_wrench.png";
+import hoses from "./hoses.png";
+import window_scraper from "./window_scraper.png";
 
 export type ProductImageProps = {
   itemId: string;
@@ -15,7 +20,7 @@ export function ProductImage({
   className = "",
 }: ProductImageProps) {
   const entry = fakeCatalog[itemId] ?? fakeCatalog["0000"];
-  const imgSrc = entry?.picture || PLACEHOLDER;
+  const imgSrc = entry?.picture || kobalt_hammer;
 
   const sizeMap: Record<string, string> = {
     xs: "var(--64rpx)",

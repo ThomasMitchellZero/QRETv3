@@ -51,6 +51,8 @@
     --160rpx: 10rem;
     --192rpx: 12rem;
     --256rpx: 16rem;
+    --312rpx: 20rem;
+    --480rpx: 30rem;
   }
 
   /* $vars from chat???? 
@@ -76,6 +78,9 @@ $justify: flex-start;
   a {
     color: var(--color-primary);
     text-decoration: none;
+  }
+
+  p {
   }
 
   /* H/V containers define direction */
@@ -171,7 +176,11 @@ $justify: flex-start;
 
   .card-ctnr {
     @extend .vbox;
-    padding: var(--24rpx);
+    flex: 1 1 0rem;
+    align-self: stretch;
+    gap: var(--24rpx);
+    overflow-y: scroll;
+    scrollbar-gutter: auto; /* CSS modern fix for consistent layout */
   }
 
   .tile {
@@ -204,8 +213,10 @@ $justify: flex-start;
   }
 
   /* ItemDetailsTile — Horizontal Flex Layout */
-  .item-details-tile {
-    @extend .card;
+  .product-details {
+    @extend .tile;
+    width: var(--312rpx);
+    flex-direction: row;
   }
 
   .catelog-image {
@@ -345,5 +356,58 @@ $justify: flex-start;
   }
   .hover-bg-accent:hover {
     background-color: var(--color-accent);
+  }
+
+  /* === TEXT SIZES (Semantic, not numeric) === */
+  .text-xs {
+    font-size: var(--8rpx);
+  } /* ~0.5rem — captions, microcopy */
+  .text-sm {
+    font-size: var(--12rpx, 0.75rem);
+  } /* fallback until defined */
+  .text-md {
+    font-size: var(--16rpx);
+  } /* ~1rem — body text */
+  .text-lg {
+    font-size: var(--24rpx);
+  } /* ~1.5rem — subheadings */
+  .text-xl {
+    font-size: var(--32rpx);
+  } /* ~2rem — section headers */
+  .text-xxl {
+    font-size: var(--48rpx);
+  } /* ~3rem — titles, hero */
+  .text-hero {
+    font-size: var(--64rpx);
+  } /* ~4rem — page titles */
+
+  /* === TEXT WEIGHTS === */
+  .text-light {
+    font-weight: 300;
+  }
+  .text-regular {
+    font-weight: 400;
+  }
+  .text-bold {
+    font-weight: 700;
+  }
+
+  /* === TEXT EMPHASIS / ALIGNMENT === */
+  .text-muted {
+    opacity: 0.7;
+  }
+  .text-strong {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+  .text-center {
+    text-align: center;
+  }
+  .text-right {
+    text-align: right;
   }
 }

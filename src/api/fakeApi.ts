@@ -1,5 +1,10 @@
 import type { Item, Invoice } from "../types/Types";
 import PLACEHOLDER from "../assets/product-images/PLACEHOLDER.png";
+import kobalt_hammer from "../assets/product-images/kobalt_hammer.png";
+import craftsman_wrench from "../assets/product-images/craftsman_wrench.png";
+import hoses from "../assets/product-images/hoses.png";
+import window_scraper from "../assets/product-images/window_scraper.png";
+import paintstick from "../assets/product-images/paintstick.png";
 
 // Catalog entries = metadata only (not regular repo items)
 export type CatalogEntry = Item & {
@@ -16,35 +21,36 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     valueCents: 0,
     picture: PLACEHOLDER,
   },
-  "1001": {
-    itemId: "1001",
-    description: "Blue Widget",
+  "1122": {
+    itemId: "1122",
+    description:
+      "Kobalt Hammer 12-inch 16oz. Fiberglass grip.  Lifetime Warranty-eligible",
     valueCents: 1299,
-    picture: "/images/catalog/blue-widget.png",
+    picture: kobalt_hammer,
   },
-  "1002": {
-    itemId: "1002",
-    description: "Red Widget",
+  "2233": {
+    itemId: "2233",
+    description: "Craftsman 8-inch Adjustable Wrench",
     valueCents: 1599,
-    picture: "/images/catalog/red-widget.png",
+    picture: craftsman_wrench,
   },
-  "1003": {
-    itemId: "1003",
-    description: "Green Widget",
+  "3344": {
+    itemId: "3344",
+    description: "18-inch hoses with 1/4-inch fittings",
     valueCents: 999,
-    picture: "/images/catalog/green-widget.png",
+    picture: hoses,
   },
-  "1004": {
-    itemId: "1004",
-    description: "Widget Pro Max",
+  "4455": {
+    itemId: "4455",
+    description: "Window Scraper Pro Max plus refill blades",
     valueCents: 3499,
-    picture: "/images/catalog/widget-pro-max.png",
+    picture: window_scraper,
   },
-  "1005": {
-    itemId: "1005",
-    description: "Mini Widget",
+  "5566": {
+    itemId: "5566",
+    description: "12-inch balsa wood paint stirrer.  4 count",
     valueCents: 499,
-    picture: "/images/catalog/mini-widget.png",
+    picture: paintstick,
   },
 };
 

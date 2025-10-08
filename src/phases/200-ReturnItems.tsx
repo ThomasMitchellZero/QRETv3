@@ -6,9 +6,9 @@ import {
   Floorplan,
   ActorTile,
   Stage,
-  ItemDetailsTile,
+  ProductDetailsTile,
   Container,
-  type ItemDetailsTileProps,
+  type ProductDetailsTileProps,
 } from "../components/Components";
 import {
   useTransaction,
@@ -122,7 +122,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
 
   return (
     <Container className="card hbox" onClick={handleCardClick}>
-      <ItemDetailsTile item={item} />
+      <ProductDetailsTile item={item} />
       <Stage id={`item-${itemId}`}>
         <ActorTile
           id={`item-${itemId}-qty`}
@@ -149,7 +149,7 @@ function ReturnItemsList() {
   const itemsMap: Map<string, Item> =
     repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
   return (
-    <div className="return-items-list">
+    <div className="card-ctnr ">
       {Array.from(itemsMap.values()).map((item: Item) => (
         <ReturnItemsCard key={item.itemId} item={item} />
       ))}
