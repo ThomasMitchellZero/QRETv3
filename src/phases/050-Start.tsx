@@ -20,7 +20,6 @@ export function StartPhase() {
       .map((entry) => ({
         itemId: entry.itemId,
         qty: Math.ceil(Math.random() * 3),
-        valueCents: entry.valueCents,
       }));
 
     const returnItems = new Map<string, Item>(

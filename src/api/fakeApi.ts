@@ -59,15 +59,15 @@ export const fakeInvoices: Record<string, Invoice> = {
   "99988": {
     invoId: "99988",
     items: [
-      { itemId: "1001", qty: 2, valueCents: 1299, invoId: "99988" } as Item, // Blue Widget
-      { itemId: "1005", qty: 1, valueCents: 499, invoId: "99988" } as Item, // Mini Widget
+      { itemId: "1122", qty: 2, valueCents: 1298, invoId: "99988" } as Item, // Blue Widget
+      { itemId: "2233", qty: 1, valueCents: 1398, invoId: "99988" } as Item, // Mini Widget
     ],
   },
   "99977": {
     invoId: "99977",
     items: [
-      { itemId: "1003", qty: 3, valueCents: 999, invoId: "99977" } as Item, // Green Widget
-      { itemId: "1004", qty: 1, valueCents: 3499, invoId: "99977" } as Item, // Widget Pro Max
+      { itemId: "3344", qty: 3, valueCents: 999, invoId: "99977" } as Item, // Green Widget
+      { itemId: "2233", qty: 99, valueCents: 3499, invoId: "99977" } as Item, // Widget Pro Max
     ],
   },
 };

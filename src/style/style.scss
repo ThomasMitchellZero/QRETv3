@@ -43,17 +43,14 @@
 
     --4rpx: 0.25rem;
     --8rpx: 0.5rem;
+    --12rpx: 0.75rem;
     --16rpx: 1rem;
+    --20rpx: 1.25rem;
     --24rpx: 1.5rem;
     --32rpx: 2rem;
     --48rpx: 3rem;
+    --56rpx: 3.5rem;
     --64rpx: 4rem;
-    --128rpx: 8rem;
-    --160rpx: 10rem;
-    --192rpx: 12rem;
-    --256rpx: 16rem;
-    --312rpx: 20rem;
-    --480rpx: 30rem;
   }
 
   body {
@@ -209,7 +206,7 @@
   .stage {
     display: flex;
     flex-direction: row;
-    gap: 0.5rem;
+    gap: 1rem;
     flex: 1;
 
     .solo {
@@ -228,12 +225,10 @@
 
   .product-image {
     flex: 0 0 auto;
-    width: 96px;
-    height: 96px;
     border-radius: var(--radius-s);
-    background-color: white;
+    fill-opacity: 100%;
+    background-color: green;
     object-fit: cover;
-    box-shadow: var(--shadow-card);
   }
 }
 /* ─────────── RETURN ITEMS ─────────── */
@@ -257,6 +252,9 @@
   }
   .gap-8rpx {
     gap: var(--8rpx);
+  }
+  .gap-0rpx {
+    gap: 0rem;
   }
 
   /* Flex Sizing Utilities */
@@ -362,55 +360,75 @@
   }
 
   /* === TEXT SIZES (Semantic, not numeric) === */
-  .text-xs {
-    font-size: var(--8rpx);
-  } /* ~0.5rem — captions, microcopy */
-  .text-sm {
-    font-size: var(--12rpx, 0.75rem);
-  } /* fallback until defined */
-  .text-md {
-    font-size: var(--16rpx);
-  } /* ~1rem — body text */
-  .text-lg {
-    font-size: var(--24rpx);
-  } /* ~1.5rem — subheadings */
-  .text-xl {
-    font-size: var(--32rpx);
-  } /* ~2rem — section headers */
-  .text-xxl {
-    font-size: var(--48rpx);
-  } /* ~3rem — titles, hero */
-  .text-hero {
-    font-size: var(--64rpx);
-  } /* ~4rem — page titles */
+  /* === TEXT SYSTEM: Coarse + Fine Controls === */
+  /* === TEXT SYSTEM: Hybrid rem + em === */
+  .text {
+    /* ─── Coarse “category” controls (root-anchored via rem) ─── */
+    &.micro {
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      font-size: var(--12rpx);
+    }
 
-  /* === TEXT WEIGHTS === */
-  .text-light {
-    font-weight: 300;
-  }
-  .text-regular {
-    font-weight: 400;
-  }
-  .text-bold {
-    font-weight: 700;
-  }
+    &.body {
+      font-weight: 400;
+      font-size: var(--16rpx);
+    }
 
-  /* === TEXT EMPHASIS / ALIGNMENT === */
-  .text-muted {
-    opacity: 0.7;
-  }
-  .text-strong {
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+    &.subtitle {
+      font-weight: 500;
+      line-height: 1.3;
+      font-size: var(--20rpx);
+    }
 
-  .text-left {
-    text-align: left;
-  }
-  .text-center {
-    text-align: center;
-  }
-  .text-right {
-    text-align: right;
+    &.title {
+      font-weight: 600;
+      line-height: 1.2;
+      font-size: 1.5rem;
+    }
+
+    &.pageTitle {
+      font-weight: 700;
+      line-height: 1.1;
+      font-size: 2rem;
+    }
+
+    /* ─── Fine “size” modifiers (relative via em) ─── */
+
+    &.sm {
+      font-size: 0.9em;
+    }
+    &.md {
+      font-size: 1em;
+    } /* default */
+    &.lg {
+      font-size: 1.2em;
+    }
+
+    /* ─── Optional variants ─── */
+    &.light {
+      font-weight: 300;
+    }
+    &.regular {
+      font-weight: 400;
+    }
+    &.bold {
+      font-weight: 700;
+    }
+    &.muted {
+      opacity: 0.7;
+    }
+    &.strong {
+      font-weight: 700;
+    }
+    &.center {
+      text-align: center;
+    }
+    &.left {
+      text-align: left;
+    }
+    &.right {
+      text-align: right;
+    }
   }
 }

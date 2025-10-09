@@ -85,6 +85,26 @@ export function Stage({
 //  UI COMPS
 ////////////////////////////////////////////////////////////////////////////////////
 
+export type LabeledValueprops = {
+  label?: string;
+  value?: string | number;
+  className?: string;
+  textAlign?: "left" | "center" | "right";
+};
+
+export function LabeledValue({
+  label,
+  value,
+  className = "",
+  textAlign = "left",
+}: LabeledValueprops) {
+  return (
+    <Container className={`vbox LV gap-0rpx ${className}`}>
+      <div className={`text body ${textAlign}`}>{label} </div>
+      <div className={`text title ${textAlign}`}>{value} </div>
+    </Container>
+  );
+}
 export type ActorTileProps = {
   id: string;
   headline: React.ReactNode;

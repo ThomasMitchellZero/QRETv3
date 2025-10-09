@@ -214,20 +214,6 @@ export function useDerivation() {
   // Layer : Rollups
   //--------------------------------------
 
-  // Validate that distillizer is idempotent for given grouping keys
-  function distillizerStringTest() {
-    const once = distillizer(returnItemsBlend, ["itemId"]);
-    const twice = distillizer(once, ["itemId"]);
-
-    const serialize = (x: any) => JSON.stringify(x);
-    const sameLength = once.length === twice.length;
-    const sameContent = once.every(
-      (a, i) => serialize(a) === serialize(twice[i])
-    );
-
-    return sameLength && sameContent;
-  }
-
   function distillizer<T extends Record<string, any>>(
     items: T[],
     keys: (keyof T)[]
@@ -256,32 +242,23 @@ export function useDerivation() {
         grouped.set(key, { ...atom });
       }
     });
-
     // Return all consolidated records as array
     return Array.from(grouped.values());
   }
 
   // total Return value
-  const totalReturnCents = distillizer<Item>(
-    returnItemsBlend as Item[],
-    ["itemId", "invoId"]
-  ).reduce((sum, item) => sum + (item.valueCents ?? 0), 0);
 
-  const refundItems = distillizer<Item>(
-    returnItemsBlend as Item[],
-    ["itemId", "invoId"]
+  const refundItems = distillizer<Item>(returnItemsBlend as Item[], [
+    "itemId",
+    "invoId",
+  ]);
+
+  const totalReturnCents = refundItems.reduce(
+    (sum, item) => sum + (item.valueCents ?? 0),
+    0
   );
+
   const perItemRefunds = distillizer<Item>(refundItems, ["itemId"]);
-  const sanityCheck = distillizerStringTest();
-
-  /**
-    
-    -itemReceipts: Each item needs to show how it's being refunded (or not).  
-      For each itemId, return the array of distillized RefundItems with matching itemID
-
-
-    -ReceiptItemsSold: For each receipt, return the array of distillized RefundItems with matching invoId
-   */
 
   // Rollup of all
 
@@ -289,7 +266,9 @@ export function useDerivation() {
   // Layer : Secondary Rollups (Relational Views)
   // ================================
 
-  // itemReceipts — Map<itemId, Item[]>
+  
+
+
   // For each itemId, collect all refund records (i.e., per receipt) where that item appears.
   const itemReceipts: Map<string, Item[]> = new Map();
   refundItems.forEach((item) => {
@@ -311,7 +290,7 @@ export function useDerivation() {
     refundItems,
     perItemRefunds,
     totalReturnCents,
-    sanityCheck,
+    receiptItemsSold,
   };
 }
 

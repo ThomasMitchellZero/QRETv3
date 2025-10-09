@@ -8,12 +8,14 @@ import {
   Stage,
   ProductDetailsTile,
   Container,
+  LabeledValue,
   type ProductDetailsTileProps,
 } from "../components/Components";
 import {
   useTransaction,
   useReturnItemsPhase,
   useTransients,
+  dollarize,
 } from "../logic/Logic";
 
 import type { Item } from "../types/Types";
@@ -40,15 +42,26 @@ export function RefundDetails({ item }: { item: Item }) {
   );
   const totalQty = item.qty ?? 0;
   const baseValue = refundRecord?.valueCents ?? 0;
-  const totalRefundValue = receiptedQty * baseValue;
+  const itemRefundTotal = receiptedQty * baseValue;
   const hasReceipts = receiptedQty > 0;
 
   return (
     <ActorTile
       id={`item-${itemId}-refund-details`}
-      style={`w-md`}
+      style={`w-md testes t`}
       headline={
-        <div className="">${((totalRefundValue ?? 0) / 100).toFixed(2)}</div>
+        <div className="hbox ">
+          <LabeledValue
+            label="Receipted"
+            value={`${receiptedQty} / ${totalQty}`}
+            className="fill-main"
+          />
+          <LabeledValue
+            label="Total Refund"
+            value={dollarize(itemRefundTotal)}
+            textAlign="right"
+          />
+        </div>
       }
     >
       {/* SOLO CONTENT */}
@@ -70,15 +83,6 @@ export function RefundDetails({ item }: { item: Item }) {
           ) : (
             <div className="">No Receipts</div>
           )}
-        </div>
-
-        <div className="">
-          <div className="">Refund Details</div>
-          <div className="">
-            <div>Receipted Qty: {receiptedQty}</div>
-            <div>Base Value: ${(baseValue / 100).toFixed(2)}</div>
-            <div>Total Refund: ${(totalRefundValue / 100).toFixed(2)}</div>
-          </div>
         </div>
       </div>
     </ActorTile>

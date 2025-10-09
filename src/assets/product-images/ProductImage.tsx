@@ -23,11 +23,11 @@ export function ProductImage({
   const imgSrc = entry?.picture || kobalt_hammer;
 
   const sizeMap: Record<string, string> = {
-    xs: "var(--64rpx)",
-    sm: "var(--96rpx)",
-    md: "var(--128rpx)",
-    lg: "var(--160rpx)",
-    xl: "var(--256rpx)",
+    xs: "4rem",
+    sm: "6rem",
+    md: "8rem",
+    lg: "10rem",
+    xl: "16rem",
   };
 
   const dimension = sizeMap[size];

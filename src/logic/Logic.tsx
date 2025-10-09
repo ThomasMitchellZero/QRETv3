@@ -31,6 +31,11 @@ import { fakeCatalog, fakeInvoices } from "../api/fakeApi";
 //  TRANSACTION STATE CONTEXT
 //********************************************************************
 
+export function dollarize(valueCents: number | undefined): string {
+  const sOut = valueCents ? `$${(valueCents / 100).toFixed(2)}` : "- -";
+  return sOut;
+}
+
 const initialTransactionState: TransactionState = {
   currentPhase: "start",
   // Canonical transaction-level repos:
@@ -270,15 +275,7 @@ export function useIsSelected(phaseId: string): boolean {
 //  HOOK: useNavigatePhase
 //********************************************************************
 /**
- * Hook: useNavigatePhase
- * Definition: Returns a function to navigate directly to a PhaseNode by id.
- * Intent: Centralize phase navigation into a single, spec-aligned primitive.
- * Constraints:
- *   - Fails loud if target phaseId does not exist in TransactionState.phases.
- *   - Always resets PhaseState to its primary screen when navigating.
- *   - Must not silently bypass disabled/hidden states (caller must validate).
- * Inputs: phaseId (string)
- * Outputs: Updates TransactionState.currentPhase and resets PhaseState.
+
  */
 export function useNavigatePhase(): (phaseId: string) => void {
   const [transaction, dispatchTransaction] = useTransaction();
