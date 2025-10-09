@@ -97,7 +97,7 @@ export function ActorTile(props: ActorTileProps) {
   const { activeStageId, activeSoloId } = transients;
   const stageCtx = useStage() as { stageId?: string; activeSoloId?: string };
   const parentStageId = stageCtx.stageId || "defaultStage";
-  const { id, headline, children, ...rest } = props;
+  const { id, headline, children, style, ...rest } = props;
 
   const tileState =
     activeSoloId === id
@@ -120,7 +120,7 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`tile vbox ${tileState}`}
+      className={`tile h-sm ${style} ${tileState}`}
       onClick={handleClick}
       {...rest}
     >
@@ -152,24 +152,31 @@ export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
 export type ProductDetailsTileProps = {
   item: Item;
   extraContent?: React.ReactNode; // Optional slot for custom info or actions
+  hasPrice?: boolean; // Whether to show price (default: true)
 };
 
 export function ProductDetailsTile({
   item,
   extraContent,
+  hasPrice = true,
 }: ProductDetailsTileProps) {
   // Lookup still fine for description/value
 
   const catalogEntry = (fakeCatalog[item.itemId] ??
     fakeCatalog["0000"]) as CatalogEntry;
 
+  const uiPrice = hasPrice ? (
+    <div className="">${(catalogEntry.valueCents / 100).toFixed(2)}</div>
+  ) : null;
+
   return (
     <Container className="product-details">
       <ProductImage itemId={item.itemId} alt={catalogEntry.description} />
       <div className="vbox fill item-details">
-        <div className="">{catalogEntry.description}</div>
         <div className="">Item #{item.itemId}</div>
-        <div className="">${(catalogEntry.valueCents / 100).toFixed(2)}</div>
+        <div className="">{catalogEntry.description}</div>
+
+        {uiPrice}
         {extraContent && (
           <div className="item-details__extra">{extraContent}</div>
         )}

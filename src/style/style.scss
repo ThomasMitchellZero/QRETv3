@@ -32,6 +32,7 @@
     --color-shartreuse: #a2ea2e;
     --color-bg-main: #fff;
     --color-bg-alt: #f4f6fa;
+    --color-bg-interactive: #e6f0ff;
 
     --color-fg: #222;
     --color-border: #ddd;
@@ -55,14 +56,6 @@
     --480rpx: 30rem;
   }
 
-  /* $vars from chat???? 
-$padding: var(--16rpx);
-$gap: var(--16rpx);
-$bg: var(--color-bg-main);
-$align: flex-start;
-$justify: flex-start; 
-*/
-
   body {
     background-color: var(--color-bg-main);
     color: var(--color-fg);
@@ -78,9 +71,6 @@ $justify: flex-start;
   a {
     color: var(--color-primary);
     text-decoration: none;
-  }
-
-  p {
   }
 
   /* H/V containers define direction */
@@ -147,7 +137,7 @@ $justify: flex-start;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: var(--color-bg-main);
+    background: var(--color-bg-alt);
     overflow: hidden;
 
     .column {
@@ -158,6 +148,7 @@ $justify: flex-start;
       border-right: 1px solid var(--color-border);
       overflow-y: auto;
       background-color: var(--color-bg-alt);
+      padding: var(--16rpx);
     }
   }
 
@@ -167,20 +158,17 @@ $justify: flex-start;
     flex-direction: row;
     gap: var(--16rpx);
     background-color: var(--color-bg-main);
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
+    padding: var(--16rpx); /* CSS modern fix for consistent layout */
   }
 
   .card-ctnr {
     @extend .vbox;
     flex: 1 1 0rem;
     align-self: stretch;
-    gap: var(--24rpx);
+    gap: var(--16rpx);
     overflow-y: scroll;
-    scrollbar-gutter: auto; /* CSS modern fix for consistent layout */
+    scrollbar-gutter: auto;
+    padding: 0 var(--24rpx);
   }
 
   .tile {
@@ -188,15 +176,33 @@ $justify: flex-start;
     flex-direction: column;
     gap: var(--16rpx);
     background-color: var(--color-bg-main);
+    border: 2px solid var(--color-border);
+
+    &.w-sm {
+      width: 8rem;
+    }
+    &.w-md {
+      width: 16rem+1rem;
+    }
+    &.w-lg {
+      width: 24rem+2rem;
+    }
+
+    &.h-sm {
+      height: 8rem;
+    }
+    &.h-md {
+      height: 12rem;
+    }
+
+    &.active {
+      border-color: var(--color-primary);
+      background-color: var(--color-bg-interactive);
+      box-shadow: var(--shadow-card);
+    }
     &:hover {
       filter: brightness(0.9);
     }
-  }
-
-  /* Image placeholder — for product tiles or item details */
-  .img-thumb {
-    // I would like this extended to have 3 size options, rpx if possible.
-    display: flex;
   }
 
   /* Stage / ActorTile */
@@ -207,31 +213,30 @@ $justify: flex-start;
     flex: 1;
 
     .solo {
-      transform: scale(1.02);
-      border: 2px solid var(--color-accent);
+      @extend .active;
+      min-height: 10rem;
     }
   }
 
-  /* ItemDetailsTile — Horizontal Flex Layout */
+  /*  ItemDetailsTile — Horizontal Flex Layout  */
   .product-details {
     @extend .tile;
-    width: var(--312rpx);
+    flex: 0 0 24rem;
+    min-width: 0rem;
     flex-direction: row;
   }
 
-  .catelog-image {
+  .product-image {
     flex: 0 0 auto;
     width: 96px;
     height: 96px;
     border-radius: var(--radius-s);
+    background-color: white;
     object-fit: cover;
     box-shadow: var(--shadow-card);
-
-    // this should have variable sizes.
   }
-
-  /* ─────────── RETURN ITEMS ─────────── */
 }
+/* ─────────── RETURN ITEMS ─────────── */
 
 /* ─────────── UTILITIES ─────────── */
 @layer utilities {
@@ -254,11 +259,7 @@ $justify: flex-start;
     gap: var(--8rpx);
   }
 
-  /* Flex Sizing Utilities
-     These utilities adapt automatically to both horizontal (row) and vertical (column) flex contexts.
-     Use `.flex-grow-max` to make a flex child expand to fill available space (stretching along the cross-axis).
-     Use `.flex-grow-min` to make a flex child shrink to its minimum size, aligned to the start.
-  */
+  /* Flex Sizing Utilities */
   .flex-grow-max {
     flex: 1 1 auto; /* Grow to fill available space, shrink if needed */
     align-self: stretch; /* Stretch along the cross-axis automatically */
@@ -294,6 +295,8 @@ $justify: flex-start;
     flex: 0 0 auto;
     align-self: flex-start;
   }
+
+  /* ---- One-Dimensional Fixed Size ---- */
 
   /* === TEXT COLORS === */
   .text-fg {

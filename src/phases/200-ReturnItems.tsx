@@ -27,7 +27,7 @@ import { useDerivation } from "../logic/Derivation";
 // Definition: UI card for a single returned item entry.
 // Now expects an `item: Item` prop.
 
-export function UiRefundDetails({ item }: { item: Item }) {
+export function RefundDetails({ item }: { item: Item }) {
   const { itemId } = item;
   const { perItemRefunds, refundItems } = useDerivation();
 
@@ -46,21 +46,20 @@ export function UiRefundDetails({ item }: { item: Item }) {
   return (
     <ActorTile
       id={`item-${itemId}-refund-details`}
+      style={`w-md`}
       headline={
-        <div className="qty-display">
-          ${((totalRefundValue ?? 0) / 100).toFixed(2)}
-        </div>
+        <div className="">${((totalRefundValue ?? 0) / 100).toFixed(2)}</div>
       }
     >
       {/* SOLO CONTENT */}
-      <div className="ui-refund-details">
-        <div className="ui-refund-section">
-          <div className="ui-refund-label">Receipted Items</div>
-          <div className="ui-refund-qty">
+      <div className="">
+        <div className="">
+          <div className="">Receipted Items</div>
+          <div className="">
             {receiptedQty} / {totalQty}
           </div>
           {hasReceipts ? (
-            <ul className="ui-refund-receipts">
+            <ul className="">
               {matchingRefunds.map((r, idx) => (
                 <li key={`${r.invoId}-${idx}`}>
                   Receipt #{r.invoId} — $
@@ -69,13 +68,13 @@ export function UiRefundDetails({ item }: { item: Item }) {
               ))}
             </ul>
           ) : (
-            <div className="ui-refund-no-receipts">No Receipts</div>
+            <div className="">No Receipts</div>
           )}
         </div>
 
-        <div className="ui-refund-section">
-          <div className="ui-refund-label">Refund Details</div>
-          <div className="ui-refund-breakdown">
+        <div className="">
+          <div className="">Refund Details</div>
+          <div className="">
             <div>Receipted Qty: {receiptedQty}</div>
             <div>Base Value: ${(baseValue / 100).toFixed(2)}</div>
             <div>Total Refund: ${(totalRefundValue / 100).toFixed(2)}</div>
@@ -122,15 +121,16 @@ export function ReturnItemsCard({ item }: { item: Item }) {
 
   return (
     <Container className="card hbox" onClick={handleCardClick}>
-      <ProductDetailsTile item={item} />
+      <ProductDetailsTile item={item} hasPrice={false} />
       <Stage id={`item-${itemId}`}>
         <ActorTile
           id={`item-${itemId}-qty`}
           headline={<div className="qty-display">{qty}</div>}
+          style={`w-sm`}
         >
           <input type="number" value={qty} onChange={handleQtyChange} min={0} />
         </ActorTile>
-        <UiRefundDetails item={item} />
+        <RefundDetails item={item} />
       </Stage>
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
@@ -141,8 +141,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
 // ================================
 // RETURN ITEMS LIST
 // ================================
-// Component: ReturnItemsList
-// Definition: List of all return items currently in the transaction repo.
+
 function ReturnItemsList() {
   const [transaction] = useTransaction();
   const repo = transaction.returnItems;
@@ -160,14 +159,7 @@ function ReturnItemsList() {
 // ================================
 // ITEM ENTRY
 // ================================
-// Component: ItemEntry
-// Definition: Local form for adding a return item by id and qty.
-// Intent: Collect item details, then push to TransactionState when valid.
-// Constraints:
-//   - Local state only until Add button pressed.
-//   - Populates same type used by ReturnItemsCard and "return-items" repo.
-// Inputs: none
-// Outputs: Dispatches ADD action with { id, qty } payload.
+
 function ItemEntry() {
   const [transaction, dispatch] = useTransaction();
   const [phase, dispatchPhase] = useReturnItemsPhase();
@@ -244,15 +236,7 @@ function ItemEntry() {
 //********************************************************************
 //  RETURN ITEMS PHASE SCAFFOLD
 //********************************************************************
-// Component: ReturnItemsPhase
-// Definition: Scaffold wrapper for the "return-items" phase of the QRET workflow.
-// Intent: Provide a canonical container for the Return Items phase, ensuring correct phaseId and structure.
-// Constraints:
-//   - Must wrap children in the canonical Phase container.
-//   - phaseId must be "return-items".
-//   - No business logic or navigation; render only.
-// Inputs: children (React.ReactNode)
-// Outputs: JSX structure for the Return Items phase.
+
 export function ReturnItemsPhase() {
   return (
     <Phase phaseId="return-items" title="Return Items">

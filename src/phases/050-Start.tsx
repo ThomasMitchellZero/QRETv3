@@ -43,7 +43,11 @@ export function StartPhase() {
     <Phase phaseId="start" title="Start">
       <Floorplan
         pageTitle="Start"
-        mainContent={<button onClick={handleFastFill}>⚡ FastFill</button>}
+        mainContent={
+          <div className="card-ctnr">
+            <button onClick={handleFastFill}>⚡ FastFill</button>
+          </div>
+        }
       />
     </Phase>
   );
