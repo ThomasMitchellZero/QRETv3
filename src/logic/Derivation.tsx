@@ -63,8 +63,6 @@ export function useDerivation() {
   const trxnReturnItems = transaction?.returnItems ?? new Map();
   const trxnReceipts = transaction?.receipts ?? new Map();
 
-  console.log(trxnReturnItems, trxnReceipts);
-
   //------------------------------
   // Layer 0: Collect Data
   //------------------------------
@@ -99,9 +97,6 @@ export function useDerivation() {
 
   const rawReceiptedItems = normalizeReceiptedItems();
   const rawReturnItems = normalizeReturnItems();
-
-  console.log("Raw Return Items:", rawReturnItems);
-  console.log("Raw Receipted Items:", rawReceiptedItems);
 
   //------------------------------
   // Layer 2: Atomize Data
@@ -245,7 +240,48 @@ export function useDerivation() {
     // Return all consolidated records as array
     return Array.from(grouped.values());
   }
+  //--------------------------------------
+  // Consolidate — Universal Rollup Function (Map-based)
+  //--------------------------------------
+  // Accepts an array of atom-like objects, groups them by specified key fields,
+  // and aggregates (sums) numeric fields defined in `aggregateKeys`.
+  // Returns a Map keyed by the concatenated group keys (e.g. "itemId|invoId").
+  // This version aligns with the AIDA Map-centric architecture.
 
+  function consolidate<T extends Record<string, any>>(
+    atoms: T[],
+    keys: (keyof T)[],
+    aggregateKeys: (keyof T)[] = []
+  ): Map<string, T> {
+    const grouped = new Map<string, T[]>();
+
+    // 1️⃣ Group atoms by specified identity keys
+    for (const atom of atoms) {
+      const key = keys.map((k) => String(atom[k] ?? "null")).join("|");
+      const group = grouped.get(key) ?? [];
+      group.push(atom);
+      grouped.set(key, group);
+    }
+
+    // 2️⃣ Consolidate each group into a single record
+    const results = new Map<string, T>();
+    for (const [key, groupAtoms] of grouped) {
+      const base = { ...groupAtoms[0] } as T;
+
+      for (const field of aggregateKeys) {
+        const total = groupAtoms.reduce((sum, a) => {
+          const v = a[field];
+          return typeof v === "number" ? sum + v : sum;
+        }, 0);
+        (base as any)[field] = total;
+      }
+
+      results.set(key, base);
+    }
+
+    // 3️⃣ Return the fully consolidated Map
+    return results;
+  }
   // total Return value
 
   const refundItems = distillizer<Item>(returnItemsBlend as Item[], [
@@ -253,21 +289,47 @@ export function useDerivation() {
     "invoId",
   ]);
 
+  //--------------------------------------
+  // New Consolidate-Based Refund Rollup
+  //--------------------------------------
+
+  const refundItemsMap = consolidate<Item>(
+    returnItemsBlend as Item[],
+    ["itemId", "invoId"], // group by both keys
+    ["qty", "valueCents"] // aggregate fields
+  );
+
+  // Convert to array for comparison with distillizer output
+  const refundItemsArray = Array.from(refundItemsMap.values());
+
+  //--------------------------------------
+  // Comparison Test: distillizer vs consolidate
+  //--------------------------------------
+
+  const refundItemsTest = JSON.stringify(refundItems);
+  const refundItemsMapTest = JSON.stringify(refundItemsArray);
+
+  if (refundItemsTest === refundItemsMapTest) {
+    console.log("✅ consolidate() matches distillizer()");
+  } else {
+    console.warn("⚠️ consolidate() differs from distillizer()");
+    console.log("distillizer:", refundItems);
+    console.log("consolidate:", refundItemsArray);
+  }
+
   const totalReturnCents = refundItems.reduce(
     (sum, item) => sum + (item.valueCents ?? 0),
     0
   );
 
   const perItemRefunds = distillizer<Item>(refundItems, ["itemId"]);
+  console.log("Per-Item Refunds:", perItemRefunds);
 
   // Rollup of all
 
   // ================================
   // Layer : Secondary Rollups (Relational Views)
   // ================================
-
-  
-
 
   // For each itemId, collect all refund records (i.e., per receipt) where that item appears.
   const itemReceipts: Map<string, Item[]> = new Map();
@@ -293,38 +355,3 @@ export function useDerivation() {
     receiptItemsSold,
   };
 }
-
-// Call your current derivation entrypoint
-// 🧪 ----------------------------------------------------
-//  TEST HARNESS — Plug-and-Play
-// -------------------------------------------------------
-
-export const RefundDebugger: React.FC = () => {
-  const [transaction] = useTransaction();
-  const derivation = useDerivation();
-
-  console.log("🧪 Derivation Test Running", derivation);
-
-  return (
-    <div
-      style={{
-        background: "#ffe4e1",
-        padding: "1rem",
-        fontFamily: "monospace",
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-        whiteSpace: "pre-wrap",
-      }}
-    >
-      <div>
-        🧾 <strong>Transaction State</strong>
-        <pre>{JSON.stringify(transaction, null, 2)}</pre>
-      </div>
-      <div>
-        🧪 <strong>Derivation Output</strong>
-        <pre>{JSON.stringify(derivation, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};

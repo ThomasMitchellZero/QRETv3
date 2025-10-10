@@ -71,3 +71,12 @@ export const fakeInvoices: Record<string, Invoice> = {
     ],
   },
 };
+
+// Helper exports to get Map views of the fake data
+export function getFakeCatalogMap(): Map<string, CatalogEntry> {
+  return new Map(Object.entries(fakeCatalog));
+}
+
+export function getFakeInvoicesMap(): Map<string, Invoice> {
+  return new Map(Object.entries(fakeInvoices));
+}
