@@ -310,8 +310,9 @@ export type FooterProps = {
 export function Footer({ onContinue, label }: FooterProps): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
-  const { totalReturnCents } = useDerivation(); // 👈 derive live refund total
-
+  const { consolidateByKey, returnItemAtoms } = useDerivation();
+  const totalReturnCents =
+    consolidateByKey(returnItemAtoms, "all").get("rollTotal")?.valueCents || 0;
   const phases = transaction.phases;
   const currentIndex = phases.findIndex(
     (p) => p.phaseId === transaction.currentPhase

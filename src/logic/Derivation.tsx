@@ -196,6 +196,21 @@ export function useDerivation() {
     return result;
   }
 
+  function arrayToMap<T extends Record<string, any>>(
+    arr: T[] | undefined,
+    key: keyof T = "id"
+  ): Map<string, T> {
+    if (!arr || arr.length === 0) return new Map();
+
+    const result = new Map<string, T>();
+    for (const atom of arr) {
+      const k = atom[key];
+      if (k) result.set(String(k), atom);
+    }
+
+    return result;
+  }
+
   // RETURNS BLEND
 
   const returnItemsBlend = blenderize(
@@ -203,155 +218,45 @@ export function useDerivation() {
     atomizedReceiptedItems
   );
 
-  console.log("Return Items Blend:", returnItemsBlend);
+  const returnItemAtoms = arrayToMap(returnItemsBlend as Item[], "itemId");
 
   //--------------------------------------
-  // Layer : Rollups
+  // Consolidate — Consistent Map Structure
   //--------------------------------------
 
-  function distillizer<T extends Record<string, any>>(
-    items: T[],
-    keys: (keyof T)[]
-  ): T[] {
-    if (items.length === 0) return [];
+  /**
+   * Consolidate a Map of Atoms by key or return a global rollup.
+   *
+   * @param {Map<string, any>} [data] - Map of atomized records.
+   * @param {string} [key="itemId"] - Property name to group by, or "all" for total rollup.
+   * @returns {Map<string, { itemId: string; qty: number; valueCents: number }>}
+   *          A Map of consolidated groups (or one "rollTotal" entry if key="all").
+   */
+  function consolidateByKey(
+    data: Map<string, any> | undefined,
+    key: string = "itemId"
+  ): Map<string, any> {
+    if (!data || data.size === 0) return new Map();
 
-    // Map from composite key string → aggregated record
-    const grouped = new Map<string, T>();
+    const result = new Map<string, any>();
 
-    items.forEach((atom) => {
-      // Build unique key from grouping fields
-      const key = keys.map((k) => String(atom[k] ?? "null")).join("|");
-      const existing = grouped.get(key);
+    for (const [, atom] of data.entries()) {
+      const groupKey = key === "all" ? "rollTotal" : atom[key];
+      if (!groupKey) continue;
 
-      if (existing) {
-        // If group exists, sum numeric fields
-        const merged: Record<string, any> = { ...existing };
-        for (const [k, v] of Object.entries(atom)) {
-          if (typeof v === "number") {
-            merged[k] = (merged[k] ?? 0) + v; // accumulate totals
-          }
-        }
-        grouped.set(key, merged as T);
-      } else {
-        // If no group exists, initialize it
-        grouped.set(key, { ...atom });
-      }
-    });
-    // Return all consolidated records as array
-    return Array.from(grouped.values());
-  }
-  //--------------------------------------
-  // Consolidate — Universal Rollup Function (Map-based)
-  //--------------------------------------
-  // Accepts an array of atom-like objects, groups them by specified key fields,
-  // and aggregates (sums) numeric fields defined in `aggregateKeys`.
-  // Returns a Map keyed by the concatenated group keys (e.g. "itemId|invoId").
-  // This version aligns with the AIDA Map-centric architecture.
+      const existing = result.get(groupKey) || {
+        itemId: groupKey,
+        qty: 0,
+        valueCents: 0,
+      };
 
-  function consolidate<T extends Record<string, any>>(
-    atoms: T[],
-    keys: (keyof T)[],
-    aggregateKeys: (keyof T)[] = []
-  ): Map<string, T> {
-    const grouped = new Map<string, T[]>();
-
-    // 1️⃣ Group atoms by specified identity keys
-    for (const atom of atoms) {
-      const key = keys.map((k) => String(atom[k] ?? "null")).join("|");
-      const group = grouped.get(key) ?? [];
-      group.push(atom);
-      grouped.set(key, group);
+      existing.qty += atom.qty ?? 0;
+      existing.valueCents += atom.valueCents ?? 0;
+      result.set(groupKey, existing);
     }
 
-    // 2️⃣ Consolidate each group into a single record
-    const results = new Map<string, T>();
-    for (const [key, groupAtoms] of grouped) {
-      const base = { ...groupAtoms[0] } as T;
-
-      for (const field of aggregateKeys) {
-        const total = groupAtoms.reduce((sum, a) => {
-          const v = a[field];
-          return typeof v === "number" ? sum + v : sum;
-        }, 0);
-        (base as any)[field] = total;
-      }
-
-      results.set(key, base);
-    }
-
-    // 3️⃣ Return the fully consolidated Map
-    return results;
-  }
-  // total Return value
-
-  const refundItems = distillizer<Item>(returnItemsBlend as Item[], [
-    "itemId",
-    "invoId",
-  ]);
-
-  //--------------------------------------
-  // New Consolidate-Based Refund Rollup
-  //--------------------------------------
-
-  const refundItemsMap = consolidate<Item>(
-    returnItemsBlend as Item[],
-    ["itemId", "invoId"], // group by both keys
-    ["qty", "valueCents"] // aggregate fields
-  );
-
-  // Convert to array for comparison with distillizer output
-  const refundItemsArray = Array.from(refundItemsMap.values());
-
-  //--------------------------------------
-  // Comparison Test: distillizer vs consolidate
-  //--------------------------------------
-
-  const refundItemsTest = JSON.stringify(refundItems);
-  const refundItemsMapTest = JSON.stringify(refundItemsArray);
-
-  if (refundItemsTest === refundItemsMapTest) {
-    console.log("✅ consolidate() matches distillizer()");
-  } else {
-    console.warn("⚠️ consolidate() differs from distillizer()");
-    console.log("distillizer:", refundItems);
-    console.log("consolidate:", refundItemsArray);
+    return result;
   }
 
-  const totalReturnCents = refundItems.reduce(
-    (sum, item) => sum + (item.valueCents ?? 0),
-    0
-  );
-
-  const perItemRefunds = distillizer<Item>(refundItems, ["itemId"]);
-  console.log("Per-Item Refunds:", perItemRefunds);
-
-  // Rollup of all
-
-  // ================================
-  // Layer : Secondary Rollups (Relational Views)
-  // ================================
-
-  // For each itemId, collect all refund records (i.e., per receipt) where that item appears.
-  const itemReceipts: Map<string, Item[]> = new Map();
-  refundItems.forEach((item) => {
-    const list = itemReceipts.get(item.itemId) ?? [];
-    list.push(item);
-    itemReceipts.set(item.itemId, list);
-  });
-
-  // receiptItemsSold — Map<invoId, Item[]>
-  // For each receipt (invoice ID), collect all items refunded under that receipt.
-  const receiptItemsSold: Map<string, Item[]> = new Map();
-  refundItems.forEach((item) => {
-    const list = receiptItemsSold.get(item.invoId ?? "unknown") ?? [];
-    list.push(item);
-    receiptItemsSold.set(item.invoId ?? "unknown", list);
-  });
-
-  return {
-    refundItems,
-    perItemRefunds,
-    totalReturnCents,
-    receiptItemsSold,
-  };
+  return { returnItemAtoms, consolidateByKey };
 }
