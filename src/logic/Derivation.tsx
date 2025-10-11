@@ -109,12 +109,12 @@ export function useDerivation() {
 
     items.forEach((item) => {
       const qty = item.qty ?? 1;
-
       // Each atom represents one "unit" of the original item
       for (let i = 0; i < qty; i++) {
         const atom = {
           ...item,
           qty: 1,
+          invoId: item.invoId ?? "- -",
           valueCents: item.valueCents ?? undefined, // already per unit
         };
         atoms.push(atom);
@@ -156,9 +156,13 @@ export function useDerivation() {
   /**
    * Equality check — determines whether two records are equal
    * based only on their shared keys.
+   * Multi-receipt-aware: match both item and receipt when present.
    */
   function areEqual(b: Record<string, any>, m: Record<string, any>): boolean {
-    return b.itemId === m.itemId;
+    // canonical equality for blend: match both item and receipt when present
+    const itemMatch = b.itemId === m.itemId;
+    const invoMatch = safeValue(b.invoId) === safeValue(m.invoId);
+    return itemMatch && invoMatch;
   }
 
   function blenderize(
@@ -225,38 +229,98 @@ export function useDerivation() {
   //--------------------------------------
 
   /**
-   * Consolidate a Map of Atoms by key or return a global rollup.
-   *
-   * @param {Map<string, any>} [data] - Map of atomized records.
-   * @param {string} [key="itemId"] - Property name to group by, or "all" for total rollup.
-   * @returns {Map<string, { itemId: string; qty: number; valueCents: number }>}
-   *          A Map of consolidated groups (or one "rollTotal" entry if key="all").
+   * Canonical null-safe value converter for rollups & grouping.
+   * Converts undefined/null into "- -" (QRET’s shared missing marker).
    */
-  function consolidateByKey(
-    data: Map<string, any> | undefined,
-    key: string = "itemId"
-  ): Map<string, any> {
-    if (!data || data.size === 0) return new Map();
+  function safeValue<T>(value: T | undefined | null): T | string {
+    return value ?? "- -";
+  }
 
-    const result = new Map<string, any>();
-
-    for (const [, atom] of data.entries()) {
-      const groupKey = key === "all" ? "rollTotal" : atom[key];
-      if (!groupKey) continue;
-
-      const existing = result.get(groupKey) || {
-        itemId: groupKey,
-        qty: 0,
-        valueCents: 0,
-      };
-
-      existing.qty += atom.qty ?? 0;
-      existing.valueCents += atom.valueCents ?? 0;
-      result.set(groupKey, existing);
+  /**
+   * Filters a Map of atoms by predicate.
+   * @param atomMap - Map of atoms
+   * @param predicate - Function that returns true to keep the entry
+   * @returns A new Map with only matching entries.
+   */
+  function filterMap(
+    atomMap: Map<string, Record<string, any>>,
+    predicate: (atom: Record<string, any>, key: string) => boolean
+  ): Map<string, Record<string, any>> {
+    const result = new Map<string, Record<string, any>>();
+    for (const [k, v] of atomMap.entries()) {
+      if (predicate(v, k)) result.set(k, v);
     }
-
     return result;
   }
 
-  return { returnItemAtoms, consolidateByKey };
+  /**
+   * Extracts unique normalized keys from an array or map of records.
+   * Uses "- -" for null/undefined keys.
+   * @param atoms - Iterable of atoms (Record<string, any>)
+   * @param field - The field key (string)
+   * @returns {string[]}
+   */
+  function getUniqueKeys(
+    atoms: Iterable<Record<string, any>>,
+    field: string
+  ): string[] {
+    const set = new Set<string>();
+    for (const atom of atoms) {
+      const raw = atom[field];
+      set.add(raw == null ? "- -" : String(raw));
+    }
+    return Array.from(set);
+  }
+
+  /**
+   * Sums the numeric values of a given field across a Map of atoms.
+   * @param atomMap - Map of atoms (each a Record of consistent keys)
+   * @param field - The numeric key to aggregate (e.g. "qty" or "valueCents")
+   * @returns The summed total of that field.
+   */
+  function aggregateAtoms(
+    atomMap: Map<string, Record<string, any>>,
+    field: string
+  ): number {
+    let total = 0;
+    for (const atom of atomMap.values()) {
+      const val = atom[field];
+      if (typeof val === "number" && !isNaN(val)) total += val;
+    }
+    return total;
+  }
+
+  /**
+   * rollupByKey()
+   * -------------------------
+   * Filters a Map of atoms by a specific key/value pair,
+   * then sums a numeric field across the filtered subset.
+   *
+   * @param atomMap - Map of flat atom records
+   * @param filterField - Field to match against
+   * @param filterValue - Value to match for inclusion
+   * @param sumField - Numeric field to aggregate (e.g. "qty" or "valueCents")
+   * @returns The numeric total of that field among matching atoms
+   */
+  function rollupByKey(
+    atomMap: Map<string, Record<string, any>>,
+    filterField: string,
+    filterValue: any,
+    sumField: string
+  ): number {
+    const subset = filterMap(
+      atomMap,
+      (atom) => atom[filterField] === filterValue
+    );
+    return aggregateAtoms(subset, sumField);
+  }
+
+  // Export helpers via hook return
+  return {
+    returnItemAtoms,
+    aggregateAtoms,
+    getUniqueKeys,
+    filterMap,
+    rollupByKey,
+  };
 }

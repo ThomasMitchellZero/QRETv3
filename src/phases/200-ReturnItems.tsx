@@ -25,25 +25,53 @@ import { useDerivation } from "../logic/Derivation";
 //********************************************************************
 //  RETURN ITEMS CARD
 //********************************************************************
-// Component: ReturnItemsCard
-// Definition: UI card for a single returned item entry.
-// Now expects an `item: Item` prop.
 
 export function RefundDetails({ item }: { item: Item }) {
   const { itemId } = item;
-  const { perItemRefunds, refundItems } = useDerivation();
+  const {
+    returnItemAtoms,
+    aggregateAtoms,
+    filterMap,
+    getUniqueKeys,
+    rollupByKey,
+  } = useDerivation();
 
-  // Derived data
-  const refundRecord = perItemRefunds.find((r) => r.itemId === itemId);
-  const matchingRefunds = refundItems.filter((r) => r.itemId === itemId);
-  const receiptedQty = matchingRefunds.reduce(
-    (sum, i) => sum + (i.qty ?? 0),
-    0
+  // matching Atoms
+  const thisItemsAtoms = filterMap(
+    returnItemAtoms,
+    (atom) => atom.itemId === item.itemId
   );
-  const totalQty = item.qty ?? 0;
-  const baseValue = refundRecord?.valueCents ?? 0;
-  const itemRefundTotal = receiptedQty * baseValue;
-  const hasReceipts = receiptedQty > 0;
+
+  // Items that have actual receipts
+  const refundAtoms = filterMap(
+    thisItemsAtoms,
+    (ItemAtom) => ItemAtom.invoId !== "- -" && !!ItemAtom.invoId
+  );
+
+  // Items without receipts, indicated by "- -"
+  const nonReceiptedAtoms = filterMap(
+    thisItemsAtoms,
+    (ItemAtom) => ItemAtom.invoId === "- -"
+  );
+
+  const totalQty = aggregateAtoms(thisItemsAtoms, "qty");
+  const receiptedQty = aggregateAtoms(refundAtoms, "qty");
+  const itemRefunds = aggregateAtoms(thisItemsAtoms, "valueCents");
+
+  const receiptsForItem = getUniqueKeys(thisItemsAtoms, "invoId"); // includes "- -" if no invoId
+  const uiRefundRows = receiptsForItem.map((invoId) => {
+    const thisInvoAtoms = filterMap(thisItemsAtoms, (a) => a.invoId === invoId);
+    const thisInvoQty = aggregateAtoms(thisInvoAtoms, "qty");
+    const thisInvoValue = aggregateAtoms(thisInvoAtoms, "valueCents");
+
+    return (
+      <div key={invoId} className="hbox space-between">
+        <div>{invoId === "- -" ? "No Receipt" : `Rcpt. #${invoId}`}</div>
+        <div>{thisInvoQty}</div>
+        <div>{dollarize(thisInvoValue)}</div>
+      </div>
+    );
+  });
 
   return (
     <ActorTile
@@ -58,33 +86,14 @@ export function RefundDetails({ item }: { item: Item }) {
           />
           <LabeledValue
             label="Total Refund"
-            value={dollarize(itemRefundTotal)}
+            value={dollarize(itemRefunds)}
             textAlign="right"
           />
         </div>
       }
     >
       {/* SOLO CONTENT */}
-      <div className="">
-        <div className="">
-          <div className="">Receipted Items</div>
-          <div className="">
-            {receiptedQty} / {totalQty}
-          </div>
-          {hasReceipts ? (
-            <ul className="">
-              {matchingRefunds.map((r, idx) => (
-                <li key={`${r.invoId}-${idx}`}>
-                  Receipt #{r.invoId} — $
-                  {((r.valueCents ?? 0) / 100).toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="">No Receipts</div>
-          )}
-        </div>
-      </div>
+      {uiRefundRows}
     </ActorTile>
   );
 }

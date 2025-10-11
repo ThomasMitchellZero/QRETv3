@@ -307,12 +307,16 @@ export type FooterProps = {
   label?: string;
 };
 
-export function Footer({ onContinue, label }: FooterProps): JSX.Element {
+export function Footer({
+  onContinue,
+  label = "Refund Value",
+}: FooterProps): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
-  const { consolidateByKey, returnItemAtoms } = useDerivation();
-  const totalReturnCents =
-    consolidateByKey(returnItemAtoms, "all").get("rollTotal")?.valueCents || 0;
+
+  const { aggregateAtoms, returnItemAtoms } = useDerivation();
+  const totalReturnCents = aggregateAtoms(returnItemAtoms, "valueCents") || 0;
+  console.log("Footer totalReturnCents", totalReturnCents);
   const phases = transaction.phases;
   const currentIndex = phases.findIndex(
     (p) => p.phaseId === transaction.currentPhase
@@ -336,7 +340,7 @@ export function Footer({ onContinue, label }: FooterProps): JSX.Element {
   return (
     <div className="hbox">
       <div className="vbox fill-main">
-        <span>{label || `Refund Value: $${refundDollars}`}</span>
+        <span>{`Refund Value: $${refundDollars}`}</span>
       </div>
       <button onClick={handleContinue} disabled={!nextPhase}>
         Continue
