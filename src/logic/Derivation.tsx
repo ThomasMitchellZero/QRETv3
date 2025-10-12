@@ -20,6 +20,7 @@ export function useDerivation() {
   // -------------------------------
   function normalizeReturnItems(): Item[] {
     return Array.from(trxnReturnItems.values()).map((i) => {
+      // ReturnItems may have undefined valueCents and invoId
       return {
         ...i,
         valueCents: i.valueCents ?? 0,

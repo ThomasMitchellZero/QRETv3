@@ -163,7 +163,7 @@
     flex: 1 1 0rem;
     align-self: stretch;
     gap: var(--16rpx);
-    overflow-y: scroll;
+    overflow-y: auto;
     scrollbar-gutter: auto;
     padding: 0 var(--24rpx);
   }
@@ -211,6 +211,7 @@
 
     .solo {
       @extend .active;
+      @extend .fill;
       min-height: 10rem;
     }
   }
@@ -430,5 +431,9 @@
     &.right {
       text-align: right;
     }
+  }
+
+  .hidden {
+    display: none;
   }
 }

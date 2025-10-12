@@ -72,8 +72,9 @@ export function Stage({
 }) {
   const [transients] = useTransients();
   const activeSoloId = transients?.activeSolo?.[id];
+  const activeStageId = transients?.activeStageId;
   return (
-    <StageContext.Provider value={{ stageId: id, activeSoloId }}>
+    <StageContext.Provider value={{ stageId: id, activeStageId, activeSoloId }}>
       <Container className={`stage ${activeSoloId ? "solo-mode" : ""}`}>
         {children}
       </Container>
@@ -99,10 +100,10 @@ export function LabeledValue({
   textAlign = "left",
 }: LabeledValueprops) {
   return (
-    <Container className={`vbox LV gap-0rpx ${className}`}>
+    <div className={`vbox LV gap-0rpx ${className}`}>
       <div className={`text body ${textAlign}`}>{label} </div>
       <div className={`text title ${textAlign}`}>{value} </div>
-    </Container>
+    </div>
   );
 }
 export type ActorTileProps = {
@@ -115,7 +116,11 @@ export type ActorTileProps = {
 export function ActorTile(props: ActorTileProps) {
   const [transients, dispatchTransients] = useTransients();
   const { activeStageId, activeSoloId } = transients;
-  const stageCtx = useStage() as { stageId?: string; activeSoloId?: string };
+  const stageCtx = useStage() as {
+    stageId?: string;
+    activeStageId?: string;
+    activeSoloId?: string;
+  };
   const parentStageId = stageCtx.stageId || "defaultStage";
   const { id, headline, children, style, ...rest } = props;
 
@@ -137,14 +142,20 @@ export function ActorTile(props: ActorTileProps) {
     });
   };
 
+  const oStyle = {
+    "solo": "solo fill",
+    "hidden": "hidden",
+    "default": "",
+  };
+
   return (
     <Container
       id={id}
-      className={`tile h-sm ${style} ${tileState}`}
+      className={`tile h-sm ${style} ${oStyle[tileState]}`}
       onClick={handleClick}
       {...rest}
     >
-      <div className="vbox">{headline}</div>
+      {headline}
       {tileState === "solo" && <div>{children}</div>}
     </Container>
   );
