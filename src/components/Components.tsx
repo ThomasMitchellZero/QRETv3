@@ -6,7 +6,7 @@ import { useDerivation } from "../logic/Derivation";
 import { type CatalogEntry, fakeCatalog } from "../api/fakeApi";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 
 import {
   useTransaction,
@@ -176,10 +176,6 @@ export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
   );
 }
 
-// Internal: PhaseBase
-
-/////////////////////////////////////////////////////////////////////////////////////
-
 export type ProductDetailsTileProps = {
   item: Item;
   extraContent?: React.ReactNode; // Optional slot for custom info or actions
@@ -215,6 +211,101 @@ export function ProductDetailsTile({
     </Container>
   );
 }
+
+export type NumpadProps = {
+  onChange?: (val: number) => void;
+  onSubmit?: (val: number) => void;
+  className?: string;
+};
+
+export const Numpad: React.FC<NumpadProps> = ({
+  onChange,
+  onSubmit,
+  className,
+}) => {
+  const [value, setValue] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = () => inputRef.current?.focus();
+
+  const updateValue = (newVal: string) => {
+    setValue(newVal);
+    onChange?.(Number(newVal) || 0);
+  };
+
+  const handleDigit = (d: string) => {
+    focusInput();
+    updateValue(value + d);
+  };
+
+  const handleBackspace = () => {
+    focusInput();
+    updateValue(value.slice(0, -1));
+  };
+
+  const handleSubmit = () => {
+    focusInput();
+    onSubmit?.(Number(value) || 0);
+  };
+
+  const handleIncrement = (delta: number) => {
+    const newVal = (Number(value) || 0) + delta;
+    updateValue(String(Math.max(0, newVal)));
+  };
+
+  const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "←", "0", "⏎"];
+
+  const handleClick = (b: string) => {
+    if (b === "←") return handleBackspace();
+    if (b === "⏎") return handleSubmit();
+    handleDigit(b);
+  };
+
+  return (
+    <div
+      className={`vbox numpad ${className || ""}`}
+      style={{ minWidth: "200px", width: "100%" }}
+    >
+      <div className="hbox space-between align-center pad-xs">
+        <button className="tile small" onClick={() => handleIncrement(-1)}>
+          -
+        </button>
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => updateValue(e.target.value.replace(/\D/g, ""))}
+          className="tile grow text-center"
+          inputMode="numeric"
+        />
+        <button className="tile small" onClick={() => handleIncrement(1)}>
+          +
+        </button>
+      </div>
+      <div className="vbox pad-xs">
+        <div
+          className="grid numpad-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "var(--gap-xs)",
+          }}
+        >
+          {buttons.map((b) => (
+            <button
+              key={b}
+              className="tile center"
+              onClick={() => handleClick(b)}
+            >
+              {b}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Numpad;
 
 //********************************************************************
 //  LAYOUT COMPS

@@ -1,5 +1,5 @@
 import React from "react";
-import { Phase } from "../components/Components";
+import { Phase, Numpad } from "../components/Components";
 import { fakeCatalog } from "../api/fakeApi";
 
 import {
@@ -26,7 +26,35 @@ import { useDerivation } from "../logic/Derivation";
 //  RETURN ITEMS CARD
 //********************************************************************
 
-export function RefundDetails({ item }: { item: Item }) {
+function ReturnQtyTile({ Item }: {Item: Item }) {
+  const [transaction, dispatch] = useTransaction();
+  const {itemId, qty} = Item;
+
+  return (
+    <ActorTile
+      id={`return-qty-${itemId}`}
+      headline={<div className="qty-display">{qty}</div>}
+      style={`w-sm testes t`}
+    >
+      <Numpad
+        onChange={(v) => {
+          const current = transaction.returnItems || new Map();
+          const newMap = new Map(current);
+          if (newMap.has(itemId)) {
+            const existingItem = newMap.get(itemId);
+            newMap.set(itemId, { ...existingItem, qty: v });
+            dispatch({
+              kind: "SET_INPUT",
+              payload: { key: "returnItems", value: newMap },
+            });
+          }
+        }}
+      />
+    </ActorTile>
+  );
+}
+
+export function RefundDetailsTile({ item }: { item: Item }) {
   const { itemId } = item;
   const { returnItemAtoms, aggregateAtoms } = useDerivation();
 
@@ -138,7 +166,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
         >
           <input type="number" value={qty} onChange={handleQtyChange} min={0} />
         </ActorTile>
-        <RefundDetails item={item} />
+        <RefundDetailsTile item={item} />
       </Stage>
       <button onClick={handleRemove} aria-label="Remove item">
         🗑️
