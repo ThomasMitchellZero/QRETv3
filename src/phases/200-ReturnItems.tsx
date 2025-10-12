@@ -28,45 +28,40 @@ import { useDerivation } from "../logic/Derivation";
 
 export function RefundDetails({ item }: { item: Item }) {
   const { itemId } = item;
-  const {
-    returnItemAtoms,
-    aggregateAtoms,
-    filterMap,
-    getUniqueKeys,
-    rollupByKey,
-  } = useDerivation();
+  const { returnItemAtoms, aggregateAtoms } = useDerivation();
 
   // matching Atoms
-  const thisItemsAtoms = filterMap(
-    returnItemAtoms,
+  const thisItemsAtoms = returnItemAtoms.filter(
     (atom) => atom.itemId === item.itemId
   );
 
-  // Items that have actual receipts
-  const refundAtoms = filterMap(
-    thisItemsAtoms,
-    (ItemAtom) => ItemAtom.invoId !== "- -" && !!ItemAtom.invoId
-  );
+  // Local key normalizer: never use `undefined` as a key. Keep it for data, map to a sentinel for grouping.
+  const keyOf = (v: string | number | undefined) =>
+    v === undefined ? "__NO_RECEIPT__" : String(v);
 
-  // Items without receipts, indicated by "- -"
-  const nonReceiptedAtoms = filterMap(
-    thisItemsAtoms,
-    (ItemAtom) => ItemAtom.invoId === "- -"
-  );
+  // Receipted subset (truthy invoId). Note: uses data truth, not the sentinel.
+  const receiptedAtoms = thisItemsAtoms.filter((a) => a.invoId != null);
 
   const totalQty = aggregateAtoms(thisItemsAtoms, "qty");
-  const receiptedQty = aggregateAtoms(refundAtoms, "qty");
+  const receiptedQty = aggregateAtoms(receiptedAtoms, "qty");
   const itemRefunds = aggregateAtoms(thisItemsAtoms, "valueCents");
 
-  const receiptsForItem = getUniqueKeys(thisItemsAtoms, "invoId"); // includes "- -" if no invoId
-  const uiRefundRows = receiptsForItem.map((invoId) => {
-    const thisInvoAtoms = filterMap(thisItemsAtoms, (a) => a.invoId === invoId);
-    const thisInvoQty = aggregateAtoms(thisInvoAtoms, "qty");
-    const thisInvoValue = aggregateAtoms(thisInvoAtoms, "valueCents");
+  // Unique display keys derived from atoms using the local sentinel
+  const receiptKeys = [...new Set(thisItemsAtoms.map((a) => keyOf(a.invoId)))];
+
+  // Debug
+  console.log("thisItemsAtoms AI", thisItemsAtoms);
+  console.log("receiptKeys AI", receiptKeys);
+
+  const uiRefundRows = receiptKeys.map((rk) => {
+    const atomsForKey = thisItemsAtoms.filter((a) => keyOf(a.invoId) === rk);
+    const thisInvoQty = aggregateAtoms(atomsForKey, "qty");
+    const thisInvoValue = aggregateAtoms(atomsForKey, "valueCents");
+    const label = rk === "__NO_RECEIPT__" ? "No Receipt" : `Rcpt. #${rk}`;
 
     return (
-      <div key={invoId} className="hbox space-between">
-        <div>{invoId === "- -" ? "No Receipt" : `Rcpt. #${invoId}`}</div>
+      <div key={rk} className="hbox space-between">
+        <div>{label}</div>
         <div>{thisInvoQty}</div>
         <div>{dollarize(thisInvoValue)}</div>
       </div>
@@ -174,7 +169,7 @@ function ReturnItemsList() {
 // ================================
 
 function ItemEntry() {
-  const [transaction, dispatch] = useTransaction();
+  const [, dispatch] = useTransaction();
   const [phase, dispatchPhase] = useReturnItemsPhase();
 
   const pendingItemId = phase.pendingItemId || "";
@@ -182,22 +177,13 @@ function ItemEntry() {
 
   const handleAdd = () => {
     if (!pendingItemId || pendingQty <= 0) return;
-    const current = transaction.returnItems || new Map();
-    const newMap = new Map(current);
-
-    if (newMap.has(pendingItemId)) {
-      const item = newMap.get(pendingItemId);
-      newMap.set(pendingItemId, { ...item, qty: item.qty + pendingQty });
-    } else {
-      newMap.set(pendingItemId, { itemId: pendingItemId, qty: pendingQty });
-    }
-
-    dispatch({
-      kind: "SET_INPUT",
-      payload: { key: "returnItems", value: newMap },
-    });
-
-    // Reset the local phase fields
+    const newItem: Item = {
+      itemId: pendingItemId,
+      qty: pendingQty,
+      valueCents: undefined,
+      invoId: undefined,
+    };
+    dispatch({ kind: "ADD_ITEM", payload: newItem });
     dispatchPhase({
       kind: "SET_LOCAL",
       payload: { key: "pendingItemId", value: "" },

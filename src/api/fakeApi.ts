@@ -19,6 +19,7 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     itemId: "_placeholder",
     description: "Unknown Item",
     valueCents: 0,
+    invoId: undefined,
     picture: PLACEHOLDER,
   },
   "1122": {
@@ -26,12 +27,14 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     description:
       "Kobalt Hammer 12-inch 16oz. Fiberglass grip.  Lifetime Warranty-eligible",
     valueCents: 1299,
+    invoId: undefined,
     picture: kobalt_hammer,
   },
   "2233": {
     itemId: "2233",
     description: "Craftsman 8-inch Adjustable Wrench",
     valueCents: 1599,
+    invoId: undefined,
     picture: craftsman_wrench,
   },
   "3344": {
@@ -39,17 +42,20 @@ export const fakeCatalog: Record<string, CatalogEntry> = {
     description: "18-inch hoses with 1/4-inch fittings",
     valueCents: 999,
     picture: hoses,
+    invoId: undefined,
   },
   "4455": {
     itemId: "4455",
     description: "Window Scraper Pro Max plus refill blades",
     valueCents: 3499,
+    invoId: undefined,
     picture: window_scraper,
   },
   "5566": {
     itemId: "5566",
     description: "12-inch balsa wood paint stirrer.  4 count",
     valueCents: 499,
+    invoId: undefined,
     picture: paintstick,
   },
 };
@@ -59,15 +65,15 @@ export const fakeInvoices: Record<string, Invoice> = {
   "99988": {
     invoId: "99988",
     items: [
-      { itemId: "1122", qty: 2, valueCents: 1298, invoId: "99988" } as Item, // Blue Widget
-      { itemId: "2233", qty: 1, valueCents: 1398, invoId: "99988" } as Item, // Mini Widget
+      { itemId: "1122", qty: 3, valueCents: 1298, invoId: "99988" } as Item, // Blue Widget
+      { itemId: "2233", qty: 2, valueCents: 1398, invoId: "99988" } as Item, // Mini Widget
     ],
   },
   "99977": {
     invoId: "99977",
     items: [
-      { itemId: "3344", qty: 3, valueCents: 999, invoId: "99977" } as Item, // Green Widget
-      { itemId: "2233", qty: 99, valueCents: 3499, invoId: "99977" } as Item, // Widget Pro Max
+      { itemId: "3344", qty: 4, valueCents: 999, invoId: "99977" } as Item, // Green Widget
+      { itemId: "2233", qty: 5, valueCents: 3499, invoId: "99977" } as Item, // Widget Pro Max
     ],
   },
 };

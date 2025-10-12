@@ -16,9 +16,9 @@
 // Primary Item
 export type Item = {
   itemId: string;
-  valueCents?: number;
+  valueCents?: number | undefined;
   qty?: number;
-  invoId?: string; // only for items sourced from an invoice
+  invoId: string | undefined; // only for items sourced from an invoice
 };
 
 // Invoice =

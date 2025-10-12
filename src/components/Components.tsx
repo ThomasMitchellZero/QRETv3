@@ -307,15 +307,14 @@ export type FooterProps = {
   label?: string;
 };
 
-export function Footer({
-  onContinue,
-  label = "Refund Value",
-}: FooterProps): JSX.Element {
+export function Footer({ onContinue }: FooterProps): JSX.Element {
   const [transaction] = useTransaction();
   const navigate = useNavigatePhase();
 
-  const { aggregateAtoms, returnItemAtoms } = useDerivation();
-  const totalReturnCents = aggregateAtoms(returnItemAtoms, "valueCents") || 0;
+  const { rollupByKey, aggregateAtoms, returnItemAtoms } = useDerivation();
+  const totalReturnCents = aggregateAtoms(returnItemAtoms, "valueCents");
+
+  console.log("Footer returnItemAtoms", returnItemAtoms);
   console.log("Footer totalReturnCents", totalReturnCents);
   const phases = transaction.phases;
   const currentIndex = phases.findIndex(

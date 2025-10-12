@@ -51,7 +51,8 @@ const initialTransactionState: TransactionState = {
 type TransactionAction =
   | { kind: "SET_PHASE"; payload: { phaseId: string } }
   | { kind: "SET_INPUT"; payload: { key: string; value: any } }
-  | { kind: "RESET" };
+  | { kind: "RESET" }
+  | { kind: "ADD_ITEM"; payload: Item };
 
 function transactionReducer(
   state: TransactionState,
@@ -64,6 +65,15 @@ function transactionReducer(
       return { ...state, [action.payload.key]: action.payload.value };
     case "RESET":
       return initialTransactionState;
+    case "ADD_ITEM": {
+      const current = new Map(state.returnItems);
+      const existing = current.get(action.payload.itemId);
+      const mergedItem: Item = existing
+        ? { ...existing, qty: (existing.qty ?? 0) + (action.payload.qty ?? 0) }
+        : { ...action.payload };
+      current.set(action.payload.itemId, mergedItem);
+      return { ...state, returnItems: current };
+    }
     default:
       return state;
   }

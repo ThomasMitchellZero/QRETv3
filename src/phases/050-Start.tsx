@@ -58,9 +58,18 @@ function addItemsAndReceiptsToTransaction(
 function fastFill(dispatch: Function) {
   // Explicit dummy artifacts (deterministic, not random)
   const itemsMap = new Map<string, Item>([
-    ["1122", { itemId: "1122", qty: 1 }],
-    ["2233", { itemId: "2233", qty: 2 }],
-    ["3344", { itemId: "3344", qty: 1 }],
+    [
+      "1122",
+      { itemId: "1122", qty: 4, valueCents: undefined, invoId: undefined },
+    ],
+    [
+      "2233",
+      { itemId: "2233", qty: 9, valueCents: undefined, invoId: undefined },
+    ],
+    [
+      "3344",
+      { itemId: "3344", qty: 5, valueCents: undefined, invoId: undefined },
+    ],
   ]);
 
   const invoicesMap = getFakeInvoicesMap();
@@ -88,21 +97,6 @@ export function StartPhase() {
             </p>
 
             <div className="hbox gap-16rpx">
-              <button
-                className="btn--primary"
-                onClick={() =>
-                  addItemsToTransaction(
-                    dispatch,
-                    new Map([
-                      ["1122", { itemId: "1122", qty: 2 }],
-                      ["2233", { itemId: "2233", qty: 1 }],
-                    ])
-                  )
-                }
-              >
-                Add Items
-              </button>
-
               <button
                 className="btn--secondary"
                 onClick={() =>
