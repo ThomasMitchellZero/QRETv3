@@ -45,7 +45,11 @@ export type PhaseNode = {
 // State Handlers
 ///////////////////////////////
 
-export type TransientState = Record<string, any>; // This saves us some validity checking.
+export type TransientState = {
+  activeContainer?: string;
+  activeErrorId?: string;
+  [key: string]: any; // allows flexible extension
+};
 
 export type TransactionState = {
   currentPhase: string; // id of current Phase/NavNode

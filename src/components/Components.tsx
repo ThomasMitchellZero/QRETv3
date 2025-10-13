@@ -328,6 +328,29 @@ export const Numpad: React.FC<NumpadProps> = ({
 
 export default Numpad;
 
+export function Overlay({
+  children,
+}: {
+  children: React.ReactNode;
+}): JSX.Element {
+  /*
+    Overlay is a container that covers a portion of the screen with a semi-transparent background.
+
+    Overlay may need to create the appearance of covering some but not all parts of the layout.  Acceptable to solve this with CSS tricks for now.  Could also "clone" some parts of the layout into the overlay if needed.
+
+    It must be easy to exit the overlay.  Any click on the overlay background (not the content) should close it.  This can be done with a callback prop or context action.
+      -This is going to be very similar to our Stage / Solo rules, to the point where I am wondering if we can combine them.
+
+    Overlay should accept components as children.  If closed, their volatile contents are lost.  
+      -Children may reference the parent's size but must be self-contained otherwise.
+
+    Overlay should block interaction with the background content.  This can be done with a semi-transparent div that covers the entire screen behind the content.
+
+
+  */
+  return <div className="overlay fill">{children}</div>;
+}
+
 //********************************************************************
 //  LAYOUT COMPS
 //********************************************************************
