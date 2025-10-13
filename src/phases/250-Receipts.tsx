@@ -1,59 +1,82 @@
-import { fakeInvoices, fakeCatalog } from "../api/fakeApi";
 import React from "react";
-import { Phase } from "../components/Components";
+import { cloneDeep } from "lodash";
+
 import {
+  Phase,
+  LabeledValue,
   Container,
   Floorplan,
   Stage,
   ActorTile,
 } from "../components/Components";
-import { useTransaction } from "../logic/Logic";
-import { useDerivation } from "../logic/Derivation";
+import { useTransaction, dollarize } from "../logic/Logic";
+import type { Invoice } from "../types/Types";
+import { fakeInvoices } from "../api/fakeApi";
 
 // ================================
-// RECEIPTS CARD
+// RECEIPT CARD
 // ================================
-function ReceiptsCard({ invoId }: { invoId: string }) {
+type ReceiptCardProps = { invoice: Invoice };
+
+function ReceiptCard({ invoice }: ReceiptCardProps) {
   const [transaction, dispatch] = useTransaction();
-  const items = fakeInvoices[invoId]?.items ?? [];
-  const totalQty = items.reduce((sum: number, item: any) => sum + item.qty, 0);
+  const { invoId, items } = invoice;
+
+  const totalQty = items.reduce((sum, item) => sum + (item.qty ?? 0), 0);
+  const totalValueCents = items.reduce(
+    (sum, item) => sum + (item.valueCents ?? 0),
+    0
+  );
 
   const handleRemove = () => {
-    const current = transaction.receipts || new Map();
-    const newMap = new Map(current);
-    newMap.delete(invoId);
-
+    const receipts = transaction.receipts ?? new Map();
+    const next = cloneDeep(receipts);
+    next.delete(invoId);
     dispatch({
       kind: "SET_INPUT",
-      payload: { key: "receipts", value: newMap },
+      payload: { key: "receipts", value: next },
     });
   };
 
-  const actorTileChildren = (
-    <div className="receipt-items-list">
-      {items.map((item) => (
-        <button
-          key={item.itemId}
-          className="receipt-item-btn"
-        >{`ID: ${item.itemId} Qty: ${item.qty}`}</button>
-      ))}
-    </div>
-  );
-
   return (
-    <Container className="card">
-      <div>
-        <strong>Receipt #{invoId}</strong>
-      </div>
-      <Stage key={`receipt-${invoId}`} id={`receipt-${invoId}`}>
+    <Container className="card hbox">
+      <LabeledValue
+        label="Receipt #"
+        value={invoId}
+        className="fill-main w-md"
+      />
+
+      <Stage id={`receipt-${invoId}`}>
         <ActorTile
-          key={`receipt-${invoId}-items`}
           id={`receipt-${invoId}-items`}
-          headline={<div className="qty-display">{totalQty}</div>}
+          headline={
+            <div className="hbox space-between">
+              <LabeledValue
+                className="fill-main"
+                label="Items Sold:"
+                textAlign="left"
+                value={String(totalQty)}
+              />
+              <LabeledValue
+                className="w-sm"
+                textAlign="right"
+                label="Receipt Value:"
+                value={dollarize(totalValueCents)}
+              />
+            </div>
+          }
         >
-          {actorTileChildren}
+          <div className="vbox">
+            {items.map((item) => (
+              <div key={item.itemId} className="hbox space-between">
+                <span>ID: {item.itemId}</span>
+                <span>Qty: {item.qty}</span>
+              </div>
+            ))}
+          </div>
         </ActorTile>
       </Stage>
+
       <button onClick={handleRemove} aria-label="Remove receipt">
         🗑️
       </button>
@@ -62,18 +85,19 @@ function ReceiptsCard({ invoId }: { invoId: string }) {
 }
 
 // ================================
-// RECEIPTS LIST
+// RECEIPT LIST
 // ================================
-function ReceiptsList() {
+function ReceiptList() {
   const [transaction] = useTransaction();
-  const repo = transaction.receipts;
-  const receiptsMap: Map<string, any> =
-    repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
+  const receipts = transaction.receipts ?? new Map();
+
+  if (!receipts.size)
+    return <div className="text title center fill">No Receipts Added</div>;
 
   return (
-    <div className="return-items-list">
-      {Array.from(receiptsMap.values()).map((receipt: any) => (
-        <ReceiptsCard key={receipt.invoId} invoId={receipt.invoId} />
+    <div className="card-ctnr">
+      {Array.from(receipts.values()).map((invoice: Invoice) => (
+        <ReceiptCard key={invoice.invoId} invoice={invoice} />
       ))}
     </div>
   );
@@ -88,45 +112,44 @@ function ReceiptEntry() {
 
   const handleAdd = () => {
     if (!id) return;
-    const current = transaction.receipts || new Map();
-    const newMap = new Map(current);
-
-    if (!newMap.has(id)) {
-      newMap.set(id, { invoId: id, items: [] });
-    }
-
+    const receipts = transaction.receipts ?? new Map();
+    if (receipts.has(id)) return; // ignore duplicates
+    const next = cloneDeep(receipts);
+    next.set(id, fakeInvoices[id] ?? { invoId: id, items: [] });
     dispatch({
       kind: "SET_INPUT",
-      payload: { key: "receipts", value: newMap },
+      payload: { key: "receipts", value: next },
     });
-
     setId("");
   };
 
   return (
     <>
-      <div className="receipts-list-ids">
+      <div className="text body">
         Available Receipt IDs: {Object.keys(fakeInvoices).join(", ")}
       </div>
-      <div className="item-entry">
+      <div className="hbox">
         <input
           type="text"
           placeholder="Receipt #"
           value={id}
           onChange={(e) => setId(e.target.value)}
         />
-        <button onClick={handleAdd}>Add Receipt</button>
+        <button onClick={handleAdd}>Add</button>
       </div>
     </>
   );
 }
 
+// ================================
+// RECEIPTS PHASE
+// ================================
 export function ReceiptsPhase() {
   return (
     <Phase phaseId="receipts" title="Receipts">
       <Floorplan
         pageTitle="Receipts"
-        mainContent={<ReceiptsList />}
+        mainContent={<ReceiptList />}
         rightColumn={<ReceiptEntry />}
       />
     </Phase>

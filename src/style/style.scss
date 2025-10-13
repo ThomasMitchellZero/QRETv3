@@ -25,9 +25,9 @@
 @layer foundation {
   :root {
     --rpx-base: 1rem;
-    --radius-s: 0.25rem;
-    --radius-m: 0.5rem;
-    --radius-l: 1rem;
+    --radius-s: var(--4rpx);
+    --radius-m: var(--8rpx);
+    --radius-l: var(--12rpx);
 
     --color-shartreuse: #a2ea2e;
     --color-bg-main: #fff;
@@ -37,6 +37,7 @@
     --color-fg: #222;
     --color-border: #ddd;
     --color-primary: #4a90e2;
+    --color-brand: #012169;
     --color-secondary: #888;
     --color-accent: #f5a623;
     --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.1);
@@ -80,6 +81,23 @@
     display: flex;
     flex-direction: column;
     gap: var(--16rpx);
+  }
+
+  .w-sm {
+    width: 8rem;
+  }
+  .w-md {
+    width: 16rem+1rem;
+  }
+  .w-lg {
+    width: 24rem+2rem;
+  }
+
+  .h-sm {
+    height: 8rem;
+  }
+  .h-md {
+    height: 12rem;
   }
 }
 
@@ -153,9 +171,13 @@
   .card {
     display: flex;
     flex-direction: row;
+    flex: 0 0 auto;
     gap: var(--16rpx);
     background-color: var(--color-bg-main);
     padding: var(--16rpx); /* CSS modern fix for consistent layout */
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-card);
+    padding: var(--16rpx);
   }
 
   .card-ctnr {
@@ -171,25 +193,36 @@
   .tile {
     display: flex;
     flex-direction: column;
-    gap: var(--16rpx);
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: var(--8rpx) var(--12rpx);
+
+    flex: 0 1 auto; /* no vertical stretching, width flexible */
+    height: auto; /* hug vertical contents always */
+    min-height: 4rem;
+    align-self: flex-start;
+
     background-color: var(--color-bg-main);
     border: 2px solid var(--color-border);
+    border-radius: var(--radius-m);
 
-    &.w-sm {
-      width: 8rem;
-    }
-    &.w-md {
-      width: 16rem+1rem;
-    }
-    &.w-lg {
-      width: 24rem+2rem;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    transform-origin: center top;
+
+    &.hidden {
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+      transition-delay: 0s;
     }
 
-    &.h-sm {
-      height: 8rem;
-    }
-    &.h-md {
-      height: 12rem;
+    &.solo {
+      opacity: 1;
+      transform: scale(1);
+      flex: 1 1 100%;
+      transition-delay: 0.15s; /* starts after fade-out completes */
+      transition: opacity 0.15s ease, transform 0.15s ease,
+        flex-basis 0.15s ease;
     }
 
     &.active {
@@ -197,17 +230,24 @@
       background-color: var(--color-bg-interactive);
       box-shadow: var(--shadow-card);
     }
-    &:hover {
+    &:not(.active):not(.solo):hover {
       filter: brightness(0.9);
     }
   }
+
+  /* Solo transition behavior — only affects ActorTiles */
 
   /* Stage / ActorTile */
   .stage {
     display: flex;
     flex-direction: row;
-    gap: 1rem;
-    flex: 1;
+    flex-wrap: wrap; /* prevents overflow */
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%; /* fill horizontally */
+    height: auto; /* hug vertical content */
+    flex: 0 1 auto; /* don't force vertical fill */
+    gap: var(--16rpx);
 
     .solo {
       @extend .active;
@@ -301,6 +341,9 @@
   .text-fg {
     color: var(--color-fg);
   }
+  .text-white {
+    color: white;
+  }
   .text-border {
     color: var(--color-border);
   }
@@ -347,6 +390,9 @@
   }
   .bg-shartreuse {
     background-color: var(--color-shartreuse);
+  }
+  .bg-brand {
+    background-color: var(--color-brand);
   }
 
   /* Optional hover helpers */

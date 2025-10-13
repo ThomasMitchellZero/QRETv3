@@ -89,30 +89,16 @@ export function StartPhase() {
       <Floorplan
         pageTitle="Start Phase"
         mainContent={
-          <div className="vbox padding-24rpx">
+          <div className="vbox fill padding-24rpx">
             <h2>Demo Setup</h2>
             <p>
               Use the buttons below to populate this demo transaction with
               canonical data.
             </p>
 
-            <div className="hbox gap-16rpx">
-              <button
-                className="btn--secondary"
-                onClick={() =>
-                  addReceiptsToTransaction(dispatch, getFakeInvoicesMap())
-                }
-              >
-                Add Receipts
-              </button>
-
-              <button
-                className="btn--outline"
-                onClick={() => fastFill(dispatch)}
-              >
-                Fast Fill (Items + Receipts)
-              </button>
-            </div>
+            <button className="btn--outline" onClick={() => fastFill(dispatch)}>
+              Fast Fill (Items + Receipts)
+            </button>
           </div>
         }
       />

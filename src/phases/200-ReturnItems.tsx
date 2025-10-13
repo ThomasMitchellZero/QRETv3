@@ -1,6 +1,7 @@
 import React from "react";
 import { Phase, Numpad } from "../components/Components";
 import { fakeCatalog } from "../api/fakeApi";
+import { cloneDeep } from "lodash";
 
 import {
   Floorplan,
@@ -26,28 +27,30 @@ import { useDerivation } from "../logic/Derivation";
 //  RETURN ITEMS CARD
 //********************************************************************
 
-function ReturnQtyTile({ Item }: {Item: Item }) {
+function ReturnQtyTile({ Item }: { Item: Item }) {
   const [transaction, dispatch] = useTransaction();
-  const {itemId, qty} = Item;
+  const { itemId, qty } = Item;
 
   return (
     <ActorTile
       id={`return-qty-${itemId}`}
-      headline={<div className="qty-display">{qty}</div>}
-      style={`w-sm testes t`}
+      headline={LabeledValue({
+        label: "Return Qty",
+        value: String(qty),
+        textAlign: "left",
+      })}
+      style={`w-sm`}
     >
       <Numpad
+        value={transaction.returnItems?.get(itemId)?.qty ?? 0}
         onChange={(v) => {
-          const current = transaction.returnItems || new Map();
-          const newMap = new Map(current);
-          if (newMap.has(itemId)) {
-            const existingItem = newMap.get(itemId);
-            newMap.set(itemId, { ...existingItem, qty: v });
-            dispatch({
-              kind: "SET_INPUT",
-              payload: { key: "returnItems", value: newMap },
-            });
-          }
+          const next = new Map(transaction.returnItems);
+          const existing = next.get(itemId);
+          if (existing) next.set(itemId, { ...existing, qty: v });
+          dispatch({
+            kind: "SET_INPUT",
+            payload: { key: "returnItems", value: next },
+          });
         }}
       />
     </ActorTile>
@@ -99,7 +102,7 @@ export function RefundDetailsTile({ item }: { item: Item }) {
   return (
     <ActorTile
       id={`item-${itemId}-refund-details`}
-      style={`w-md testes t`}
+      style={`w-md`}
       headline={
         <div className="hbox ">
           <LabeledValue
@@ -126,20 +129,6 @@ export function ReturnItemsCard({ item }: { item: Item }) {
   const [, dispatchTransients] = useTransients();
   const { itemId, qty } = item;
 
-  const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQty = parseInt(e.target.value, 10) || 0;
-    const current = transaction.returnItems || new Map();
-    const newMap = new Map(current);
-    if (newMap.has(itemId)) {
-      const existingItem = newMap.get(itemId);
-      newMap.set(itemId, { ...existingItem, qty: newQty });
-    }
-    dispatch({
-      kind: "SET_INPUT",
-      payload: { key: "returnItems", value: newMap },
-    });
-  };
-
   const handleRemove = () => {
     const current = transaction.returnItems || new Map();
     const newMap = new Map(current);
@@ -159,13 +148,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
     <Container className="card hbox" onClick={handleCardClick}>
       <ProductDetailsTile item={item} hasPrice={false} />
       <Stage id={`item-${itemId}`}>
-        <ActorTile
-          id={`item-${itemId}-qty`}
-          headline={<div className="qty-display">{qty}</div>}
-          style={`w-sm`}
-        >
-          <input type="number" value={qty} onChange={handleQtyChange} min={0} />
-        </ActorTile>
+        <ReturnQtyTile Item={item} />
         <RefundDetailsTile item={item} />
       </Stage>
       <button onClick={handleRemove} aria-label="Remove item">

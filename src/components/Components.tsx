@@ -6,7 +6,7 @@ import { useDerivation } from "../logic/Derivation";
 import { type CatalogEntry, fakeCatalog } from "../api/fakeApi";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 
 import {
   useTransaction,
@@ -151,28 +151,13 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`tile h-sm ${style} ${oStyle[tileState]}`}
+      className={`tile ${style} ${oStyle[tileState]}`}
       onClick={handleClick}
       {...rest}
     >
       {headline}
       {tileState === "solo" && <div>{children}</div>}
     </Container>
-  );
-}
-
-export type PhaseProps = {
-  phaseId: string;
-  title: React.ReactNode;
-  children: React.ReactNode;
-};
-
-import { PhaseProvider } from "../logic/Logic";
-export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
-  return (
-    <PhaseProvider phaseId={phaseId}>
-      <PhaseBase>{children}</PhaseBase>
-    </PhaseProvider>
   );
 }
 
@@ -213,51 +198,51 @@ export function ProductDetailsTile({
 }
 
 export type NumpadProps = {
+  value?: number;
   onChange?: (val: number) => void;
-  onSubmit?: (val: number) => void;
   className?: string;
 };
 
 export const Numpad: React.FC<NumpadProps> = ({
+  value = 0,
   onChange,
-  onSubmit,
   className,
 }) => {
-  const [value, setValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-
+  // Auto-focus the input when the numpad mounts or its parent tile is clicked
+  React.useEffect(() => {
+    const focusInput = () => inputRef.current?.focus();
+    focusInput(); // Focus immediately when mounted
+    const parent = inputRef.current?.closest(".tile");
+    if (parent) parent.addEventListener("mousedown", focusInput);
+    return () => {
+      if (parent) parent.removeEventListener("mousedown", focusInput);
+    };
+  }, []);
   const focusInput = () => inputRef.current?.focus();
 
-  const updateValue = (newVal: string) => {
-    setValue(newVal);
-    onChange?.(Number(newVal) || 0);
-  };
-
   const handleDigit = (d: string) => {
+    const next = `${value ?? ""}${d}`;
+    onChange?.(Number(next) || 0);
     focusInput();
-    updateValue(value + d);
   };
 
   const handleBackspace = () => {
+    const next = String(value ?? "").slice(0, -1);
+    onChange?.(Number(next) || 0);
     focusInput();
-    updateValue(value.slice(0, -1));
-  };
-
-  const handleSubmit = () => {
-    focusInput();
-    onSubmit?.(Number(value) || 0);
   };
 
   const handleIncrement = (delta: number) => {
-    const newVal = (Number(value) || 0) + delta;
-    updateValue(String(Math.max(0, newVal)));
+    const next = Math.max(0, (value ?? 0) + delta);
+    onChange?.(next);
+    focusInput();
   };
 
-  const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "←", "0", "⏎"];
+  // Only digits for grid
+  const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
   const handleClick = (b: string) => {
-    if (b === "←") return handleBackspace();
-    if (b === "⏎") return handleSubmit();
     handleDigit(b);
   };
 
@@ -266,34 +251,70 @@ export const Numpad: React.FC<NumpadProps> = ({
       className={`vbox numpad ${className || ""}`}
       style={{ minWidth: "200px", width: "100%" }}
     >
-      <div className="hbox space-between align-center pad-xs">
-        <button className="tile small" onClick={() => handleIncrement(-1)}>
+      <div
+        className="hbox space-between align-center pad-xs"
+        style={{ gap: "0.5rem", padding: "0.5rem", alignItems: "center" }}
+      >
+        <button
+          className="fill-main text title "
+          style={{ minHeight: "2.5rem" }}
+          onClick={() => handleIncrement(-1)}
+        >
           -
         </button>
         <input
           ref={inputRef}
           value={value}
-          onChange={(e) => updateValue(e.target.value.replace(/\D/g, ""))}
-          className="tile grow text-center"
+          onChange={(e) => onChange?.(Number(e.target.value) || 0)}
+          className=" fill-main text-center"
           inputMode="numeric"
+          style={{
+            textAlign: "center",
+            minHeight: "2.5rem",
+          }}
         />
-        <button className="tile small" onClick={() => handleIncrement(1)}>
+        <button
+          className="fill-main text title "
+          style={{ minWidth: "2.5rem", minHeight: "2.5rem" }}
+          onClick={() => handleIncrement(1)}
+        >
           +
         </button>
+        <button
+          className="fill-main text title "
+          style={{ minHeight: "2.5rem" }}
+          onClick={handleBackspace}
+        >
+          ←
+        </button>
       </div>
+
       <div className="vbox pad-xs">
         <div
           className="grid numpad-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "var(--gap-xs)",
+            gap: "0.5rem",
+            justifyItems: "center",
+            alignItems: "center",
+            padding: "0.5rem",
           }}
         >
           {buttons.map((b) => (
             <button
               key={b}
               className="tile center"
+              style={{
+                width: "100%",
+                minHeight: "3.5rem",
+                height: "3.5rem",
+                fontSize: "1.25rem",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "0.25rem",
+                display: "flex",
+              }}
               onClick={() => handleClick(b)}
             >
               {b}
@@ -312,7 +333,6 @@ export default Numpad;
 //********************************************************************
 
 export type FloorplanProps = {
-  topBar?: React.ReactNode; // optional: ecosystem bar
   navBar?: React.ReactNode; // optional: navigation row
   pageTitle?: React.ReactNode; // page header
   leftColumn?: React.ReactNode;
@@ -322,7 +342,6 @@ export type FloorplanProps = {
 };
 
 export function Floorplan({
-  topBar = <div className="ecosystem-bar">Ecosystem Placeholder</div>,
   navBar = <NavBar />,
   pageTitle,
   leftColumn,
@@ -331,21 +350,21 @@ export function Floorplan({
   footer = <Footer />,
 }: FloorplanProps): JSX.Element {
   return (
-    <>
-      <div className="floorplan hbox fill">
-        <div className="hbox fill">
-          {leftColumn && <div className="column ">{leftColumn}</div>}
-          <div className="vbox fill main-column">
-            {topBar}
-            {pageTitle}
-            {navBar}
-            {mainContent || <div className="fill" />}
-            {footer}
-          </div>
-          {rightColumn && <div className="column">{rightColumn}</div>}
-        </div>
+    <div className="vbox fill gap-0rpx floorplan">
+      <div className="hbox fill-cross bg-brand text-white">
+        Ecosystem Placeholder
       </div>
-    </>
+      <div className="hbox gap-0rpx fill">
+        {leftColumn && <div className="column bg-bg-main">{leftColumn}</div>}
+        <div className="vbox fill main-column">
+          <h1 className={`text title`}>{pageTitle}</h1>
+          {navBar}
+          {mainContent || <div className="fill" />}
+          {footer}
+        </div>
+        {rightColumn && <div className="column bg-bg-main">{rightColumn}</div>}
+      </div>
+    </div>
   );
 }
 
@@ -374,6 +393,21 @@ export function NavBar(): JSX.Element {
         );
       })}
     </div>
+  );
+}
+
+export type PhaseProps = {
+  phaseId: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+};
+
+import { PhaseProvider } from "../logic/Logic";
+export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
+  return (
+    <PhaseProvider phaseId={phaseId}>
+      <PhaseBase>{children}</PhaseBase>
+    </PhaseProvider>
   );
 }
 
