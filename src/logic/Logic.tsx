@@ -145,8 +145,8 @@ const initialTransientState: TransientState = {};
 
 type TransientAction =
   | {
-      kind: "SET_SOLO";
-      payload?: { activeStageId?: string; activeSoloId?: string };
+      kind: "SET_OVERLAY";
+      payload?: { activeOverlayId?: string };
     }
   | { kind: "SET_ERROR"; payload?: { errorIds?: string[] } }
   | { kind: "SET_DIALOG"; payload?: { dialogId?: string } }
@@ -158,7 +158,7 @@ function transientReducer(
   action: TransientAction
 ): Object {
   switch (action.kind) {
-    case "SET_SOLO":
+    case "SET_OVERLAY":
       return {
         ...state,
         ...(action.payload ?? {}),
