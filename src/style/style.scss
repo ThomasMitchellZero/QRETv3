@@ -54,6 +54,14 @@
     --64rpx: 4rem;
   }
 
+  /* ─────────── TRANSIENT SCOPE ─────────── */
+  /* Creates an isolated z-plane while preserving flex behavior */
+  .transient-scope {
+    flex: 1 1 auto;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
   body {
     background-color: var(--color-bg-main);
     color: var(--color-fg);
@@ -197,7 +205,7 @@
     justify-content: flex-start;
     padding: var(--8rpx) var(--12rpx);
 
-    flex: 0 1 auto; /* no vertical stretching, width flexible */
+    flex: 1 1 auto; /* no vertical stretching, width flexible */
     height: auto; /* hug vertical contents always */
     min-height: 4rem;
     align-self: flex-start;
@@ -216,13 +224,11 @@
       transition-delay: 0s;
     }
 
+    /* Solo state — visually distinct, no absolute/fixed layout */
     &.solo {
-      opacity: 1;
-      transform: scale(1);
-      flex: 1 1 100%;
-      transition-delay: 0.15s; /* starts after fade-out completes */
-      transition: opacity 0.15s ease, transform 0.15s ease,
-        flex-basis 0.15s ease;
+      background-color: var(--color-bg-interactive);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-card);
     }
 
     &.active {
@@ -235,25 +241,18 @@
     }
   }
 
-  /* Solo transition behavior — only affects ActorTiles */
-
-  /* Stage / ActorTile */
+  /* Stage: container for tiles, overlays, normal flow */
   .stage {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap; /* prevents overflow */
-    align-items: flex-start;
-    justify-content: flex-start;
-    width: 100%; /* fill horizontally */
-    height: auto; /* hug vertical content */
-    flex: 0 1 auto; /* don't force vertical fill */
+    width: 100%;
+    height: auto;
     gap: var(--16rpx);
+  }
 
-    .solo {
-      @extend .active;
-      @extend .fill;
-      min-height: 10rem;
-    }
+  /* When a solo tile is present, hide all non-solo siblings */
+  .stage:has(.solo) > :not(.solo) {
+    display: none;
   }
 
   /*  ItemDetailsTile — Horizontal Flex Layout  */

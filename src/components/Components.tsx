@@ -7,7 +7,12 @@ import { type CatalogEntry, fakeCatalog } from "../api/fakeApi";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
 import React, { useRef } from "react";
-import { useTransients, useNavigatePhase, isActive } from "../logic/Logic";
+import {
+  useTransients,
+  useNavigatePhase,
+  useTransaction,
+  isActive,
+} from "../logic/Logic";
 
 //********************************************************************
 //  CONTAINER (BASE PRIMITIVE)
@@ -53,8 +58,6 @@ export function Tile(props: TileProps): JSX.Element {
   );
 }
 
-// Stage no longer injects props or clones children.
-// Conditional behavior (e.g., solo/active) now lives in ActorTile.
 export function Stage({
   id,
   children,
@@ -116,48 +119,28 @@ export type ActorTileProps = {
 
 export function ActorTile(props: ActorTileProps) {
   const [transients, dispatchTransients] = useTransients();
-  const { activeStageId, activeSoloId } = transients;
-  const stageCtx = useStage() as {
-    stageId?: string;
-    activeStageId?: string;
-    activeSoloId?: string;
-  };
-  const parentStageId = stageCtx.stageId || "defaultStage";
   const { id, headline, children, style, ...rest } = props;
 
-  const tileState =
-    activeSoloId === id
-      ? "solo"
-      : activeSoloId && activeStageId === parentStageId
-      ? "hidden"
-      : "default";
+  // Simplified state: isSolo is true if this tile is the active overlay
+  const isSolo = isActive(transients, "activeOverlayId", id);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatchTransients({
-      kind: "SET_SOLO",
-      payload: {
-        activeStageId: parentStageId,
-        activeSoloId: id,
-      },
+      kind: "SET_OVERLAY",
+      payload: { activeOverlayId: id },
     });
-  };
-
-  const oStyle = {
-    "solo": "solo fill",
-    "hidden": "hidden",
-    "default": "",
   };
 
   return (
     <Container
       id={id}
-      className={`tile ${style} ${oStyle[tileState]}`}
+      className={`tile ${style} ${isSolo ? "solo layer-top" : ""}`}
       onClick={handleClick}
       {...rest}
     >
       {headline}
-      {tileState === "solo" && <div>{children}</div>}
+      {isSolo && <div>{children}</div>}
     </Container>
   );
 }
@@ -329,27 +312,13 @@ export const Numpad: React.FC<NumpadProps> = ({
 
 export default Numpad;
 
+// Overlay participates in the transient z-axis model and uses .layer-top.blocking for correct stacking.
 export function Overlay({
   children,
 }: {
   children: React.ReactNode;
 }): JSX.Element {
-  /*
-    Overlay is a container that covers a portion of the screen with a semi-transparent background.
-
-    Overlay may need to create the appearance of covering some but not all parts of the layout.  Acceptable to solve this with CSS tricks for now.  Could also "clone" some parts of the layout into the overlay if needed.
-
-    It must be easy to exit the overlay.  Any click on the overlay background (not the content) should close it.  This can be done with a callback prop or context action.
-      -This is going to be very similar to our Stage / Solo rules, to the point where I am wondering if we can combine them.
-
-    Overlay should accept components as children.  If closed, their volatile contents are lost.  
-      -Children may reference the parent's size but must be self-contained otherwise.
-
-    Overlay should block interaction with the background content.  This can be done with a semi-transparent div that covers the entire screen behind the content.
-
-
-  */
-  return <div className="overlay fill">{children}</div>;
+  return <div className="overlay layer-top blocking fill">{children}</div>;
 }
 
 //********************************************************************

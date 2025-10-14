@@ -6,8 +6,8 @@ import {
   LabeledValue,
   Container,
   Floorplan,
-  Stage,
   ActorTile,
+  Stage,
 } from "../components/Components";
 import { useTransaction, dollarize } from "../logic/Logic";
 import type { Invoice } from "../types/Types";
@@ -46,7 +46,7 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
         className="fill-main w-md"
       />
 
-      <Stage id={`receipt-${invoId}`}>
+      <Stage className={`transient-scope`} id={`receipt-${invoId}`}>
         <ActorTile
           id={`receipt-${invoId}-items`}
           headline={
