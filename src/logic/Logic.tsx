@@ -36,6 +36,16 @@ export function dollarize(valueCents: number | undefined): string {
   return sOut;
 }
 
+export function isActive(
+  transients: TransientState,
+  key: string,
+  value?: string
+): boolean {
+  if (!(key in transients)) return false;
+  if (value === undefined) return Boolean(transients[key]);
+  return transients[key] === value;
+}
+
 const initialTransactionState: TransactionState = {
   currentPhase: "start",
   // Canonical transaction-level repos:

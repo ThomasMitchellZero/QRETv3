@@ -7,12 +7,7 @@ import { type CatalogEntry, fakeCatalog } from "../api/fakeApi";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
 import React, { useRef } from "react";
-
-import {
-  useTransaction,
-  useTransients,
-  useNavigatePhase,
-} from "../logic/Logic";
+import { useTransients, useNavigatePhase, isActive } from "../logic/Logic";
 
 //********************************************************************
 //  CONTAINER (BASE PRIMITIVE)
@@ -25,7 +20,7 @@ export type ContainerProps = {
   id?: string | undefined;
   children?: React.ReactNode;
   className?: string;
-  preserve?: string[] | undefined; // no keyof restriction during prototype
+  preserve?: string[] | undefined;
   onClick?: React.MouseEventHandler;
 };
 
@@ -58,27 +53,33 @@ export function Tile(props: TileProps): JSX.Element {
   );
 }
 
-const StageContext = React.createContext<object>({});
-export function useStage() {
-  return React.useContext(StageContext);
-}
-
+// Stage no longer injects props or clones children.
+// Conditional behavior (e.g., solo/active) now lives in ActorTile.
 export function Stage({
   id,
   children,
+  className,
 }: {
   id: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
 }) {
-  const [transients] = useTransients();
-  const activeSoloId = transients?.activeSolo?.[id];
-  const activeStageId = transients?.activeStageId;
+  const [, dispatchTransients] = useTransients();
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      dispatchTransients({ kind: "CLEAR_TRANSIENTS" });
+    }
+  };
+
   return (
-    <StageContext.Provider value={{ stageId: id, activeStageId, activeSoloId }}>
-      <Container className={`stage ${activeSoloId ? "solo-mode" : ""}`}>
-        {children}
-      </Container>
-    </StageContext.Provider>
+    <Container
+      id={id}
+      className={`stage transient-scope ${className || ""}`}
+      onClick={handleClick}
+    >
+      {children}
+    </Container>
   );
 }
 
