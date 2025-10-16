@@ -34,8 +34,10 @@ export function Container(props: ContainerProps): JSX.Element {
   const { children, className = "", preserve, onClick } = props;
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatchTransients({ kind: "CLEAR_TRANSIENTS", payload: { preserve: [] } });
+    dispatchTransients({
+      kind: "CLEAR_TRANSIENT",
+      preserve: preserve || [],
+    });
     if (onClick) onClick(e);
   };
 
@@ -71,7 +73,7 @@ export function Stage({
 
   const handleClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      dispatchTransients({ kind: "CLEAR_TRANSIENTS" });
+      dispatchTransients({ kind: "CLEAR_TRANSIENT" });
     }
   };
 
@@ -127,7 +129,7 @@ export function ActorTile(props: ActorTileProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatchTransients({
-      kind: "SET_OVERLAY",
+      kind: "SET_TRANSIENT",
       payload: { activeOverlayId: id },
     });
   };
@@ -409,7 +411,12 @@ function PhaseBase({ children }: { children: React.ReactNode }) {
   const [, dispatchTransients] = useTransients();
 
   const handleBackgroundClick = () => {
-    dispatchTransients({ kind: "RESET_TRANSIENTS" });
+    dispatchTransients({ kind: "RESET_TRANSIENT" });
+    // Also collapse the InvoSearch card if open
+    dispatchTransients({
+      kind: "SET_TRANSIENT",
+      payload: { invoSearchExpanded: false },
+    });
   };
 
   return (

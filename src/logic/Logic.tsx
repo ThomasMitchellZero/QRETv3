@@ -151,44 +151,44 @@ function phaseReducer(state: any, action: PhaseAction): any {
 //********************************************************************
 //  TRANSIENT STATE CONTEXT
 //********************************************************************
-const initialTransientState: TransientState = {};
+const initialTransientState: TransientState = {
+  invoSearchExpanded: false,
+};
 
 type TransientAction =
-  | {
-      kind: "SET_OVERLAY";
-      payload?: { activeOverlayId?: string };
-    }
-  | { kind: "SET_ERROR"; payload?: { errorIds?: string[] } }
-  | { kind: "SET_DIALOG"; payload?: { dialogId?: string } }
-  | { kind: "RESET_TRANSIENTS" }
-  | { kind: "CLEAR_TRANSIENTS"; payload?: { preserve?: string[] } };
+  | { kind: "SET_TRANSIENT"; payload: Partial<TransientState> }
+  | { kind: "CLEAR_TRANSIENT"; preserve?: (keyof TransientState)[] }
+  | { kind: "PRESERVE_TRANSIENT"; payload: Partial<TransientState> } // Deprecated – use CLEAR_TRANSIENT.preserve instead
+  | { kind: "RESET_TRANSIENT" };
 
-function transientReducer(
+function transientsReducer(
   state: TransientState,
   action: TransientAction
-): Object {
+): TransientState {
   switch (action.kind) {
-    case "SET_OVERLAY":
-      return {
-        ...state,
-        ...(action.payload ?? {}),
-      };
-    case "SET_ERROR":
-      return { ...state, errorIds: action.payload?.errorIds ?? [] };
-    case "SET_DIALOG":
-      return { ...state, dialogId: action.payload?.dialogId };
-    case "RESET_TRANSIENTS":
-      return { ...initialTransientState };
-    case "CLEAR_TRANSIENTS": {
-      const preserve = action.payload?.preserve || [];
-      let newState: TransientState = {};
-      preserve.forEach((key: string) => {
-        if (state[key] !== undefined) {
-          newState[key] = state[key];
-        }
-      });
-      return newState;
+    case "SET_TRANSIENT":
+      return { ...state, ...action.payload };
+
+    case "CLEAR_TRANSIENT": {
+      const preserveKeys =
+        (action as any).preserve ?? (action as any).payload?.preserve ?? [];
+      if (!preserveKeys.length) return {};
+      return Object.fromEntries(
+        Object.entries(state).filter(([key]) =>
+          preserveKeys.includes(key as keyof TransientState)
+        )
+      ) as TransientState;
     }
+
+    case "PRESERVE_TRANSIENT":
+      console.warn(
+        "PRESERVE_TRANSIENT is deprecated. Use CLEAR_TRANSIENT with preserve[] instead."
+      );
+      return { ...action.payload, ...state };
+
+    case "RESET_TRANSIENT":
+      return {};
+
     default:
       return state;
   }
@@ -213,7 +213,7 @@ export function PhaseProvider({
     ...initialPhaseState,
     phaseId,
   });
-  const transientValue = useReducer(transientReducer, {
+  const transientValue = useReducer(transientsReducer, {
     ...initialTransientState,
   });
   return (

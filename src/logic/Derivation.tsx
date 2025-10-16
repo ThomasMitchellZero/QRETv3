@@ -131,6 +131,34 @@ export function useDerivation() {
     );
   }
 
+  function rollupAll<T extends Record<string, any>>(
+    arr: T[],
+    keys: (keyof T)[]
+  ): T[] {
+    let output: T[] = [];
+    if (!arr?.length || !keys?.length) return output;
+
+    const groups = new Map<string, T>();
+
+    for (const atom of arr) {
+      const key = keys.map((k) => String(atom[k])).join("|");
+      const existing = groups.get(key);
+
+      if (existing) {
+        for (const [field, value] of Object.entries(atom)) {
+          if (typeof value === "number") {
+            (existing as any)[field] = ((existing as any)[field] ?? 0) + value;
+          }
+        }
+      } else {
+        groups.set(key, structuredClone(atom));
+      }
+    }
+
+    output = Array.from(groups.values());
+    return output;
+  }
+
   // No filterMap wrapper; native Array.filter is sufficient.
 
   // -------------------------------
@@ -141,5 +169,6 @@ export function useDerivation() {
     aggregateAtoms,
     getUniqueKeys,
     rollupByKey,
+    rollupAll,
   };
 }

@@ -40,6 +40,8 @@
     --color-brand: #012169;
     --color-secondary: #888;
     --color-accent: #f5a623;
+    --color-critical: #971b2f;
+    --color-success: #007a33;
     --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.1);
 
     --4rpx: 0.25rem;
@@ -111,11 +113,20 @@
 
 /* ─────────── COMPONENTS ─────────── */
 @layer components {
-  /* Mixins */
+  .divider-h {
+    width: 100%;
+    height: 1px;
+    background-color: var(--color-border);
+    flex-shrink: 0;
+  }
 
-  /* ─────────── MIXINS ─────────── */
-
-  /* Base layout container */
+  .divider-v {
+    width: 1px;
+    height: auto;
+    background-color: var(--color-border);
+    align-self: stretch;
+    flex-shrink: 0;
+  }
 
   /* Buttons */
   button {
@@ -173,12 +184,16 @@
       background-color: var(--color-bg-alt);
       padding: var(--16rpx);
     }
+
+    .main-column {
+      flex: 1 1 auto;
+      padding: 0rem var(--24rpx);
+    }
   }
 
   /* Card — visually elevated container */
   .card {
     display: flex;
-    flex-direction: row;
     flex: 0 0 auto;
     gap: var(--16rpx);
     background-color: var(--color-bg-main);
@@ -195,19 +210,17 @@
     gap: var(--16rpx);
     overflow-y: auto;
     scrollbar-gutter: auto;
-    padding: 0 var(--24rpx);
   }
 
   .tile {
     display: flex;
-    flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     padding: var(--8rpx) var(--12rpx);
 
     flex: 1 1 auto; /* no vertical stretching, width flexible */
     height: auto; /* hug vertical contents always */
-    min-height: 4rem;
+    min-height: 4rem; /* ensures tiles never shrink below 4rem */
     align-self: flex-start;
 
     background-color: var(--color-bg-main);
@@ -355,6 +368,12 @@
   .text-accent {
     color: var(--color-accent);
   }
+  .text-critical {
+    color: var(--color-critical);
+  }
+  .text-success {
+    color: var(--color-success);
+  }
   .text-bg-main {
     color: var(--color-bg-main);
   }
@@ -459,12 +478,6 @@
       font-weight: 400;
     }
     &.bold {
-      font-weight: 700;
-    }
-    &.muted {
-      opacity: 0.7;
-    }
-    &.strong {
       font-weight: 700;
     }
     &.center {

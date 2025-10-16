@@ -25,6 +25,22 @@ export type Item = {
 export type Invoice = {
   invoId: string;
   items: Item[];
+  customer?: Customer;
+  payment?: Payment;
+};
+
+// Customer = contact metadata for invoice search and matching
+export type Customer = {
+  name?: string;
+  phone?: number; // stored as integer for numeric search
+  email?: string;
+};
+
+// Payment = tender metadata for invoice search and matching
+export type Payment = {
+  cc?: string; // full credit card number (mock data)
+  method?: string;
+  authCode?: string;
 };
 
 ////////////////////////////////
@@ -67,4 +83,74 @@ export type PhaseState = {
 export type ReturnItemsPhaseState = PhaseState & {
   pendingItemId: string;
   pendingQty: number;
+};
+
+// ================================
+// Reference Objects (for APE)
+// ================================
+export const refItem: Item = {
+  itemId: "0000",
+  valueCents: 1000,
+  qty: 1,
+  invoId: "99999",
+};
+
+export const refInvoice: Invoice = {
+  invoId: "99999",
+  items: [refItem],
+  customer: {
+    name: "John Doe",
+    phone: 1234567890,
+    email: "john@example.com",
+  },
+  payment: {
+    cc: "4111111111111111",
+    method: "credit",
+    authCode: "AUTHCODE123",
+  },
+};
+
+export const refCustomer: Customer = {
+  name: "Jane Smith",
+  phone: 9876543210,
+  email: "jane@example.com",
+};
+
+export const refPayment: Payment = {
+  cc: "4222222222222",
+  method: "debit",
+  authCode: "AUTH98765",
+};
+
+export const refPhaseNode: PhaseNode = {
+  phaseId: "example-phase",
+  url: "/example",
+  status: "mandatory",
+  selected: true,
+  enabled: true,
+  visible: true,
+};
+
+export const refTransientState: TransientState = {
+  activeContainer: "example-container",
+  activeErrorId: "none",
+};
+
+export const refTransactionState: TransactionState = {
+  currentPhase: "start",
+  phases: [refPhaseNode],
+  returnItems: new Map([["0000", refItem]]),
+  receipts: new Map([["99999", refInvoice]]),
+};
+
+export const refPhaseState: PhaseState = {
+  phaseId: "start",
+  activeScreen: "primary",
+};
+
+export const refReturnItemsPhaseState: ReturnItemsPhaseState = {
+  phaseId: "return-items",
+  activeScreen: "primary",
+  pendingItemId: "0000",
+  pendingQty: 1,
 };

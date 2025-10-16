@@ -80,29 +80,39 @@ export function RefundDetailsTile({ item }: { item: Item }) {
   // Unique display keys derived from atoms using the local sentinel
   const receiptKeys = [...new Set(thisItemsAtoms.map((a) => keyOf(a.invoId)))];
 
-  // Debug
-  console.log("thisItemsAtoms AI", thisItemsAtoms);
-  console.log("receiptKeys AI", receiptKeys);
-
   const uiRefundRows = receiptKeys.map((rk) => {
     const atomsForKey = thisItemsAtoms.filter((a) => keyOf(a.invoId) === rk);
     const thisInvoQty = aggregateAtoms(atomsForKey, "qty");
     const thisInvoValue = aggregateAtoms(atomsForKey, "valueCents");
     const label = rk === "__NO_RECEIPT__" ? "No Receipt" : `Rcpt. #${rk}`;
+    const labelStyle = label === "No Receipt" ? "text-critical" : "";
+    const valueStyle =
+      label === "No Receipt" ? "text-critical" : "text-success";
 
+    const oStyle = {};
     return (
-      <div key={rk} className="hbox space-between">
-        <div>{label}</div>
-        <div>{thisInvoQty}</div>
-        <div>{dollarize(thisInvoValue)}</div>
+      <div key={rk} className="hbox gap-8rpx fill-main">
+        <div
+          className={`fill-main ${labelStyle}`}
+        >{`${label} x ${thisInvoQty}`}</div>
+        <div className={`text ${valueStyle} subtitle bold`}>
+          {dollarize(thisInvoValue)}
+        </div>
       </div>
     );
   });
 
+  const uiSoloContent = (
+    <div className="vbox fill-cross hug-main gap-8rpx">
+      <div className={`divider-h`}></div>
+      {uiRefundRows}
+    </div>
+  );
+
   return (
     <ActorTile
       id={`item-${itemId}-refund-details`}
-      style={`w-md`}
+      style={`w-md vbox`}
       headline={
         <div className="hbox ">
           <LabeledValue
@@ -119,7 +129,7 @@ export function RefundDetailsTile({ item }: { item: Item }) {
       }
     >
       {/* SOLO CONTENT */}
-      {uiRefundRows}
+      {uiSoloContent}
     </ActorTile>
   );
 }
@@ -141,13 +151,13 @@ export function ReturnItemsCard({ item }: { item: Item }) {
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatchTransients({ kind: "CLEAR_TRANSIENTS", payload: { preserve: [] } });
+    dispatchTransients({ kind: "CLEAR_TRANSIENT" });
   };
 
   return (
     <Container className="card hbox" onClick={handleCardClick}>
       <ProductDetailsTile item={item} hasPrice={false} />
-      <Stage id={`item-${itemId}`}>
+      <Stage id={`item-${itemId}`} className="layer-base transient-scope">
         <ReturnQtyTile Item={item} />
         <RefundDetailsTile item={item} />
       </Stage>
