@@ -117,11 +117,12 @@ export type ActorTileProps = {
   headline: React.ReactNode;
   children?: React.ReactNode;
   style?: string | React.CSSProperties | undefined;
+  className?: string;
 };
 
 export function ActorTile(props: ActorTileProps) {
   const [transients, dispatchTransients] = useTransients();
-  const { id, headline, children, style, ...rest } = props;
+  const { id, headline, children, style, className } = props;
 
   // Simplified state: isSolo is true if this tile is the active overlay
   const isSolo = isActive(transients, "activeOverlayId", id);
@@ -137,9 +138,8 @@ export function ActorTile(props: ActorTileProps) {
   return (
     <Container
       id={id}
-      className={`tile ${style} ${isSolo ? "solo layer-top" : ""}`}
+      className={`tile ${style} ${className}`}
       onClick={handleClick}
-      {...rest}
     >
       {headline}
       {isSolo && <div>{children}</div>}
@@ -232,6 +232,26 @@ export const Numpad: React.FC<NumpadProps> = ({
     handleDigit(b);
   };
 
+  const UiBtns = buttons.map((b) => (
+    <button
+      key={b}
+      className="tile center"
+      style={{
+        width: "100%",
+        minHeight: "3.5rem",
+        height: "3.5rem",
+        fontSize: "1.25rem",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "0.25rem",
+        display: "flex",
+      }}
+      onClick={() => handleClick(b)}
+    >
+      {b}
+    </button>
+  ));
+
   return (
     <div
       className={`vbox numpad ${className || ""}`}
@@ -287,25 +307,7 @@ export const Numpad: React.FC<NumpadProps> = ({
             padding: "0.5rem",
           }}
         >
-          {buttons.map((b) => (
-            <button
-              key={b}
-              className="tile center"
-              style={{
-                width: "100%",
-                minHeight: "3.5rem",
-                height: "3.5rem",
-                fontSize: "1.25rem",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: "0.25rem",
-                display: "flex",
-              }}
-              onClick={() => handleClick(b)}
-            >
-              {b}
-            </button>
-          ))}
+          {/* UiBtns */}
         </div>
       </div>
     </div>

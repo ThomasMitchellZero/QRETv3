@@ -330,6 +330,7 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
 
       <Stage className={`transient-scope`} id={`receipt-${invoId}`}>
         <ActorTile
+          className="vbox"
           id={`receipt-${invoId}-items`}
           headline={
             <div className="hbox space-between">
@@ -372,10 +373,9 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
 function ReceiptList() {
   const [transaction] = useTransaction();
   const receipts = transaction.receipts ?? new Map();
-
+  // <InvoSearchCard />
   return (
     <div className="card-ctnr">
-      <InvoSearchCard />
       {Array.from(receipts.values()).map((invoice: Invoice) => (
         <ReceiptCard key={invoice.invoId} invoice={invoice} />
       ))}
