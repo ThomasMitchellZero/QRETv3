@@ -1,8 +1,6 @@
-export const InvoSearchCard = () => {
-
-    // VERY rough sketch.
-    const brief = {
-      /*
+// VERY rough sketch.
+const brief = {
+  /*
   
     ** DO NOT DELETE.  FOR APE MODIFICATION ONLY **
   
@@ -111,10 +109,10 @@ export const InvoSearchCard = () => {
     -Logic for 2 modes should have a similar shape, but specific configuration should be encapsulated in the mode objects.
       
     */
-    };
-    const designOutline = {
-      // Common handlers
-      /*
+};
+const designOutline = {
+  // Common handlers
+  /*
   
       !!!!!!!!!!!  NEVER, ever delete design Outline, this means LLMs too.  No touchy !!!!!!!!!!
   
@@ -134,4 +132,77 @@ export const InvoSearchCard = () => {
         < Action Button />
   
     */
-    };
+};
+
+const TaylorsVersionScriptTree = {
+  /*
+  NEVER, EVER replace this file without consulting me first.  This is the core of our interaction model, and changing it has wide-reaching implications.  This goes Double for LLMs.  Do not fuck with this, this is what we recreate drafts from.
+
+  
+  Taylor's Version:
+  
+    ScriptTree:
+      - Changing from DialogTree to ScriptTree to better reflect its purpose in guiding user interactions.
+  
+      Example conceptual shape:
+  
+      ScriptTree = {
+        "Phase-ReturnItems": {
+          "item-123": {
+            "service-abc": {}
+          }
+        }
+      }
+  
+      Working Principle — Array-Route ScriptTree
+  
+      Guiding intent: Keep interaction state deterministic, and easy to debug.
+  
+      The ScriptTree is a single global context that stores a nested object describing all active dialogs.
+      Every interactive element—Stage, Actor, or Dialog—derives its position in that tree using a route array (string[]), built by extending its parent’s route from context.
+      All interaction updates are handled exclusively setBranch.
+        -There is no concept of clearing vs. preserving; every interaction sets its target branch to {}.
+      Each Stage resets its own branch; each Actor extends its parent’s branch.
+  
+      We chose array routes over parent-pointer graphs because:
+        •	They’re immutable (no side effects).
+        •	They’re serializable (safe for logging, snapshots, replay).
+        •	They’re React-friendly (no reference mutation issues).
+        •	They provide human-readable traceability (Phase / Card / Tile / Dialog).
+  
+      Everything that can go wrong in this model happens in a single place—the branch helpers—so once those are correct, the entire routing mechanism is stable.
+  
+  
+  
+      The ScriptTree framework is designed to manage nested, localized interaction states
+        -There is only one, globlal ScriptTree that holds the state for all phases and components.
+        -The Script Tree itself has no inherent UI behavior; it simply holds state.
+          -Any reference to z-axis is incorrect; layering will be handled separately.
+        -ScriptTree should be reset to {} whenver we change phases.  Remember, these are meant to be transient states.  Anything we need to preserve should live elsewhere.
+        -I'm not opposed to ScriptTree having a dedicated context separate from Phase or Transaction context.  Given the x.y[z] nature of the data, it might make sense to have its own context provider.
+  
+  
+        -Stage and Actors are both instances of the Container type.  The key element of the Container is that it interacts with the ScriptTree layer.
+          -Stage clicks set their own branch of the ScriptTree to {}.  
+          -Actor clicks add their own node to their parent's branch.
+        -There is no longer any concept of clearing or preserving.  The only action is setting the value of a given node to {}.  Stages set their parent node to {}, Actors set their own node to {} within their parent's branch.
+  
+        -Every click in a Stage has one result: resetting that branch of the ScriptTree to an empty object {} with its own unique ID as the key.  
+          -The exceptions are the ActorTiles.  Like all Containers, they allow definition of their own onClick behavior.  Instead of resetting their own branch, they add their own node to their parent's branch.
+          -Ideally, I would like not to have to define an entire route.  Ideally just knowing the parent's route and my own ID would be enough to find my place in the tree.
+  
+        -There is no separate "clear" action; every click resets its own branch.
+  
+        -Therefore, the Stage Dialog visibility functions should be really easy:  If my own node exists at my parent's branch, I'm visible.  Any falsy value (including undefined from a mising branch) means I'm not visible.
+          -This should probably be an easy helper function available to all Containers.  Call it a Cue.  "Do I exist at ParentRoute in the ScriptTree?"
+  
+        - Coding Preferences
+          - Don't go nuts preventing edge cases.  We control the environment.
+          - I like logic that is metaphorically consistent with the domain.
+          - I prefer to have one heuristic that works in all cases, even if it means decreasing flexibility.
+          - I do not like string-based logic.  I prefer object-based logic.
+          - Counters and ++ usually mean we're doing something hacky.
+  
+  
+  */
+};

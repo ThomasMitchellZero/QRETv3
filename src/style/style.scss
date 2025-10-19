@@ -93,23 +93,6 @@
     flex-direction: column;
     gap: var(--16rpx);
   }
-
-  .w-sm {
-    width: 8rem;
-  }
-  .w-md {
-    width: 16rem+1rem;
-  }
-  .w-lg {
-    width: 24rem+2rem;
-  }
-
-  .h-sm {
-    height: 8rem;
-  }
-  .h-md {
-    height: 12rem;
-  }
 }
 
 /* ─────────── COMPONENTS ─────────── */
@@ -144,20 +127,20 @@
     transition: 0.2s ease background-color;
     border: none;
 
-    .btn--primary {
-      background: var(--color-primary);
+    &.btn--primary {
+      background-color: var(--color-primary);
       color: white;
     }
-    .btn--secondary {
-      background: var(--color-secondary);
+    &.btn--secondary {
+      background-color: var(--color-interactive-alt);
       color: white;
     }
-    .btn--outline {
-      background: none;
+    &.btn--outline {
+      background-color: white;
       border: 2px solid var(--color-primary);
       color: var(--color-primary);
     }
-    .btn--text {
+    &.btn--text {
       background: none;
       color: var(--color-primary);
     }
@@ -494,5 +477,25 @@
 
   .hidden {
     display: none;
+  }
+
+  .w-sm {
+    width: 8rem;
+  }
+  .w-md {
+    width: 16rem+1rem;
+  }
+  .w-lg {
+    width: 24rem+2rem;
+  }
+
+  .h-xs {
+    height: 6rem;
+  }
+  .h-sm {
+    height: 8rem;
+  }
+  .h-md {
+    height: 12rem;
   }
 }

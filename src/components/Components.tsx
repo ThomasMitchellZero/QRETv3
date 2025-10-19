@@ -475,11 +475,15 @@ export function Footer({ onContinue }: FooterProps): JSX.Element {
   const refundDollars = (totalReturnCents / 100).toFixed(2);
 
   return (
-    <div className="hbox">
+    <div className="hbox padding-16rpx">
       <div className="vbox fill-main">
         <span>{`Refund Value: $${refundDollars}`}</span>
       </div>
-      <button onClick={handleContinue} disabled={!nextPhase}>
+      <button
+        className="btn--primary h-sm w-lg"
+        onClick={handleContinue}
+        disabled={!nextPhase}
+      >
         Continue
       </button>
     </div>

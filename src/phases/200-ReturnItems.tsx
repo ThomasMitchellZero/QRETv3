@@ -39,7 +39,7 @@ function ReturnQtyTile({ Item }: { Item: Item }) {
         value: String(qty),
         textAlign: "left",
       })}
-      style={`w-sm`}
+      style={`vbox w-sm`}
     >
       <Numpad
         value={transaction.returnItems?.get(itemId)?.qty ?? 0}
@@ -161,7 +161,11 @@ export function ReturnItemsCard({ item }: { item: Item }) {
         <ReturnQtyTile Item={item} />
         <RefundDetailsTile item={item} />
       </Stage>
-      <button onClick={handleRemove} aria-label="Remove item">
+      <button
+        className="btn--secondary"
+        onClick={handleRemove}
+        aria-label="Remove item"
+      >
         🗑️
       </button>
     </Container>
