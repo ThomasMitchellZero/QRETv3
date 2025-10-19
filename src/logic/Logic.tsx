@@ -316,13 +316,3 @@ export function useNavigatePhase(): (phaseId: string) => void {
     dispatchPhase({ kind: "RESET", payload: { phaseId } });
   };
 }
-
-
-// hey Chat, look here.
-const exampleTransientState: {
-  "Phase-ReturnItems": {
-    "item-123": {
-      "service-abc": {};
-    };
-  };
-};
