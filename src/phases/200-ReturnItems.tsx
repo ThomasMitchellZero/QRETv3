@@ -5,13 +5,12 @@ import { cloneDeep } from "lodash";
 
 import {
   Floorplan,
-  ActorTile,
-  Stage,
   ProductDetailsTile,
-  Container,
   LabeledValue,
   type ProductDetailsTileProps,
 } from "../components/Components";
+
+import { Stage, Actor, useInterlude, Dialog } from "../logic/Interlude";
 import {
   useTransaction,
   useReturnItemsPhase,
@@ -27,33 +26,37 @@ import { useDerivation } from "../logic/Derivation";
 //  RETURN ITEMS CARD
 //********************************************************************
 
-function ReturnQtyTile({ Item }: { Item: Item }) {
+function ReturnQtyTile({ item }: { item: Item }) {
   const [transaction, dispatch] = useTransaction();
-  const { itemId, qty } = Item;
+  const { itemId, qty } = item;
+
+  const scene = { [`return-qty-${itemId}`]: true };
 
   return (
-    <ActorTile
+    <Actor
       id={`return-qty-${itemId}`}
-      headline={LabeledValue({
-        label: "Return Qty",
-        value: String(qty),
-        textAlign: "left",
-      })}
-      style={`vbox w-sm`}
-    >
-      <Numpad
-        value={transaction.returnItems?.get(itemId)?.qty ?? 0}
-        onChange={(v) => {
-          const next = new Map(transaction.returnItems);
-          const existing = next.get(itemId);
-          if (existing) next.set(itemId, { ...existing, qty: v });
-          dispatch({
-            kind: "SET_INPUT",
-            payload: { key: "returnItems", value: next },
-          });
-        }}
-      />
-    </ActorTile>
+      scene={scene}
+      headline={
+        <LabeledValue label="Return Qty" textAlign="left" value={`${qty}`} />
+      }
+      dialog={
+        <Dialog id={`return-qty-dialog-${itemId}`} scene={scene}>
+          <Numpad
+            value={transaction.returnItems?.get(itemId)?.qty ?? 0}
+            onChange={(v) => {
+              const next = new Map(transaction.returnItems);
+              const existing = next.get(itemId);
+              if (existing) next.set(itemId, { ...existing, qty: v });
+              dispatch({
+                kind: "SET_INPUT",
+                payload: { key: "returnItems", value: next },
+              });
+            }}
+          />
+        </Dialog>
+      }
+      className="vbox w-sm"
+    />
   );
 }
 
@@ -61,35 +64,29 @@ export function RefundDetailsTile({ item }: { item: Item }) {
   const { itemId } = item;
   const { returnItemAtoms, aggregateAtoms } = useDerivation();
 
-  // matching Atoms
   const thisItemsAtoms = returnItemAtoms.filter(
     (atom) => atom.itemId === item.itemId
   );
-
-  // Local key normalizer: never use `undefined` as a key. Keep it for data, map to a sentinel for grouping.
   const keyOf = (v: string | number | undefined) =>
     v === undefined ? "__NO_RECEIPT__" : String(v);
-
-  // Receipted subset (truthy invoId). Note: uses data truth, not the sentinel.
   const receiptedAtoms = thisItemsAtoms.filter((a) => a.invoId != null);
 
   const totalQty = aggregateAtoms(thisItemsAtoms, "qty");
   const receiptedQty = aggregateAtoms(receiptedAtoms, "qty");
   const itemRefunds = aggregateAtoms(thisItemsAtoms, "valueCents");
-
-  // Unique display keys derived from atoms using the local sentinel
   const receiptKeys = [...new Set(thisItemsAtoms.map((a) => keyOf(a.invoId)))];
 
-  const uiRefundRows = receiptKeys.map((rk) => {
+  const scene = { [`refund-details-${itemId}`]: true };
+
+  const refundRows = receiptKeys.map((rk) => {
     const atomsForKey = thisItemsAtoms.filter((a) => keyOf(a.invoId) === rk);
     const thisInvoQty = aggregateAtoms(atomsForKey, "qty");
     const thisInvoValue = aggregateAtoms(atomsForKey, "valueCents");
     const label = rk === "__NO_RECEIPT__" ? "No Receipt" : `Rcpt. #${rk}`;
-    const labelStyle = label === "No Receipt" ? "text-critical" : "";
+    const labelStyle = rk === "__NO_RECEIPT__" ? "text-critical" : "";
     const valueStyle =
-      label === "No Receipt" ? "text-critical" : "text-success";
+      rk === "__NO_RECEIPT__" ? "text-critical" : "text-success";
 
-    const oStyle = {};
     return (
       <div key={rk} className="hbox gap-8rpx fill-main">
         <div
@@ -102,19 +99,12 @@ export function RefundDetailsTile({ item }: { item: Item }) {
     );
   });
 
-  const uiSoloContent = (
-    <div className="vbox fill-cross hug-main gap-8rpx">
-      <div className={`divider-h`}></div>
-      {uiRefundRows}
-    </div>
-  );
-
   return (
-    <ActorTile
-      id={`item-${itemId}-refund-details`}
-      style={`w-md vbox`}
+    <Actor
+      id={`refund-details-${itemId}`}
+      scene={scene}
       headline={
-        <div className="hbox ">
+        <div className="hbox">
           <LabeledValue
             label="Receipted"
             value={`${receiptedQty} / ${totalQty}`}
@@ -127,48 +117,54 @@ export function RefundDetailsTile({ item }: { item: Item }) {
           />
         </div>
       }
-    >
-      {/* SOLO CONTENT */}
-      {uiSoloContent}
-    </ActorTile>
+      dialog={
+        <Dialog id={`refund-dialog-${itemId}`} scene={scene}>
+          <div className="vbox gap-8rpx">
+            <div className="divider-h" />
+            {refundRows}
+          </div>
+        </Dialog>
+      }
+      className="vbox w-md"
+    />
   );
 }
 
 export function ReturnItemsCard({ item }: { item: Item }) {
   const [transaction, dispatch] = useTransaction();
-  const [, dispatchTransients] = useTransients();
-  const { itemId, qty } = item;
+  const { itemId } = item;
 
-  const handleRemove = () => {
-    const current = transaction.returnItems || new Map();
-    const newMap = new Map(current);
-    newMap.delete(itemId);
-    dispatch({
-      kind: "SET_INPUT",
-      payload: { key: "returnItems", value: newMap },
-    });
-  };
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatchTransients({ kind: "CLEAR_TRANSIENT" });
-  };
+  // Local interaction boundary for this item
+  const scene = { [`item-${itemId}`]: true };
 
   return (
-    <Container className="card hbox" onClick={handleCardClick}>
+    <div className="card hbox gap-16rpx">
+      {/* Static header: not part of Interlude */}
       <ProductDetailsTile item={item} hasPrice={false} />
-      <Stage id={`item-${itemId}`} className="layer-base transient-scope">
-        <ReturnQtyTile Item={item} />
+
+      {/* Localized interaction zone */}
+      <Stage id={`stage-${itemId}`} scene={scene} className="hbox gap-8rpx">
+        <ReturnQtyTile item={item} />
         <RefundDetailsTile item={item} />
       </Stage>
-      <button
-        className="btn--secondary"
-        onClick={handleRemove}
-        aria-label="Remove item"
-      >
-        🗑️
-      </button>
-    </Container>
+
+      {/* Footer actions (non-Interlude) */}
+      <div className="hbox fill-main justify-end align-start">
+        <button
+          className="btn--outline h-sm text"
+          onClick={() => {
+            const next = new Map(transaction.returnItems);
+            next.delete(itemId);
+            dispatch({
+              kind: "SET_INPUT",
+              payload: { key: "returnItems", value: next },
+            });
+          }}
+        >
+          🗑️ Remove
+        </button>
+      </div>
+    </div>
   );
 }
 // ================================
@@ -181,7 +177,7 @@ function ReturnItemsList() {
   const itemsMap: Map<string, Item> =
     repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
   return (
-    <div className="card-ctnr ">
+    <div className="card-ctnr gap-16rpx">
       {Array.from(itemsMap.values()).map((item: Item) => (
         <ReturnItemsCard key={item.itemId} item={item} />
       ))}

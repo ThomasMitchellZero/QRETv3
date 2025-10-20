@@ -11,17 +11,22 @@ import {
   useTransients,
   useNavigatePhase,
   useTransaction,
+  PhaseProvider,
   isActive,
 } from "../logic/Logic";
+
+import { useInterlude, Stage, Actor } from "../logic/Interlude";
 
 //********************************************************************
 //  CONTAINER (BASE PRIMITIVE)
 //********************************************************************
+
 /*
+  These will soon be deprecated.
 
 */
 
-export type ContainerProps = {
+type ContainerProps = {
   id?: string | undefined;
   children?: React.ReactNode;
   className?: string;
@@ -29,7 +34,7 @@ export type ContainerProps = {
   onClick?: React.MouseEventHandler;
 };
 
-export function Container(props: ContainerProps): JSX.Element {
+function Container(props: ContainerProps): JSX.Element {
   const [, dispatchTransients] = useTransients();
   const { children, className = "", preserve, onClick } = props;
 
@@ -48,42 +53,14 @@ export function Container(props: ContainerProps): JSX.Element {
   );
 }
 
-export type TileProps = ContainerProps & {
+type TileProps = ContainerProps & {
   children: React.ReactNode;
 };
 
-export function Tile(props: TileProps): JSX.Element {
+function Tile(props: TileProps): JSX.Element {
   return (
     <Container className="tile" {...props}>
       {props.children}
-    </Container>
-  );
-}
-
-export function Stage({
-  id,
-  children,
-  className,
-}: {
-  id: string;
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  const [, dispatchTransients] = useTransients();
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      dispatchTransients({ kind: "CLEAR_TRANSIENT" });
-    }
-  };
-
-  return (
-    <Container
-      id={id}
-      className={`stage transient-scope ${className || ""}`}
-      onClick={handleClick}
-    >
-      {children}
     </Container>
   );
 }
@@ -112,40 +89,6 @@ export function LabeledValue({
     </div>
   );
 }
-export type ActorTileProps = {
-  id: string;
-  headline: React.ReactNode;
-  children?: React.ReactNode;
-  style?: string | React.CSSProperties | undefined;
-  className?: string;
-};
-
-export function ActorTile(props: ActorTileProps) {
-  const [transients, dispatchTransients] = useTransients();
-  const { id, headline, children, style, className } = props;
-
-  // Simplified state: isSolo is true if this tile is the active overlay
-  const isSolo = isActive(transients, "activeOverlayId", id);
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatchTransients({
-      kind: "SET_TRANSIENT",
-      payload: { activeOverlayId: id },
-    });
-  };
-
-  return (
-    <Container
-      id={id}
-      className={`tile ${style} ${className}`}
-      onClick={handleClick}
-    >
-      {headline}
-      {isSolo && <div>{children}</div>}
-    </Container>
-  );
-}
 
 export type ProductDetailsTileProps = {
   item: Item;
@@ -168,7 +111,7 @@ export function ProductDetailsTile({
   ) : null;
 
   return (
-    <Container className="product-details">
+    <div className="product-details">
       <ProductImage itemId={item.itemId} alt={catalogEntry.description} />
       <div className="vbox fill item-details">
         <div className="">Item #{item.itemId}</div>
@@ -179,7 +122,7 @@ export function ProductDetailsTile({
           <div className="item-details__extra">{extraContent}</div>
         )}
       </div>
-    </Container>
+    </div>
   );
 }
 
@@ -353,12 +296,12 @@ export function Floorplan({
       </div>
       <div className="hbox gap-0rpx fill">
         {leftColumn && <div className="column bg-bg-main">{leftColumn}</div>}
-        <div className="vbox fill main-column">
+        <Stage id={`Floorplan`} scene={{}} className="vbox fill main-column">
           <h1 className={`text title`}>{pageTitle}</h1>
           {navBar}
           {mainContent || <div className="fill" />}
           {footer}
-        </div>
+        </Stage>
         {rightColumn && <div className="column bg-bg-main">{rightColumn}</div>}
       </div>
     </div>
@@ -399,7 +342,6 @@ export type PhaseProps = {
   children: React.ReactNode;
 };
 
-import { PhaseProvider } from "../logic/Logic";
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
   return (
     <PhaseProvider phaseId={phaseId}>
@@ -433,6 +375,7 @@ export type PhaseNodeTileProps = {
 };
 
 export function PhaseNodeTile({ node }: PhaseNodeTileProps): JSX.Element {
+  const [interlude] = useInterlude();
   return (
     <div className="tile">
       <strong>{node.phaseId}</strong>

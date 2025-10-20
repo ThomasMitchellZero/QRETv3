@@ -37,6 +37,7 @@
     --color-fg: #222;
     --color-border: #ddd;
     --color-primary: #4a90e2;
+    --color-interactive: #0072ce;
     --color-interactive-alt: #c2d8ea;
     --color-brand: #012169;
     --color-secondary: #888;
@@ -133,7 +134,7 @@
     }
     &.btn--secondary {
       background-color: var(--color-interactive-alt);
-      color: white;
+      color: var(--color-interactive);
     }
     &.btn--outline {
       background-color: white;
@@ -221,35 +222,55 @@
       transition-delay: 0s;
     }
 
-    /* Solo state — visually distinct, no absolute/fixed layout */
-    &.solo {
-      background-color: var(--color-bg-interactive);
-      border-color: var(--color-primary);
-      box-shadow: var(--shadow-card);
-    }
-
     &.active {
       border-color: var(--color-primary);
       background-color: var(--color-bg-interactive);
       box-shadow: var(--shadow-card);
     }
-    &:not(.active):not(.solo):hover {
+    &:not(.active):hover {
       filter: brightness(0.9);
     }
   }
 
-  /* Stage: container for tiles, overlays, normal flow */
+  /* Dialog: expanding panel aligned to Actor, constrained by Stage */
+  /* (Refined above; see .dialog) */
+
+  ////////////////////////////////////////////////
+  ///         CARDS + TILES + DIALOGS          ///
+  ///  - Cards: elevated containers for grouping content/////////////////////////////
+  ///
+
+  /* Stage: container for localized interactions */
   .stage {
     display: flex;
-    flex-direction: row;
     width: 100%;
-    height: auto;
-    gap: var(--16rpx);
+    max-width: 100%;
   }
 
-  /* When a solo tile is present, hide all non-solo siblings */
-  .stage:has(.solo) > :not(.solo) {
-    display: none;
+  /* Actor: semantic alias for tile, emphasizing interaction */
+  .actor {
+    @extend .tile;
+    max-width: 16rem;
+    cursor: pointer;
+  }
+
+  /* Dialog refinement */
+  .dialog {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    align-self: center;
+    background-color: var(--color-bg-main);
+    padding: var(--16rpx);
+    background-color: darkkhaki;
+  }
+
+  .dialog-slot {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    align-items: flex-start;
   }
 
   /*  ItemDetailsTile — Horizontal Flex Layout  */
@@ -269,6 +290,18 @@
   }
 }
 /* ─────────── RETURN ITEMS ─────────── */
+
+/* A standard grid template (ASGRT) 
+
+    - Has a resizable column for primary key tiles.
+    - Has (n) columns for use by tiles
+    - Has a cleanup column for delete button.
+
+    - How to handle appearance of dialogs in relation to their triggering Actors?
+    - What is the new row behavior?  What do we need to consider?
+    - 
+
+  */
 
 /* ─────────── UTILITIES ─────────── */
 @layer utilities {
@@ -479,6 +512,27 @@
     display: none;
   }
 
+  /* Flex alignment utilities */
+  .justify-start {
+    justify-content: flex-start;
+  }
+  .justify-center {
+    justify-content: center;
+  }
+  .justify-end {
+    justify-content: flex-end;
+  }
+
+  .align-start {
+    align-items: flex-start;
+  }
+  .align-center {
+    align-items: center;
+  }
+  .align-end {
+    align-items: flex-end;
+  }
+
   .w-sm {
     width: 8rem;
   }
@@ -489,13 +543,27 @@
     width: 24rem+2rem;
   }
 
-  .h-xs {
+  .h-sm {
     height: 6rem;
   }
-  .h-sm {
+  .h-md {
     height: 8rem;
   }
-  .h-md {
+  .h-lg {
     height: 12rem;
   }
+}
+
+/* Alignment utilities */
+.align-start {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.align-center {
+  justify-content: center;
+  align-items: center;
+}
+.align-end {
+  justify-content: flex-end;
+  align-items: flex-end;
 }

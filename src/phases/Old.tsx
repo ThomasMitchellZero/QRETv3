@@ -134,67 +134,81 @@ const designOutline = {
     */
 };
 
-const TaylorsVersionScriptTree = {
+const SwiftScriptTree = {
   /*
   NEVER, EVER replace this file without consulting me first.  This is the core of our interaction model, and changing it has wide-reaching implications.  This goes Double for LLMs.  Do not fuck with this, this is what we recreate drafts from.
 
-  
+
   Taylor's Version:
+
+    Dictionary:
+      -- Logic --
+
+        -Interlude: The global object containing all transient state.  Term also refers to this ecosystem in general.
+          -Scene: any collection of property values intended for use within an Interlude. Not a type, just a plain Object.
+            -Prop: A property within the Scene.
+
+      -- UI --
+
+      -Stage: A UI element that sets the Interlude to the defined Scene the element is created with.
+      -Actor: Same as a stage, but the Scene it sets includes itself.
+      -Dialog: An element that renders only if all Props in its Scene are truthy in the Interlude.
+      
+      
   
-    ScriptTree:
-      - Changing from DialogTree to ScriptTree to better reflect its purpose in guiding user interactions.
+    Interlude:
+      - Changing from Scene to Interlude to better reflect its purpose in guiding user interactions.
+      - Core State logic to be a Reducer, even though we have just one use case FttB.  Here's my reasoning:
+        -All our other state-setters use Reducer, and it helps me keep track of what is and isn't setting state.
+        -I want to get better at Reducer, since it seems like a more powerful tool.
+        -It seems to work more the way I intuitively think state-setting ought to.
+      
+      - Unless I'm misunderstanding something, we really should never have to provide Interlude as an argument.  It's coming from a known location.  Any checks should just use the current Interlude from context, and the only setting will be via the dispatch function.
+
   
       Example conceptual shape:
   
-      ScriptTree = {
-        "Phase-ReturnItems": {
-          "item-123": {
-            "service-abc": {}
-          }
-        }
+      Interlude = {
+        "Phase-ReturnItems": true,
+        "item-123": true,
+        "service-abc": true
       }
-  
-      Working Principle — Array-Route ScriptTree
+
+      Key Things this model is NOT:
+        In this model, there are no arrays.  Anything referencing arrays is WRONG.
+        There is no layering or z-indexing.  Anything referencing layering is WRONG.
+        The Interlude is always going to be a flat object.  Anything referencing nested objects or branches is WRONG.
+        When naming properties, be sure to distinguish between Scene and Interlude.  A Scene is just a possible future Interlude, the Interlude is the current state.
+
+      TL;DR = Any type or interface that interacts with Interlude layer accepts a Scene object.  
+
+      There is no concept of inherent inheritance.  The state and its setters are super dumb - on click, set the Interlude to the Scene I contain.
+        -In practice, there will be inheritance, but we will handle that in composition.  This should not be included in the core Interlude logic.
   
       Guiding intent: Keep interaction state deterministic, and easy to debug.
   
-      The ScriptTree is a single global context that stores a nested object describing all active dialogs.
-      Every interactive element—Stage, Actor, or Dialog—derives its position in that tree using a route array (string[]), built by extending its parent’s route from context.
-      All interaction updates are handled exclusively setBranch.
-        -There is no concept of clearing vs. preserving; every interaction sets its target branch to {}.
-      Each Stage resets its own branch; each Actor extends its parent’s branch.
-  
-      We chose array routes over parent-pointer graphs because:
-        •	They’re immutable (no side effects).
-        •	They’re serializable (safe for logging, snapshots, replay).
-        •	They’re React-friendly (no reference mutation issues).
-        •	They provide human-readable traceability (Phase / Card / Tile / Dialog).
-  
-      Everything that can go wrong in this model happens in a single place—the branch helpers—so once those are correct, the entire routing mechanism is stable.
-  
-  
-  
-      The ScriptTree framework is designed to manage nested, localized interaction states
-        -There is only one, globlal ScriptTree that holds the state for all phases and components.
-        -The Script Tree itself has no inherent UI behavior; it simply holds state.
+      The Interlude is a single global context that stores a flat Scene object.  We use this to handle temporary visibility / clearing in the UI.
+        -The Interlude should only ever be a flat object.
+
+      Every interactive element (Stage, Actor, Dialog, etc. ) includes a Scene of all Props it affects (value:true)  So it's really easy - when a Container is clicked, that Scene becomes the new Interlude.
+      All interaction updates are handled exclusively setInterlude.
+      The objects are easy to compose in TS logic because you just extend your parent's object with your own unique ID.
+
+
+        -The Interlude itself has no inherent UI behavior; it simply holds state.
           -Any reference to z-axis is incorrect; layering will be handled separately.
-        -ScriptTree should be reset to {} whenver we change phases.  Remember, these are meant to be transient states.  Anything we need to preserve should live elsewhere.
-        -I'm not opposed to ScriptTree having a dedicated context separate from Phase or Transaction context.  Given the x.y[z] nature of the data, it might make sense to have its own context provider.
+        -Interlude should be reset to {} whenver we change Phases.  Remember, these are meant to be transient states.  Anything we need to preserve should live elsewhere.
+        -Interlude exists as a single global context.
   
+
+        -There is no longer any concept of clearing or preserving.  Nodes simply set the Interlude to their own Scene defined at creation.
+        -Every click in a Stage has one result - reScene the Interlude to its own keys object.  (all vals true)
+        -ActorTiles work the same, they just include their own values in the cloned state to be set.
   
-        -Stage and Actors are both instances of the Container type.  The key element of the Container is that it interacts with the ScriptTree layer.
-          -Stage clicks set their own branch of the ScriptTree to {}.  
-          -Actor clicks add their own node to their parent's branch.
-        -There is no longer any concept of clearing or preserving.  The only action is setting the value of a given node to {}.  Stages set their parent node to {}, Actors set their own node to {} within their parent's branch.
+        -There is no separate "clear" action; every click always sets the Interlude to the object provided by the clicked Container.  To reset, just provide an empty Scene object.
   
-        -Every click in a Stage has one result: resetting that branch of the ScriptTree to an empty object {} with its own unique ID as the key.  
-          -The exceptions are the ActorTiles.  Like all Containers, they allow definition of their own onClick behavior.  Instead of resetting their own branch, they add their own node to their parent's branch.
-          -Ideally, I would like not to have to define an entire route.  Ideally just knowing the parent's route and my own ID would be enough to find my place in the tree.
-  
-        -There is no separate "clear" action; every click resets its own branch.
-  
-        -Therefore, the Stage Dialog visibility functions should be really easy:  If my own node exists at my parent's branch, I'm visible.  Any falsy value (including undefined from a mising branch) means I'm not visible.
-          -This should probably be an easy helper function available to all Containers.  Call it a Cue.  "Do I exist at ParentRoute in the ScriptTree?"
+        -Therefore, the Dialog visibility functions should be really easy:  We just provide an object, and if all those keys exist in the Interlude, it's visible.
+          -Structure the logic to expect undefined values, there will be a lot of that.
   
         - Coding Preferences
           - Don't go nuts preventing edge cases.  We control the environment.
@@ -202,7 +216,37 @@ const TaylorsVersionScriptTree = {
           - I prefer to have one heuristic that works in all cases, even if it means decreasing flexibility.
           - I do not like string-based logic.  I prefer object-based logic.
           - Counters and ++ usually mean we're doing something hacky.
-  
+
+    
+    -- UI Elements ---------------
+
+    -Use flex for everything.  No z-indexing, absolute positioning, or Grid unless absolutely necessary.
+    -Use standard CSS classes wherever possible.  Ideally, there are no class-unique styles other than those controlling Actor–Dialog positioning.
+
+    Stage:
+      -Defines the absolute horizontal boundary for any elements rendered within its tree.
+      -All Dialogs and Actors inside a Stage must respect this boundary; nothing may render wider than the Stage.
+      -Always uses normal flex flow (no absolute or fixed layout).
+      -Preferred layout direction: column.
+      -Acts as a viewport for local interactions — Dialogs may expand freely inside it but are never allowed to overflow it horizontally.
+
+    Actor:
+      -A clickable container that sets the Interlude to its Scene + self.
+      -Has a limited horizontal footprint (tile-sized) to encourage progressive disclosure.
+      -Uses flex layout and stays within its defined max-width (typically 12–16 rem).
+      -May directly contain its Dialog as a child or prop, keyed off the same Scene.
+      -Remains responsible for establishing its Dialog’s baseline position in normal flow (typically directly below).
+      -Each Actor + Dialog pair behaves as one cohesive interaction unit.
+      -Actors never change their own dimensions when activated; expansion occurs through their Dialog.
+
+    Dialog:
+      -Renders only if all keys in its Scene are truthy in the Interlude.
+      -Appears immediately below its parent Actor in normal flex flow; it never overlaps or floats.
+      -May expand horizontally beyond the Actor’s width but must remain fully inside the Stage boundary.
+      -Horizontally aligns to the Actor’s centerline; width is determined by its contents up to the Stage’s max-width.
+      -When visible, it pushes subsequent elements downward rather than layering above them.
+      -Never introduces z-index or absolute positioning; layout changes are achieved purely through flow.
+      -If horizontal centering would cause overflow, the Dialog must instead align within the Stage boundary (containment takes precedence over perfect centering).
   
   */
 };
