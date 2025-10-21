@@ -197,30 +197,13 @@
     scrollbar-gutter: auto;
   }
 
-  .tile {
-    display: flex;
-    align-items: stretch;
-    justify-content: flex-start;
-    padding: var(--8rpx) var(--12rpx);
-
-    flex: 1 1 auto; /* no vertical stretching, width flexible */
-    height: auto; /* hug vertical contents always */
-    min-height: 4rem; /* ensures tiles never shrink below 4rem */
-    align-self: flex-start;
-
+  .interactor {
     background-color: var(--color-bg-main);
     border: 2px solid var(--color-border);
     border-radius: var(--radius-m);
 
     transition: opacity 0.15s ease, transform 0.15s ease;
     transform-origin: center top;
-
-    &.hidden {
-      opacity: 0;
-      transform: scale(0.95);
-      pointer-events: none;
-      transition-delay: 0s;
-    }
 
     &.active {
       border-color: var(--color-primary);
@@ -232,45 +215,40 @@
     }
   }
 
-  /* Dialog: expanding panel aligned to Actor, constrained by Stage */
-  /* (Refined above; see .dialog) */
+  .tile {
+    @extend .interactor;
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: var(--8rpx) var(--12rpx);
 
-  ////////////////////////////////////////////////
-  ///         CARDS + TILES + DIALOGS          ///
-  ///  - Cards: elevated containers for grouping content/////////////////////////////
-  ///
+    flex: 1 1 auto; /* no vertical stretching, width flexible */
+    height: auto; /* hug vertical contents always */
+    min-height: 4rem; /* ensures tiles never shrink below 4rem */
+    align-self: flex-start;
+  }
 
-  /* Stage: container for localized interactions */
   .stage {
     display: flex;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* Actor: semantic alias for tile, emphasizing interaction */
-  .actor {
-    @extend .tile;
-    max-width: 16rem;
-    cursor: pointer;
-  }
-
-  /* Dialog refinement */
-  .dialog {
-    display: flex;
-    width: fit-content;
-    max-width: 100%;
-    align-self: center;
-    background-color: var(--color-bg-main);
-    padding: var(--16rpx);
-    background-color: darkkhaki;
-  }
-
-  .dialog-slot {
-    display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 100%;
-    align-items: flex-start;
+
+    .dialog-shell {
+      display: flex;
+      flex-direction: column;
+      gap: var(--16rpx);
+    }
+  }
+
+  .actor {
+    @extend .tile; // has distinct class as future-proofing
+  }
+
+  .dialog {
+    @extend .interactor;
+    width: fit-content;
+    flex-shrink: 1; /* allow flexbox to shrink if needed */
+    overflow-wrap: break-word; /* wrap long words instead of clipping */
+    background-color: darkkhaki;
   }
 
   /*  ItemDetailsTile — Horizontal Flex Layout  */
@@ -552,18 +530,4 @@
   .h-lg {
     height: 12rem;
   }
-}
-
-/* Alignment utilities */
-.align-start {
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-.align-center {
-  justify-content: center;
-  align-items: center;
-}
-.align-end {
-  justify-content: flex-end;
-  align-items: flex-end;
 }

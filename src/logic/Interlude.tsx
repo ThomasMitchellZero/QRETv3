@@ -123,11 +123,26 @@ import type { ReactNode, Dispatch } from "react";
 
 // === Types ===
 
+// Scene = any object representing a possible Interlude
 export type Scene = Record<string, boolean>;
 
-type InterludeAction =
+// Core action types for all Interlude components
+export type InterludeAction =
   | { kind: "SET_SCENE"; payload: Scene }
   | { kind: "CLEAR_SCENE" };
+
+// Component-specific type contracts (unified family)
+export type InterludeProps = {
+  id: string;
+  scene: Scene;
+  children?: ReactNode;
+  className?: string;
+};
+
+export type ActorProps = InterludeProps & {
+  tileSlot?: ReactNode;
+  dialog?: ReactNode;
+};
 
 // === Reducer ===
 
@@ -205,7 +220,8 @@ const swiftActorDialog = {
 
       Actor Rules:
         - Actors remain fixed size and position; never resize on activation.
-        - When an Actor is clicked:
+        - An actor itself is unclickable.  However, it contains a clickable Tile element that triggers its Scene change.
+          - When an Actor's Tile is clicked:
           - It sets its Scene as the new Interlude 
             - Dialog visibility and Selected style applied by same condition - presence of its Scene in Interlude.
             -its Dialog becomes visible directly beneath it.
@@ -218,15 +234,8 @@ const swiftActorDialog = {
           -This should happen automatically, no manual width calculations needed.
         - If the desired centered position would cause overflow, the browser naturally
           clamps the Dialog to remain fully within the Stage bounds.
-        - Alignment options:
-            -Center should be default.  If other alignments needed, use standard overrides from @utilities layer.
         - Dialogs expand in flow, pushing content below downward (no overlap).
 
-      Styling Notes:
-
-        - Actor: display:flex; justify-content:space-between; align-items:center;
-        - Dialog: align-self:center; width:auto or fixed; max-width:100%;
-        - All children respect Stage boundaries.  Overflow:hidden; optional.
 
       Result:
       A self-contained, purely flex-driven vertical stack that handles progressive
@@ -236,27 +245,19 @@ const swiftActorDialog = {
         */
 };
 
-/**
- * Stage component
- *
- * - Accepts: {id, scene, className, children}
- * - On click: dispatches {kind:'SET_SCENE', payload:scene}
- * - Layout: flex column, defines horizontal boundary for dialog/actor children
- */
-type StageProps = {
-  id?: string;
-  scene: Scene;
-  className?: string;
-  children?: React.ReactNode;
-};
-export function Stage({ id, scene, className = "", children }: StageProps) {
+export function Stage({
+  id,
+  scene = {},
+  className = "",
+  children,
+}: InterludeProps) {
   const [, dispatch] = useInterlude();
   // Stage boundary: flex column, full width by default, can be styled via className
 
   return (
     <div
       id={`stage-${id}`}
-      className={`${className} dialog`}
+      className={`stage ${className}`}
       onClick={(e) => {
         e.stopPropagation();
         dispatch({ kind: "SET_SCENE", payload: scene });
@@ -267,44 +268,22 @@ export function Stage({ id, scene, className = "", children }: StageProps) {
   );
 }
 
-/**
- * Actor component
- *
- * - Accepts: {id, scene, headline, dialog, className}
- * - On click: dispatches {kind:'SET_SCENE', payload:scene}
- * - Renders headline, optional dialog, applies .tile and .active classes
- * - Fixed width tile (maxWidth: 16rem)
- */
-type ActorProps = {
-  id?: string;
-  scene: Scene;
-  headline?: React.ReactNode;
-  dialog?: React.ReactNode;
-  className?: string;
-};
-export function Actor({
-  id,
-  scene,
-  headline,
-  dialog,
-  className = "",
-}: ActorProps) {
+export function Actor({ id, scene, className, children }: InterludeProps) {
   const [, dispatch] = useInterlude();
-  const isActive = useIsActive(scene) ? "active" : "";
-  const tileClass = `tile ${className} ${isActive}`;
+  const isActive = useIsActive(scene);
+  const activeClass = isActive ? "active" : "";
+  // No Style is intentional: Style should be applied to tile and dialog slots as needed.
   return (
     <div
       id={`actor-${id}`}
-      className={tileClass}
+      className={`tile ${activeClass} hug-main fill-cross`}
       onClick={(e) => {
-        // Only trigger if click is on Actor itself, not bubbling from children (like Dialog)
         e.stopPropagation();
+        console.log(`Actor ${id} clicked`); // For debugging purposes
         dispatch({ kind: "SET_SCENE", payload: scene });
       }}
     >
-      {headline && <div className="actor-headline">{headline}</div>}
-      {/* Dialog may be rendered as child, but Dialog does its own visibility logic */}
-      {dialog}
+      {children}
     </div>
   );
 }
@@ -314,22 +293,36 @@ export function Actor({
  *
  * - Accepts: {id, scene, className, children}
  * - Uses useIsActive(scene) to render only if active
- * - Layout: flex column, contained by Stage boundary, horizontally centered to Actor but clamps to Stage width
- * - Styles: display:flex; flexDirection:column; alignItems:center; width:fit-content; maxWidth:100%; marginTop:0.5rem;
  */
-type DialogProps = {
-  id?: string;
-  scene: Scene;
-  className?: string;
-  children?: React.ReactNode;
+
+export type DialogProps = InterludeProps & {
+  rowClassName?: string;
 };
-export function Dialog({ id, scene, className = "", children }: DialogProps) {
+export function Dialog({
+  id,
+  scene,
+  className = "",
+  rowClassName = "",
+  children,
+}: DialogProps) {
   const isActive = useIsActive(scene);
-  if (!isActive) return null;
-  // Dialog: flex col, centered, width fit-content, maxWidth 100% (never overflow Stage)
+  const activeClass = isActive ? "active" : "";
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`Dialog ${id} clicked`); // For debugging purposes
+  };
   return (
-    <div id={id} className={`${className} dialog`}>
-      {children}
-    </div>
+    isActive && (
+      <div className={`dialog-shell ${rowClassName} hug-cross fill-main`}>
+        <div
+          onClick={(e) => handleClick(e)}
+          id={`dialog-${id}`}
+          className={`${className} ${activeClass} dialog`}
+        >
+          {children}
+        </div>
+      </div>
+    )
   );
 }

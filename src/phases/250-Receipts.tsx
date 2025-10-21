@@ -7,7 +7,7 @@ import {
   Floorplan,
   Numpad,
 } from "../components/Components";
-import { useTransaction, useTransients, dollarize } from "../logic/Logic";
+import { useTransaction, dollarize } from "../logic/Logic";
 import type {
   Invoice,
   TransientState,
@@ -24,6 +24,14 @@ import type {
 import { fakeInvoices, findInvoices } from "../api/fakeApi";
 
 import { useDerivation } from "../logic/Derivation";
+import {
+  useInterlude,
+  useIsActive,
+  Stage,
+  Actor,
+  Dialog,
+  type Scene,
+} from "../logic/Interlude";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
 // ================================
@@ -49,7 +57,7 @@ const brief = {
   if invoice cart is empty, Card fills entire column and centers the content in the vertical axis.  if invoice cart has items, Card instead shrinks to fit content.
   Try to keep the logic minimal and direct.  I am the only one working on this and I am using only local data.  We don't need a hardened app that can handle weird cases.
   Branching logic should be implemented through mode objects rather than conditional branches. Each mode encapsulates all necessary state, handlers, and UI config (e.g., Mode[modeName].property), allowing the system to treat modes as data rather than control flow.
-  -Container Component should only be used for clickables.  For layout, use div with className="hbox" or "vbox" and appropriate flex/hug classes.
+  -div Component should only be used for clickables.  For layout, use div with className="hbox" or "vbox" and appropriate flex/hug classes.
   Create a new class for mini-tiles.  We will use these again.
   ** Shared Cared Properties **
   Search is going to contain 2 rows, a Tile row and a Content column. In Content column, show 2 Mini tiles to select mode. 
@@ -134,7 +142,7 @@ const designOutline = {
     -Transaction state - add validated Invo via standard dispatch.
     -Transient state 
       - Card expand / collapse
-    <Container>
+    <div>
       <// Mode Selection Tiles // keyed to local state.  Always visibile.  />
       <ExpandedContent >
       isExpanded // keyed to Phase State ??
@@ -147,8 +155,10 @@ const designOutline = {
 
 // --- Main InvoSearchCard logic ---
 export const InvoSearchCard = () => {
-  const [transients, dispatchTransients] = useTransients();
   const [transaction, dispatchTransaction] = useTransaction();
+  const stageId = "invo-search-card";
+  const scene = { [stageId]: true } as Scene;
+  const isActive = useIsActive(scene);
 
   // local flat state
   const [local, setLocal] = React.useState({
@@ -157,16 +167,8 @@ export const InvoSearchCard = () => {
     searchType: "receipt", // 'receipt' | 'order'
   });
 
-  const isExpanded = transients?.invoSearchExpanded ?? true;
-
   // toggle expand
-  const handleToggleExpand = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    dispatchTransients({
-      kind: "SET_TRANSIENT",
-      payload: { invoSearchExpanded: !isExpanded },
-    });
-  };
+  const handleToggleExpand = (e?: React.MouseEvent) => {};
 
   // handle mode select
   const handleModeSelect = (mode: string) =>
@@ -197,18 +199,7 @@ export const InvoSearchCard = () => {
   };
 
   return (
-    <Container
-      id="invo-search-card"
-      className="card vbox fill-cross hug-main gap-8rpx"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          dispatchTransients({
-            kind: "SET_TRANSIENT",
-            payload: { invoSearchExpanded: true },
-          });
-        }
-      }}
-    >
+    <Stage id={"invo-search-card"} className={``} scene={scene}>
       {/* Mode selection tiles */}
       <div className="hbox fill-cross hug-main gap-8rpx">
         <div
@@ -223,7 +214,7 @@ export const InvoSearchCard = () => {
         >
           Search Receipts
         </div>
-        {isExpanded && (
+        {isActive && (
           <button
             className="tile text body"
             onClick={handleToggleExpand}
@@ -235,13 +226,13 @@ export const InvoSearchCard = () => {
       </div>
 
       {/* Expanded content */}
-      {isExpanded && (
+      {isActive && (
         <div className="hbox gap-8rpx padding-8rpx">
           {local.mode === "enterTrxn" && (
             <div className="hbox gap-8rpx align-center">
               <div className="vbox w-md gap-8rpx">
                 <div className="vbox w-md gap-8rpx">
-                  <Container
+                  <div
                     className={`tile ${
                       local.searchType === "receipt" ? "active" : ""
                     }`}
@@ -250,8 +241,8 @@ export const InvoSearchCard = () => {
                     }
                   >
                     Receipt #
-                  </Container>
-                  <Container
+                  </div>
+                  <div
                     className={`tile ${
                       local.searchType === "order" ? "active" : ""
                     }`}
@@ -260,7 +251,7 @@ export const InvoSearchCard = () => {
                     }
                   >
                     Order #
-                  </Container>
+                  </div>
                 </div>
               </div>
               <div className="fill vbox gap-8rpx">
@@ -288,18 +279,28 @@ export const InvoSearchCard = () => {
           )}
         </div>
       )}
-    </Container>
+    </Stage>
   );
 };
 
 // ================================
 // RECEIPT CARD
 // ================================
+
+const receiptCardSceneId = (invoId: string) => `receipt-card-${invoId}`;
+const receiptCardScene = (invoId: string) => {
+  const next = {
+    [receiptCardSceneId(invoId)]: true,
+  } as Scene;
+  return next;
+};
+
 type ReceiptCardProps = { invoice: Invoice };
 
 function ReceiptCard({ invoice }: ReceiptCardProps) {
   const [transaction, dispatch] = useTransaction();
   const { invoId, items } = invoice;
+  const scene = receiptCardScene(invoId);
 
   const totalQty = items.reduce((sum, item) => sum + (item.qty ?? 0), 0);
   const totalValueCents = items.reduce(
@@ -318,33 +319,34 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
   };
 
   return (
-    <Container className="card hbox">
-      <LabeledValue
-        label="Receipt #"
-        value={invoId}
-        className="fill-main w-md"
-      />
+    <div className="card hbox">
+      <LabeledValue label="Receipt #" value={invoId} className="w-sm" />
 
-      <Stage className={`transient-scope`} id={`receipt-${invoId}`}>
-        <ActorTile
-          className="vbox"
-          id={`receipt-${invoId}-items`}
-          headline={
-            <div className="hbox space-between">
-              <LabeledValue
-                className="fill-main"
-                label="Items Sold:"
-                textAlign="left"
-                value={String(totalQty)}
-              />
-              <LabeledValue
-                className="w-sm"
-                textAlign="right"
-                label="Receipt Value:"
-                value={dollarize(totalValueCents)}
-              />
-            </div>
-          }
+      <Stage
+        className={`align-start fill-main gap-16rpx`}
+        id={`receipt-${invoId}`}
+        scene={scene}
+      >
+        <Actor scene={scene} className={`w-md`} id={`receipt-${invoId}-tile`}>
+          <div className="hbox space-between">
+            <LabeledValue
+              className="fill-main"
+              label="Items Sold:"
+              textAlign="left"
+              value={String(totalQty)}
+            />
+            <LabeledValue
+              className="w-sm"
+              textAlign="right"
+              label="Receipt Value:"
+              value={dollarize(totalValueCents)}
+            />
+          </div>
+        </Actor>
+        <Dialog
+          id={`receipt-${invoId}-dialog`}
+          scene={scene}
+          rowClassName={`align-start`}
         >
           <div className="vbox">
             {items.map((item) => (
@@ -354,13 +356,13 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
               </div>
             ))}
           </div>
-        </ActorTile>
+        </Dialog>
       </Stage>
 
       <button onClick={handleRemove} aria-label="Remove receipt">
         🗑️
       </button>
-    </Container>
+    </div>
   );
 }
 
