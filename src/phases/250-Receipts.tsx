@@ -323,25 +323,27 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
       <LabeledValue label="Receipt #" value={invoId} className="w-sm" />
 
       <Stage
-        className={`align-start fill-main gap-16rpx`}
+        className={`align-start fill-main blooble`}
         id={`receipt-${invoId}`}
-        scene={scene}
+        scene={{}}
       >
-        <Actor scene={scene} className={`w-md`} id={`receipt-${invoId}-tile`}>
-          <div className="hbox space-between">
-            <LabeledValue
-              className="fill-main"
-              label="Items Sold:"
-              textAlign="left"
-              value={String(totalQty)}
-            />
-            <LabeledValue
-              className="w-sm"
-              textAlign="right"
-              label="Receipt Value:"
-              value={dollarize(totalValueCents)}
-            />
-          </div>
+        <Actor
+          scene={scene}
+          className={`hbox w-md ActorItself`}
+          id={`receipt-${invoId}-tile`}
+        >
+          <LabeledValue
+            className="fill-main"
+            label="Items Sold:"
+            textAlign="left"
+            value={String(totalQty)}
+          />
+          <LabeledValue
+            className="w-sm"
+            textAlign="right"
+            label="Receipt Value:"
+            value={dollarize(totalValueCents)}
+          />
         </Actor>
         <Dialog
           id={`receipt-${invoId}-dialog`}

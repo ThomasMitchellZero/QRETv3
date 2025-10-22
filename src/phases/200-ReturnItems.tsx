@@ -46,7 +46,6 @@ export function ReturnQtyDialog({ item }: { item: Item }) {
       className={`dialog align-start`}
       scene={ReturnQtyScene(itemId)}
     >
-      <LabeledValue label="Return Qty" textAlign="left" value={`${qty}`} />
       <Numpad
         value={transaction.returnItems?.get(itemId)?.qty ?? 0}
         onChange={(v) => {
@@ -164,7 +163,7 @@ export function RefundDetailsDialog({ item }: { item: Item }) {
       rk === "__NO_RECEIPT__" ? "text-critical" : "text-success";
 
     return (
-      <div key={rk} className="hbox gap-8rpx fill-main">
+      <div key={rk} className="hbox gap-8rpx fill-cross">
         <div
           className={`fill-main ${labelStyle}`}
         >{`${label} x ${thisInvoQty}`}</div>
@@ -177,7 +176,7 @@ export function RefundDetailsDialog({ item }: { item: Item }) {
 
   return (
     <Dialog
-      id={`refund-details-dialog-${itemId}`}
+      id={`refund-details-${itemId}`}
       scene={scene}
       className={`w-md`}
       rowClassName={`align-center`} // related actor is near the middle.
@@ -200,26 +199,21 @@ export function ReturnItemsCard({ item }: { item: Item }) {
       <ProductDetailsTile item={item} hasPrice={false} />
 
       {/* Localized interaction zone */}
-      <Stage
-        id={`stage-${itemId} `}
-        scene={scene}
-        className="hbox gap-8rpx fill-main"
-      >
+      <Stage id={`stage-${itemId} `} scene={scene} className="fill-main">
         <div className={`hbox`}>
           <ReturnQtyTile item={item} />
           <RefundDetailsTile item={item} />
         </div>
         {/* Dialogs */}
-        <div className={`dialog-row`}>
-          <RefundDetailsDialog item={item} />
-          <ReturnQtyDialog item={item} />
-        </div>
+
+        <RefundDetailsDialog item={item} />
+        <ReturnQtyDialog item={item} />
       </Stage>
 
       {/* Cleanup actions (non-Interlude) */}
       <div className="hbox justify-end align-start">
         <button
-          className="btn--outline h-sm text"
+          className="btn--outline h-sm text title"
           onClick={() => {
             const next = new Map(transaction.returnItems);
             next.delete(itemId);
@@ -229,7 +223,7 @@ export function ReturnItemsCard({ item }: { item: Item }) {
             });
           }}
         >
-          🗑️ Remove
+          x
         </button>
       </div>
     </div>

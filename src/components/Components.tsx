@@ -175,83 +175,43 @@ export const Numpad: React.FC<NumpadProps> = ({
     handleDigit(b);
   };
 
-  const UiBtns = buttons.map((b) => (
-    <button
-      key={b}
-      className="tile center"
-      style={{
-        width: "100%",
-        minHeight: "3.5rem",
-        height: "3.5rem",
-        fontSize: "1.25rem",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "0.25rem",
-        display: "flex",
-      }}
-      onClick={() => handleClick(b)}
-    >
-      {b}
-    </button>
-  ));
-
   return (
-    <div
-      className={`vbox numpad ${className || ""}`}
-      style={{ minWidth: "200px", width: "100%" }}
-    >
-      <div
-        className="hbox space-between align-center pad-xs"
-        style={{ gap: "0.5rem", padding: "0.5rem", alignItems: "center" }}
-      >
+    <div className={`numpad ${className || ""}`}>
+      <div className="numpad-controls">
         <button
-          className="fill-main text title "
-          style={{ minHeight: "2.5rem" }}
+          className="numpad-btn text title"
           onClick={() => handleIncrement(-1)}
         >
           -
         </button>
         <input
+          id="numpad-input"
           ref={inputRef}
           value={value}
           onChange={(e) => onChange?.(Number(e.target.value) || 0)}
-          className=" fill-main text-center"
+          className="numpad-input text title"
           inputMode="numeric"
-          style={{
-            textAlign: "center",
-            minHeight: "2.5rem",
-          }}
         />
         <button
-          className="fill-main text title "
-          style={{ minWidth: "2.5rem", minHeight: "2.5rem" }}
+          className="numpad-btn text title"
           onClick={() => handleIncrement(1)}
         >
           +
         </button>
-        <button
-          className="fill-main text title "
-          style={{ minHeight: "2.5rem" }}
-          onClick={handleBackspace}
-        >
+        <button className="numpad-btn text title" onClick={handleBackspace}>
           ←
         </button>
       </div>
-
-      <div className="vbox pad-xs">
-        <div
-          className="grid numpad-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "0.5rem",
-            justifyItems: "center",
-            alignItems: "center",
-            padding: "0.5rem",
-          }}
-        >
-          {/* UiBtns */}
-        </div>
+      <div className="numpad-grid">
+        {buttons.map((b) => (
+          <button
+            key={b}
+            className="numpad-btn text"
+            onClick={() => handleClick(b)}
+          >
+            {b}
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -276,7 +276,7 @@ export function Actor({ id, scene, className, children }: InterludeProps) {
   return (
     <div
       id={`actor-${id}`}
-      className={`tile ${activeClass} hug-main fill-cross`}
+      className={`tile ${className} ${activeClass} hug-main fill-cross`}
       onClick={(e) => {
         e.stopPropagation();
         console.log(`Actor ${id} clicked`); // For debugging purposes
@@ -314,7 +314,7 @@ export function Dialog({
   };
   return (
     isActive && (
-      <div className={`dialog-shell ${rowClassName} hug-cross fill-main`}>
+      <div className={`dialog-shell ${rowClassName}`}>
         <div
           onClick={(e) => handleClick(e)}
           id={`dialog-${id}`}
