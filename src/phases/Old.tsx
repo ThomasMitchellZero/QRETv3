@@ -1,335 +1,215 @@
-// VERY rough sketch.
-import React from "react";
-import { Phase, Numpad } from "../components/Components";
-import { fakeCatalog } from "../api/fakeApi";
-import { cloneDeep } from "lodash";
-
-import {
-  Floorplan,
-  ProductDetailsTile,
-  LabeledValue,
-  type ProductDetailsTileProps,
-} from "../components/Components";
-
-import { Stage, Actor, useInterlude, Dialog } from "../logic/Interlude";
-import { useTransaction, useReturnItemsPhase, dollarize } from "../logic/Logic";
-
-import type { Item } from "../types/Types";
-
-import { useDerivation } from "../logic/Derivation";
-
-//********************************************************************
-//  RETURN QTY
-//********************************************************************
-
-function ReturnQtyTile({ item }: { item: Item }) {
-  const [transaction, dispatch] = useTransaction();
-  const { itemId, qty } = item;
-
-  const scene = { [`return-qty-${itemId}`]: true };
-
-  return <Actor id={`return-qty-${itemId}`} scene={scene} className={`w-sm`} />;
-}
-
-export function ReturnQtyDialog({ item }: { item: Item }) {
-  const [transaction, dispatch] = useTransaction();
-  const { itemId, qty } = item;
-
-  return (
-    <Dialog
-      id={`return-qty-dialog-${itemId}`}
-      className={`dialog align-start`}
-      scene={{ [`return-qty-${itemId}`]: true }}
-    >
-      <LabeledValue label="Return Qty" textAlign="left" value={`${qty}`} />
-      <Numpad
-        value={transaction.returnItems?.get(itemId)?.qty ?? 0}
-        onChange={(v) => {
-          const next = new Map(transaction.returnItems);
-          const existing = next.get(itemId);
-          if (existing) next.set(itemId, { ...existing, qty: v });
-          dispatch({
-            kind: "SET_INPUT",
-            payload: { key: "returnItems", value: next },
-          });
-        }}
-      />
-    </Dialog>
-  );
-}
-
-//********************************************************************
-//  Refund Details
-//********************************************************************
-
-const refundDetailsSwift = {
+const swift_InvoSearch = {
   /*
+  === Monkey Comments (FOR APE MODIFICATION ONLY) ===
+  Taylor's Version.
+  ** DO NOT DELETE.  FOR APE MODIFICATION ONLY **
 
-  You’re focused solely on RefundDetailsTile and RefundDetailsDialog in 200-ReturnItems.
-Both currently share intertwined logic—data, state, and rendering responsibilities mixed together.
-Your goal:
-  •	Split the Tile (the clickable Actor) and the Dialog (the expanding detail view).
-  •	Preserve all working logic (refund data, calculations, interactivity).
-  •	Avoid duplicating or desynchronizing shared logic.
-  •	Limit work to ~15 minutes, prioritizing reliability over elegance.
 
-Target outcome:
-  •	RefundDetailsTile = lightweight trigger (renders summary info, dispatches Interlude scene).
-  •	RefundDetailsDialog = separate component (renders full details, reads same props/context).
-  •	Shared logic (e.g. refund total computation) lives in a pure helper function or a custom hook—whichever is faster to extract.
+  For Types, reference Types.tsx file.  Use existing types where practical.
+  For Existing Logic, read from Logic.tsx.
+  For Existing Derivation, read from Derivation.tsx.
+  For Existing Components, read from Components.tsx.
+  For Existing API, read from fakeApi.tsx.
+  For Style, read from styles.css.
 
-Constraints:
-  •	No changes to global architecture.
-  •	Must remain consistent with current Interlude (Scene-driven visibility).
-  •	Keep refactor local to 200-ReturnItems.
+  
+  Ignore error handling for now.  We will add that later.
 
-Approach summary:
-  1.	Identify shared logic inside RefundDetailsTile (like calculations).
-  2.	Extract that logic to a useRefundDetails() helper/hook file in the same directory. (~5 min)
-  3.	Pass the hook’s return values into both components. (~5 min)
-  4.	Replace Dialog conditional rendering with isActive(sceneKey) from Interlude. (~3–5 min)
+  There will be multiple configurations possible: 
+    -A 'standby' mode for when the control is not being interacted with.  This is the only part that will touch Interlude state.
+    -A 'keySearch' mode for when the control is active and the user is doing a keySearch for a single record.
+    -A 'advSearch' mode for when the user is doing an advanced search.
 
-End result: two clean, independent components connected by one small shared logic module.
+  ---------------------------------------------------------------
+
+  ** General Layout and Behavior **
+    -At the top, this is a Stage containing a Form.  The only internal logic that touches Interlude state is whether the card is active or inactive.
+      -The stage is just to prevent clearing itself from the interlude.
+    -All logic for all states other than Interacting / Not are local state only.
+      -Clicking outside the card removes it from the interlude, and thus it is inactive.
+    -If the card goes back to inactive state, it resets to default local state.  
+    -I want our horizontal elements to line up.  Clicking on the bar should feel like "Oh, same thing but with more options"
+    -Under the hood, this is really just a <form> with different inputs showing / hiding based on mode.
+
+    -I want to use oConfig to define all mode-specific configuration.
+      -We shouldn't have to do any conditionals - just route to the appropriate object for a given key.
+      -This component's structure is well-suited to nesting conditionals inside objects rather than using if / switch statements.
+
+    -I want all modes of the card to use the same column layout so that the mode tiles do not move around when switching modes.
+      -Icon column (All have the column, but it is ONLY filled in the top row.
+      -Mode Tile column
+        -When contents are visible, their order does not change, but their Active class always checks against local state.
+      -Type Tile column
+        -Same content behavior as Mode Tile column.
+      -Input column
+        -Input column will contain both the input field(s) and the "Search" button.
+        -Search button is the ONLY trigger for a search action.
+        
+    -Top-level component should probably be an hBox with 2 rows:
+      -All Inputs
+      -Container for search results (advSearch only)
+
+  ---------------------------------------------------------------
+
+  -- Configuration Object (oConfig) --
+  -oConfig{} is the primary configuration object for the component.
+    -oConfig contains all setting-specific configuration - style, default values, strings, props passed.  oConfig is the single source of truth for all mode-specific configuration.
+      -It should be kept clean of any non-configuration logic.
+        -ideally, all values are simple keys or strings that are passed directly into logic or components as props. 
+        -If() statements are code smell.  Logic should be more along the lines of oConfig.[local.mode].searchTypes[local.type]
+    -There should be no conditional logic required in the render tree - just route to the appropriate object in oConfig based on local state.
+
+    -oConfig and the Local state intersect each other: any oConfig key that is user-settable has a corresponding local state key.
+      -localState can contain keys that are not in oConfig, but not vice versa.
+        -these are keys that do not affect the configuration - e.g. search results, input values.
+
+
+
+   State Handling --
+
+  Search execution is triggered only by pressing the Search button.
+  Typing, Numpad input, or focus changes never automatically initiate a search.
+
+  There are 2 kinds of local state in this component:
+    localSettings - tracks user-settable configuration (mode, type)
+      -these DO NOT get reset when the Interlude ends.
+    localInputs - tracks user-settable input values (numpad entry, text entry)
+      -These can vary based on mode / type selected.
+        -We can probably address this by having all possible input keys in localInputs, and only rendering the relevant ones based on mode / type.
+        -Alternatively, we could have set the localInputs object dynamically based on mode / type, but that seems more complex.
+        -In either case, the contents should be clear when the mode changes.
+
+  -For our Setting Handlers (i.e. inputs where user is choosing a branch - e.g.  Type,  Mode), we are just setting local state.  Local state tracks:
+    -Mode
+    -Type
+
+
+  -localSettings and localInputs should always be flat.  It should accept props that correspond with the oConfig structure, never nested.
+
+  -In this context, localSettings should always have default values.  The only way to change values is user interaction.
+    -This means we do not have to include conditions for undefined values in our render tree.
+
+  
+  -All stable inputs set localInputs state
+  -Numpad sets localInputs state
+  -All actions that affect the transaction dispatch to the transaction context via standard handlers.
+
+  ** Always / Never for State and oConfig **
+    Always:
+    Derive all mode-specific configuration from oConfig routed valuess.
+    use localSettings to track user-settable values.
+      User-settable values correspond with the keys that route to a corresponding oConfig structure.
+    use localInputs to track user-settable input values.
+
+  Never:
+    Use conditional logic in the render tree to determine mode-specific configuration.
+    Store nested objects in local state.
+    Store non-configuration values in oConfig.
+    use arrays in oConfig.  If it doesn't have a unique key, it doesn't belong in oConfig.
+
+  ** Sample Shapes **
+
+const oConfig = {
+  mode: {
+    keySearch: {
+      label: "Key Search",
+      types: {
+        receipt: {
+          label: "Receipt #",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_RECEIPT", val }),
+        },
+        order: {
+          label: "Order #",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_ORDER", val }),
+        },
+      },
+    },
+    advSearch: {
+      label: "Advanced Search",
+      types: {
+        phone: {
+          label: "Phone",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_PHONE", val }),
+        },
+        cc: {
+          label: "Credit Card",
+          inputKind: "text",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_CC", val }),
+        },
+      },  
+    },
+  },
+};
+
+    const localSettings = {
+      mode: "keySearch",
+      searchType: "receipt",
+    };
+
+    const local inputs = {
+      entryValue: 0,
+      differentFieldValue: "",
+      // these are examples
+  }
+
+
+
+  ---------------------------------------------------------------
+  
+  -StandbyMode.
+    -This is a 5px high bar with the title "Search Receipts".
+      -An 8rem Search icon.
+      -The currently selected Mode tile.
+      -The currently selected Type file.
+      -an empty input field.
+
+
+  -keySearch Mode: 
+    -A column of all modes available, currently "keySearch" and "advSearch".
+    -A column of all types available for the selected mode.
+    -A column of input fields for the selected type.  For now, just keySearch with numpad.
+      -Numpad input field.  (Use existing Numpad component from Components.tsx)
+    -If a result is found, add it directly to the transactionState.receipts  In this mode, it will be the only potential match.
+
+  -advSearch Mode:
+    - same layout as keySearch mode, but different types and input fields.
+    - In this mode, the results area is visible, though not rendered until it is populated.
+      -Populated can be either a successful search or a "no results found" message.
+      -A column to display the search results.  For now, just invoId of matching invoices.
+    If search is successful, show a list of the matching invoices.
+      -DO NOT automatically add to transactionState.receipts.  We will do this manually later.
+
+    Fttb, if no result is found, just do nothing.
+    
+    
 
 */
 };
 
-const refundDetailsScene = (itemId: string) => ({
-  [`refund-details-${itemId}`]: true,
-});
-
-export function RefundDetailsTile({ item }: { item: Item }) {
-  const { itemId } = item;
-  const { returnItemAtoms, aggregateAtoms } = useDerivation();
-
-  const thisItemsAtoms = returnItemAtoms.filter(
-    (atom) => atom.itemId === item.itemId
-  );
-
-  const receiptedAtoms = thisItemsAtoms.filter((a) => a.invoId != null);
-
-  const totalQty = aggregateAtoms(thisItemsAtoms, "qty");
-  const receiptedQty = aggregateAtoms(receiptedAtoms, "qty");
-  const itemRefunds = aggregateAtoms(thisItemsAtoms, "valueCents");
-  const scene = refundDetailsScene(itemId);
-
-  return (
-    <Actor
-      id={`refund-details-${itemId}`}
-      scene={scene}
-      className={`w-md  align-center`}
-    >
-      <div className="hbox w-md">
-        <LabeledValue
-          label="Receipted"
-          value={`${receiptedQty} / ${totalQty}`}
-          className="fill-main"
-        />
-        <LabeledValue
-          label="Total Refund"
-          value={dollarize(itemRefunds)}
-          textAlign="right"
-        />
-      </div>
-    </Actor>
-  );
-}
-
-export function RefundDetailsDialog({ item }: { item: Item }) {
-  const { itemId } = item;
-  const { returnItemAtoms, aggregateAtoms } = useDerivation();
-
-  const thisItemsAtoms = returnItemAtoms.filter(
-    (atom) => atom.itemId === item.itemId
-  );
-  const keyOf = (v: string | number | undefined) =>
-    v === undefined ? "__NO_RECEIPT__" : String(v);
-
-  const receiptKeys = [...new Set(thisItemsAtoms.map((a) => keyOf(a.invoId)))];
-
-  const scene = { [`refund-details-${itemId}`]: true };
-
-  const refundRows = receiptKeys.map((rk) => {
-    const atomsForKey = thisItemsAtoms.filter((a) => keyOf(a.invoId) === rk);
-    const thisInvoQty = aggregateAtoms(atomsForKey, "qty");
-    const thisInvoValue = aggregateAtoms(atomsForKey, "valueCents");
-    const label = rk === "__NO_RECEIPT__" ? "No Receipt" : `Rcpt. #${rk}`;
-    const labelStyle = rk === "__NO_RECEIPT__" ? "text-critical" : "";
-    const valueStyle =
-      rk === "__NO_RECEIPT__" ? "text-critical" : "text-success";
-
-    return (
-      <div key={rk} className="hbox gap-8rpx fill-main">
-        <div
-          className={`fill-main ${labelStyle}`}
-        >{`${label} x ${thisInvoQty}`}</div>
-        <div className={`text ${valueStyle} subtitle bold`}>
-          {dollarize(thisInvoValue)}
-        </div>
-      </div>
-    );
-  });
-
-  return (
-    <Dialog
-      id={`refund-details-dialog-${itemId}`}
-      scene={scene}
-      className={`w-md  align-center`}
-    >
-      {refundRows}
-    </Dialog>
-  );
-}
-
-export function ReturnItemsCard({ item }: { item: Item }) {
-  const [transaction, dispatch] = useTransaction();
-  const { itemId } = item;
-
-  // Local interaction boundary for this item
-  const scene = { [`item-${itemId}`]: true };
-
-  return (
-    <div className="card hbox gap-16rpx">
-      {/* Static header: not part of Interlude */}
-      <ProductDetailsTile item={item} hasPrice={false} />
-
-      {/* Localized interaction zone */}
-      <Stage
-        id={`stage-${itemId} `}
-        scene={scene}
-        className="hbox gap-8rpx fill-main"
-      >
-        <div className={`hbox`}>
-          <ReturnQtyTile item={item} />
-          <RefundDetailsTile item={item} />
-        </div>
-        {/* Dialogs */}
-        <div className={`dialog-row`}>
-          <RefundDetailsDialog item={item} />
-          <ReturnQtyDialog item={item} />
-        </div>
-      </Stage>
-
-      {/* Cleanup actions (non-Interlude) */}
-      <div className="hbox justify-end align-start">
-        <button
-          className="btn--outline h-sm text"
-          onClick={() => {
-            const next = new Map(transaction.returnItems);
-            next.delete(itemId);
-            dispatch({
-              kind: "SET_INPUT",
-              payload: { key: "returnItems", value: next },
-            });
-          }}
-        >
-          🗑️ Remove
-        </button>
-      </div>
-    </div>
-  );
-}
-// ================================
-// RETURN ITEMS LIST
-// ================================
-
-function ReturnItemsList() {
-  const [transaction] = useTransaction();
-  const repo = transaction.returnItems;
-  const itemsMap: Map<string, Item> =
-    repo instanceof Map ? repo : new Map(Object.entries(repo || {}));
-  return (
-    <div className="card-ctnr gap-16rpx">
-      {Array.from(itemsMap.values()).map((item: Item) => (
-        <ReturnItemsCard key={item.itemId} item={item} />
-      ))}
-    </div>
-  );
-}
-
-// ================================
-// ITEM ENTRY
-// ================================
-
-function ItemEntry() {
-  const [, dispatch] = useTransaction();
-  const [phase, dispatchPhase] = useReturnItemsPhase();
-
-  const pendingItemId = phase.pendingItemId || "";
-  const pendingQty = phase.pendingQty || 1;
-
-  const handleAdd = () => {
-    if (!pendingItemId || pendingQty <= 0) return;
-    const newItem: Item = {
-      itemId: pendingItemId,
-      qty: pendingQty,
-      valueCents: undefined,
-      invoId: undefined,
-    };
-    dispatch({ kind: "ADD_ITEM", payload: newItem });
-    dispatchPhase({
-      kind: "SET_LOCAL",
-      payload: { key: "pendingItemId", value: "" },
-    });
-    dispatchPhase({
-      kind: "SET_LOCAL",
-      payload: { key: "pendingQty", value: 1 },
-    });
-  };
-
-  // Why is the Muggle's model of the time involved in UI work so skewed?
-  return (
-    <>
-      <div className="catalog-items-list">
-        Available Item IDs: {Object.keys(fakeCatalog).join(", ")}
-      </div>
-      <div className="item-entry">
-        <input
-          type="text"
-          placeholder="Item #"
-          value={pendingItemId}
-          onChange={(e) =>
-            dispatchPhase({
-              kind: "SET_LOCAL",
-              payload: { key: "pendingItemId", value: e.target.value },
-            })
-          }
-        />
-        <input
-          type="number"
-          min={1}
-          value={pendingQty}
-          onChange={(e) =>
-            dispatchPhase({
-              kind: "SET_LOCAL",
-              payload: {
-                key: "pendingQty",
-                value: parseInt(e.target.value, 10) || 1,
-              },
-            })
-          }
-        />
-        <button onClick={handleAdd}>Add Item</button>
-      </div>
-    </>
-  );
-}
-
-//********************************************************************
-//  RETURN ITEMS PHASE SCAFFOLD
-//********************************************************************
-
-export function ReturnItemsPhase() {
-  return (
-    <Phase phaseId="return-items" title="Return Items">
-      <Floorplan
-        pageTitle="Return Items"
-        mainContent={<ReturnItemsList />}
-        rightColumn={<ItemEntry />}
-      />
-    </Phase>
-  );
-}
+const swift_SearchResults = {
+  /*
+  -CRITICAL DISTINCTION:
+      -Added invoices work exactly the same as adding them by any other means.
+        -The Receipts repo is the SSoT for invoices in the transaction.
+        -ALL other information is derived from fakeInvoices using the invoId from the Receipts repo.
+    -The list items are unstyled hBoxes with the following info:
+      -Invoice #
+      -Stage:
+        -Actor Tile:
+          total SKUs sold
+          total sale amount
+          -When solo:
+            -A divider
+            -A list of SKUs sold with qty and price as a Component.  Will add to later.
+      Conditionally, one of the following:
+        -A button that adds that receipt directly to the transaction if it is not already present.
+        or:
+        -Text saying 'Added' if that receipt is already in the cart.
+  */
+};
 
 const brief = {
   /*

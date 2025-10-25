@@ -8,7 +8,6 @@ import { ProductImage } from "../assets/product-images/ProductImage";
 
 import React, { useRef } from "react";
 import {
-  useTransients,
   useNavigatePhase,
   useTransaction,
   PhaseProvider,
@@ -20,50 +19,6 @@ import { useInterlude, Stage, Actor } from "../logic/Interlude";
 //********************************************************************
 //  CONTAINER (BASE PRIMITIVE)
 //********************************************************************
-
-/*
-  These will soon be deprecated.
-
-*/
-
-type ContainerProps = {
-  id?: string | undefined;
-  children?: React.ReactNode;
-  className?: string;
-  preserve?: string[] | undefined;
-  onClick?: React.MouseEventHandler;
-};
-
-function Container(props: ContainerProps): JSX.Element {
-  const [, dispatchTransients] = useTransients();
-  const { children, className = "", preserve, onClick } = props;
-
-  const handleClick = (e: React.MouseEvent) => {
-    dispatchTransients({
-      kind: "CLEAR_TRANSIENT",
-      preserve: preserve || [],
-    });
-    if (onClick) onClick(e);
-  };
-
-  return (
-    <div className={className} onClick={handleClick}>
-      {children}
-    </div>
-  );
-}
-
-type TileProps = ContainerProps & {
-  children: React.ReactNode;
-};
-
-function Tile(props: TileProps): JSX.Element {
-  return (
-    <Container className="tile" {...props}>
-      {props.children}
-    </Container>
-  );
-}
 
 ////////////////////////////////////////////////////////////////////////////////////
 //  UI COMPS
@@ -126,17 +81,41 @@ export function ProductDetailsTile({
   );
 }
 
+export type SelectionTileProps = {
+  isSelected?: boolean;
+  isDisabled?: boolean;
+  onClick?: () => void;
+  children?: React.ReactNode;
+  className?: string;
+};
+
+export function SelectionTile({
+  isSelected = false,
+  isDisabled = true,
+  onClick,
+  children,
+  className = "",
+}: SelectionTileProps) {
+  const sClasses = `${isSelected ? "selected" : ""} ${
+    isDisabled ? "" : "disabled"
+  } ${className}`;
+  return (
+    <div
+      className={`tile ${sClasses}`}
+      onClick={isDisabled ? undefined : onClick}
+    >
+      {children}
+    </div>
+  );
+}
+
 export type NumpadProps = {
   value?: number;
   onChange?: (val: number) => void;
   className?: string;
 };
 
-export const Numpad: React.FC<NumpadProps> = ({
-  value = 0,
-  onChange,
-  className,
-}) => {
+export function Numpad({ value, onChange, className = "" }: NumpadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // Auto-focus the input when the numpad mounts or its parent tile is clicked
   React.useEffect(() => {
@@ -176,7 +155,7 @@ export const Numpad: React.FC<NumpadProps> = ({
   };
 
   return (
-    <div className={`numpad ${className || ""}`}>
+    <div className={`numpad ${className}`}>
       <div className="numpad-controls">
         <button
           className="numpad-btn text title"
@@ -215,7 +194,7 @@ export const Numpad: React.FC<NumpadProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default Numpad;
 
@@ -303,31 +282,7 @@ export type PhaseProps = {
 };
 
 export function Phase({ phaseId, title, children }: PhaseProps): JSX.Element {
-  return (
-    <PhaseProvider phaseId={phaseId}>
-      <PhaseBase>{children}</PhaseBase>
-    </PhaseProvider>
-  );
-}
-
-// Definition: Wrapper div for phase screens that resets transients on background click.
-function PhaseBase({ children }: { children: React.ReactNode }) {
-  const [, dispatchTransients] = useTransients();
-
-  const handleBackgroundClick = () => {
-    dispatchTransients({ kind: "RESET_TRANSIENT" });
-    // Also collapse the InvoSearch card if open
-    dispatchTransients({
-      kind: "SET_TRANSIENT",
-      payload: { invoSearchExpanded: false },
-    });
-  };
-
-  return (
-    <div className="hbox Fill" onClick={handleBackgroundClick}>
-      {children}
-    </div>
-  );
+  return <PhaseProvider phaseId={phaseId}>{children}</PhaseProvider>;
 }
 
 export type PhaseNodeTileProps = {

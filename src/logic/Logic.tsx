@@ -148,58 +148,8 @@ function phaseReducer(state: any, action: PhaseAction): any {
   }
 }
 
-//********************************************************************
-//  TRANSIENT STATE CONTEXT
-//********************************************************************
-const initialTransientState: TransientState = {
-  invoSearchExpanded: false,
-};
-
-type TransientAction =
-  | { kind: "SET_TRANSIENT"; payload: Partial<TransientState> }
-  | { kind: "CLEAR_TRANSIENT"; preserve?: (keyof TransientState)[] }
-  | { kind: "PRESERVE_TRANSIENT"; payload: Partial<TransientState> } // Deprecated – use CLEAR_TRANSIENT.preserve instead
-  | { kind: "RESET_TRANSIENT" };
-
-function transientsReducer(
-  state: TransientState,
-  action: TransientAction
-): TransientState {
-  switch (action.kind) {
-    case "SET_TRANSIENT":
-      return { ...state, ...action.payload };
-
-    case "CLEAR_TRANSIENT": {
-      const preserveKeys =
-        (action as any).preserve ?? (action as any).payload?.preserve ?? [];
-      if (!preserveKeys.length) return {};
-      return Object.fromEntries(
-        Object.entries(state).filter(([key]) =>
-          preserveKeys.includes(key as keyof TransientState)
-        )
-      ) as TransientState;
-    }
-
-    case "PRESERVE_TRANSIENT":
-      console.warn(
-        "PRESERVE_TRANSIENT is deprecated. Use CLEAR_TRANSIENT with preserve[] instead."
-      );
-      return { ...action.payload, ...state };
-
-    case "RESET_TRANSIENT":
-      return {};
-
-    default:
-      return state;
-  }
-}
-
 const PhaseContext = createContext<
   [PhaseState, Dispatch<PhaseAction>] | undefined
->(undefined);
-
-const TransientContext = createContext<
-  [TransientState, Dispatch<TransientAction>] | undefined
 >(undefined);
 
 export function PhaseProvider({
@@ -213,15 +163,8 @@ export function PhaseProvider({
     ...initialPhaseState,
     phaseId,
   });
-  const transientValue = useReducer(transientsReducer, {
-    ...initialTransientState,
-  });
   return (
-    <PhaseContext.Provider value={phaseValue}>
-      <TransientContext.Provider value={transientValue}>
-        {children}
-      </TransientContext.Provider>
-    </PhaseContext.Provider>
+    <PhaseContext.Provider value={phaseValue}>{children}</PhaseContext.Provider>
   );
 }
 
@@ -248,14 +191,6 @@ export function useReturnItemsPhase(): [
   }
   // Cast phase state as ReturnItemsPhaseState (safe: fields are optional)
   return ctx as [ReturnItemsPhaseState, Dispatch<PhaseAction>];
-}
-
-export function useTransients(): [TransientState, Dispatch<TransientAction>] {
-  const ctx = useContext(TransientContext);
-  if (!ctx) {
-    throw new Error("useTransients must be used within PhaseProvider");
-  }
-  return ctx;
 }
 
 //********************************************************************

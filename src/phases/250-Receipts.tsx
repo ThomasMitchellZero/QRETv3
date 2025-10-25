@@ -1,24 +1,19 @@
 import React from "react";
-import { cloneDeep } from "lodash";
+import { cloneDeep, set } from "lodash";
 
 import {
   Phase,
   LabeledValue,
   Floorplan,
   Numpad,
+  SelectionTile,
 } from "../components/Components";
 import { useTransaction, dollarize } from "../logic/Logic";
 import type {
   Invoice,
-  TransientState,
   PhaseState,
   TransactionState,
   Item,
-  refInvoice,
-  refTransactionState,
-  refPhaseState,
-  refTransientState,
-  refItem,
 } from "../types/Types";
 
 import { fakeInvoices, findInvoices } from "../api/fakeApi";
@@ -38,9 +33,10 @@ import { ProductImage } from "../assets/product-images/ProductImage";
 // INVOICE SEARCH CARD
 // ================================
 
-const brief = {
+const swift_InvoSearch = {
   /*
   === Monkey Comments (FOR APE MODIFICATION ONLY) ===
+  Taylor's Version.
   ** DO NOT DELETE.  FOR APE MODIFICATION ONLY **
 
 
@@ -53,43 +49,184 @@ const brief = {
 
   
   Ignore error handling for now.  We will add that later.
-  Search is going to be a Card that is placed in the Receipts column.  The card is titled Search Receipts.
-  if invoice cart is empty, Card fills entire column and centers the content in the vertical axis.  if invoice cart has items, Card instead shrinks to fit content.
-  Try to keep the logic minimal and direct.  I am the only one working on this and I am using only local data.  We don't need a hardened app that can handle weird cases.
-  Branching logic should be implemented through mode objects rather than conditional branches. Each mode encapsulates all necessary state, handlers, and UI config (e.g., Mode[modeName].property), allowing the system to treat modes as data rather than control flow.
-  -div Component should only be used for clickables.  For layout, use div with className="hbox" or "vbox" and appropriate flex/hug classes.
-  Create a new class for mini-tiles.  We will use these again.
-  ** Shared Cared Properties **
-  Search is going to contain 2 rows, a Tile row and a Content column. In Content column, show 2 Mini tiles to select mode. 
-    -If expanded, show a [ - ] button to collapse the content.
-    -Any click within the content area expands it if it is not already expanded.
-    -Only a click on the [ - ] button collapses it.
-    -The card’s size always hugs the vertical content.  Hugging and flex logic still apply normally.  
-  -I would like a configuration for numPad for entering key names instead of qty.  This would be similar but it would not have + or - buttons.  It would have a backspace button.  
-  ---------------------------------------------------------------
-  ** Enter Transaction# Mode **
-  First selection tile triggers the first mode: "Enter Transaction#". When active, Content is an hbox containing the following:
-    -A vertical list of mini-tiles to select search type: Receipt# and Order#.  For this demo, no logic is needed.  We will search by invoId no matter what the user enters.  
-    -The Numpad entry field is the only number-entry input visible.  
-    -There should be no separate <input type="text"> field when the numpad is active; the numpad handles all numeric entry and editing.  
-    -The numpad configured for entering key names.
-      -The numpad's value is bound to the local state for this component.
-    -A button to "Add" the receipt to the cart.
-      -When clicked, this searches fakeInvoices for the matching invoId.
-      -On Add (if valid), the numpad dispatches an action to add the invoice to the Receipts repo.
-  ----------------------------------------------------------------
-  ** Search Receipt Mode **
-  Second Selection Tile is triggers the second mode: Receipt Search.
-    -When active, Content contains the following:
-      a row of:
-        -vertical column containing Tiles for Search Phone and Search CC#.  May add more later.
-        -An input field to enter the phone or CC# title varies to match selection.
-          -When searching by Phone or Card#, show the numpad entry field only (no extra text input).  
 
-        -A 'Search' button.  When clicked, this searches fakeInvoices for the matching criteria
-      -A column to display the search results.
-  If search is successful, show a list of the matching invoices.
-    -CRITICAL DISTINCTION:
+  There will be multiple configurations possible: 
+    -A 'standby' mode for when the control is not being interacted with.  This is the only part that will touch Interlude state.
+    -A 'keySearch' mode for when the control is active and the user is doing a keySearch for a single record.
+    -A 'advSearch' mode for when the user is doing an advanced search.
+
+  ---------------------------------------------------------------
+
+  ** General Layout and Behavior **
+    -At the top, this is a Stage containing a Form.  The only internal logic that touches Interlude state is whether the card is active or inactive.
+      -The stage is just to prevent clearing itself from the interlude.
+    -All logic for all states other than Interacting / Not are local state only.
+      -Clicking outside the card removes it from the interlude, and thus it is inactive.
+    -If the card goes back to inactive state, it resets to default local state.  
+    -I want our horizontal elements to line up.  Clicking on the bar should feel like "Oh, same thing but with more options"
+    -Under the hood, this is really just a <form> with different inputs showing / hiding based on mode.
+
+    -I want to use oConfig to define all mode-specific configuration.
+      -We shouldn't have to do any conditionals - just route to the appropriate object for a given key.
+      -This component's structure is well-suited to nesting conditionals inside objects rather than using if / switch statements.
+
+    -I want all modes of the card to use the same column layout so that the mode tiles do not move around when switching modes.
+      -Icon column (All have the column, but it is ONLY filled in the top row.
+      -Mode Tile column
+        -When contents are visible, their order does not change, but their Active class always checks against local state.
+      -Type Tile column
+        -Same content behavior as Mode Tile column.
+      -Input column
+        -Input column will contain both the input field(s) and the "Search" button.
+        -Search button is the ONLY trigger for a search action.
+        
+    -Top-level component should probably be an hBox with 2 rows:
+      -All Inputs
+      -Container for search results (advSearch only)
+
+  ---------------------------------------------------------------
+
+  -- Configuration Object (oConfig) --
+  -oConfig{} is the primary configuration object for the component.
+    -oConfig contains all setting-specific configuration - style, default values, strings, props passed.  oConfig is the single source of truth for all mode-specific configuration.
+      -It should be kept clean of any non-configuration logic.
+        -ideally, all values are simple keys or strings that are passed directly into logic or components as props. 
+        -If() statements are code smell.  Logic should be more along the lines of oConfig.[local.mode].searchTypes[local.type]
+    -There should be no conditional logic required in the render tree - just route to the appropriate object in oConfig based on local state.
+
+    -oConfig and the Local state intersect each other: any oConfig key that is user-settable has a corresponding local state key.
+      -localState can contain keys that are not in oConfig, but not vice versa.
+        -these are keys that do not affect the configuration - e.g. search results, input values.
+
+
+
+   State Handling --
+
+  Search execution is triggered only by pressing the Search button.
+  Typing, Numpad input, or focus changes never automatically initiate a search.
+
+  There are 2 kinds of local state in this component:
+    localSettings - tracks user-settable configuration (mode, type)
+      -these DO NOT get reset when the Interlude ends.
+    localInputs - tracks user-settable input values (numpad entry, text entry)
+      -These can vary based on mode / type selected.
+        -We can probably address this by having all possible input keys in localInputs, and only rendering the relevant ones based on mode / type.
+        -Alternatively, we could have set the localInputs object dynamically based on mode / type, but that seems more complex.
+        -In either case, the contents should be clear when the mode changes.
+
+  -For our Setting Handlers (i.e. inputs where user is choosing a branch - e.g.  Type,  Mode), we are just setting local state.  Local state tracks:
+    -Mode
+    -Type
+
+
+  -localSettings and localInputs should always be flat.  It should accept props that correspond with the oConfig structure, never nested.
+
+  -In this context, localSettings should always have default values.  The only way to change values is user interaction.
+    -This means we do not have to include conditions for undefined values in our render tree.
+
+  
+  -All stable inputs set localInputs state
+  -Numpad sets localInputs state
+  -All actions that affect the transaction dispatch to the transaction context via standard handlers.
+
+  ** Always / Never for State and oConfig **
+    Always:
+    Derive all mode-specific configuration from oConfig routed valuess.
+    use localSettings to track user-settable values.
+      User-settable values correspond with the keys that route to a corresponding oConfig structure.
+    use localInputs to track user-settable input values.
+
+  Never:
+    Use conditional logic in the render tree to determine mode-specific configuration.
+    Store nested objects in local state.
+    Store non-configuration values in oConfig.
+    use arrays in oConfig.  If it doesn't have a unique key, it doesn't belong in oConfig.
+
+  ** Sample Shapes **
+
+const oConfig = {
+  mode: {
+    keySearch: {
+      label: "Key Search",
+      types: {
+        receipt: {
+          label: "Receipt #",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_RECEIPT", val }),
+        },
+        order: {
+          label: "Order #",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_ORDER", val }),
+        },
+      },
+    },
+    advSearch: {
+      label: "Advanced Search",
+      types: {
+        phone: {
+          label: "Phone",
+          inputKind: "numpad",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_PHONE", val }),
+        },
+        cc: {
+          label: "Credit Card",
+          inputKind: "text",
+          onSearch: (val, dispatch) => dispatch({ type: "SEARCH_CC", val }),
+        },
+      },  
+    },
+  },
+};
+
+    const localSettings = {
+      mode: "keySearch",
+      searchType: "receipt",
+    };
+
+    const local inputs = {
+      entryValue: 0,
+      differentFieldValue: "",
+      // these are examples
+  }
+
+
+
+  ---------------------------------------------------------------
+  
+  -StandbyMode.
+    -This is a 5px high bar with the title "Search Receipts".
+      -An 8rem Search icon.
+      -The currently selected Mode tile.
+      -The currently selected Type file.
+      -an empty input field.
+
+
+  -keySearch Mode: 
+    -A column of all modes available, currently "keySearch" and "advSearch".
+    -A column of all types available for the selected mode.
+    -A column of input fields for the selected type.  For now, just keySearch with numpad.
+      -Numpad input field.  (Use existing Numpad component from Components.tsx)
+    -If a result is found, add it directly to the transactionState.receipts  In this mode, it will be the only potential match.
+
+  -advSearch Mode:
+    - same layout as keySearch mode, but different types and input fields.
+    - In this mode, the results area is visible, though not rendered until it is populated.
+      -Populated can be either a successful search or a "no results found" message.
+      -A column to display the search results.  For now, just invoId of matching invoices.
+    If search is successful, show a list of the matching invoices.
+      -DO NOT automatically add to transactionState.receipts.  We will do this manually later.
+
+    Fttb, if no result is found, just do nothing.
+    
+    
+
+*/
+};
+
+const swift_SearchResults = {
+  /*
+  -CRITICAL DISTINCTION:
       -Added invoices work exactly the same as adding them by any other means.
         -The Receipts repo is the SSoT for invoices in the transaction.
         -ALL other information is derived from fakeInvoices using the invoId from the Receipts repo.
@@ -106,182 +243,268 @@ const brief = {
         -A button that adds that receipt directly to the transaction if it is not already present.
         or:
         -Text saying 'Added' if that receipt is already in the cart.
-  ---------------------------------------------------------------
-  ** State Handling **
-  -For our Mode Setters (means inputs where user is choosing an option - e.g. Search Type, Search Mode, parameters), we are just setting local state.
-    -Using objects to encapsulate all mode-specific config and handlers.
-    -What gets rendered should be dumb - just routes to the appropriate mode object.
-  -Full / Vs. Mini Card state:
-    -Any click inside the content area expands the card if it is not already expanded.
-    -Any click outside the content area collapses the card if it is not already collapsed.
-      -this may need to be handled in Phase transient state.
-    -The [ - ] also button collapses the card if it is not already collapsed.
-    -In Mini State, only the mode selection tiles are visible.
-      -As a result, we should make every effort to ensure that Mode tiles do not change position when switching Card Modes.
-    -ANY click inside the card (including any child element) sets the card to Full state.  
-    -In Full state, the card still hugs its contents; it simply reveals more of them.   
-  -Local state for mode and numpad value.
-  -Local state should be completely flat.
-  -ALL independent local state elements should have their own field.
-    -Search Mode (Trxn # vs. multi-result)
-    -Search Parameters 
-      -user selections like Order# vs. Receipt#, 
-      -search type (phone, email, cc)
-  -All stable inputs set local state.
-  -Numpad sets local state
-  -All actions that affect the transaction dispatch to the transaction context.
-  -Logic for 2 modes should have a similar shape, but specific configuration should be encapsulated in the mode objects.
-*/
-};
-const designOutline = {
-  // Common handlers
-  /*
-    !!!!!!!!!!!  NEVER, ever delete design Outline, this means LLMs too.  No touchy !!!!!!!!!!
-    -All state parameters should have default values.  The user should be be able to switch choices at any time without losing data, but their choices are defined for
-    -Local state should be a single, object.
-    -Transaction state - add validated Invo via standard dispatch.
-    -Transient state 
-      - Card expand / collapse
-    <div>
-      <// Mode Selection Tiles // keyed to local state.  Always visibile.  />
-      <ExpandedContent >
-      isExpanded // keyed to Phase State ??
-       <// Mode Content row > 
-        < Parameter Selection Column />
-        < Parameter-Conditional Children />
-        < Action Button />
   */
 };
 
 // --- Main InvoSearchCard logic ---
-export const InvoSearchCard = () => {
+export const InvoSearchBarOld = () => {
   const [transaction, dispatchTransaction] = useTransaction();
   const stageId = "invo-search-card";
   const scene = { [stageId]: true } as Scene;
   const isActive = useIsActive(scene);
 
-  // local flat state
-  const [local, setLocal] = React.useState({
-    mode: "enterTrxn", // 'enterTrxn' | 'search'
-    entryValue: 0,
-    searchType: "receipt", // 'receipt' | 'order'
+  type Mode = "keySearch" | "advSearch";
+  type KeySearch = "receipt" | "order";
+  type AdvSearch = "phone" | "cc";
+  type LocalSettingsProps = {
+    mode: Mode;
+    keySearch: KeySearch;
+    advSearch: AdvSearch;
+  };
+
+  type LocalSettingsAction =
+    | { type: "SET_MODE"; payload: Mode }
+    | { type: "SET_KEYSEARCH"; payload: KeySearch }
+    | { type: "SET_ADVSEARCH"; payload: AdvSearch };
+
+  function localSettingsReducer(
+    state: LocalSettingsProps,
+    action: LocalSettingsAction
+  ): LocalSettingsProps {
+    switch (action.type) {
+      case "SET_MODE":
+        return { ...state, mode: action.payload };
+      case "SET_KEYSEARCH":
+        return { ...state, keySearch: action.payload };
+      case "SET_ADVSEARCH":
+        return { ...state, advSearch: action.payload };
+      default:
+        return state;
+    }
+  }
+
+  // Usage
+  const [localSettings, dispatchSettings] = React.useReducer(
+    localSettingsReducer,
+    {
+      mode: "keySearch",
+      keySearch: "receipt",
+      advSearch: "phone",
+    } as LocalSettingsProps
+  );
+
+  const [localInputs, setLocalInputs] = React.useState({
+    entryValue: null,
   });
 
-  // toggle expand
-  const handleToggleExpand = (e?: React.MouseEvent) => {};
+  function handleInputChange() {
+    // Fttb, this should all happen through numpad.
+  }
 
-  // handle mode select
-  const handleModeSelect = (mode: string) =>
-    setLocal((p) => ({
-      ...p,
-      mode,
-      searchType: mode === "enterTrxn" ? "receipt" : "phone",
-    }));
+  // iconCol 4rem | modeCol 12rem | typeCol 12rem | inputCol 1fr
 
-  // handle numpad change
-  const handleNumpadChange = (val: number) =>
-    setLocal((p) => ({ ...p, entryValue: val }));
+// START_SCOPE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
 
-  // add invoice to receipts
-  const handleAdd = () => {
-    const id = String(local.entryValue);
-    if (!id) return;
-    const next = new Map(transaction.receipts ?? new Map());
-    if (next.has(id)) return;
-    const inv = fakeInvoices[id];
-    if (inv) {
-      next.set(id, inv);
-      dispatchTransaction({
-        kind: "SET_INPUT",
-        payload: { key: "receipts", value: next },
-      });
-    }
+
+  function UiSelectionTile(key: string, value: string) {
+    // standard template for Mode and Type tiles.
+    // on click, set localSettings accordingly.
+    // highlight if active, logic sets scss class conditionally.
+
+    const keyStr = `invoSearchSelectionTile${value}`;
+    const isActive = localSettings[key as keyof LocalSettingsProps] === value;
+      // converts the key to uppercase and dispatches the appropriate action.
+
+      return (
+        <div
+          id={`${keyStr}`}
+          key={keyStr}
+          className={`tile test subtitle h-sm ${isActive ? "active" : ""}`}
+          onClick={}
+        >
+
+        </div>
+      );
+    };
+  }
+// END_SCOPE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  return (
+    <Stage id={stageId} className={`invo-search-card grid`} scene={scene}>
+      <div className="hbox invo-search-grid">
+        <div className={`iconCol`}></div>
+        <div className={`modeCol `}>
+        <SelectionTile />
+        </div>
+        <div className={`typeCol `}></div>
+        <div className={`inputCol `}>
+          <Numpad
+            value={localInputs.entryValue || 0}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+      <div className={`hbox`}></div>
+    </Stage>
+  );
+};
+
+// END
+export function InvoSearchBar() {
+  const oConfig = {
+    keySearch: {
+      label: "Key Search",
+      types: {
+        receipt: { label: "Receipt #" },
+        order: { label: "Order #" },
+      },
+    },
+    advSearch: {
+      label: "Advanced Search",
+      types: {
+        phone: { label: "Phone" },
+        cc: { label: "Credit Card" },
+      },
+    },
+  } as const;
+
+  type Mode = keyof typeof oConfig;
+  type SearchType = keyof (typeof oConfig)[Mode]["types"];
+  type LocalSettings = {
+    mode: Mode;
+    searchType: SearchType;
+  };
+
+  const [transaction, dispatchTransaction] = useTransaction();
+
+  type LocalSettingsProps = {
+    mode: Mode;
+    searchType: SearchType;
+  };
+  // Local configuration + input states
+  const [localSettings, setLocalSettings] = React.useState({
+    mode: "keySearch",
+    searchType: "receipt",
+  } as LocalSettingsProps);
+
+  const [localInputs, setLocalInputs] = React.useState({
+    entryValue: "",
+  });
+
+  const [results, setResults] = React.useState<Invoice[]>([]);
+
+  type ModeKey = keyof typeof oConfig;
+  type TypeKey<M extends ModeKey> = keyof (typeof oConfig)[M]["types"];
+
+  // Generic state setters
+  const updateSetting = (key: keyof typeof localSettings, value: any) =>
+    setLocalSettings((prev) => ({ ...prev, [key]: value }));
+
+  const updateInput = (key: keyof typeof localInputs, value: any) =>
+    setLocalInputs((prev) => ({ ...prev, [key]: value }));
+
+  // Local configuration object
+  const oldOConfig = {
+    keySearch: {
+      label: "Key Search",
+      types: {
+        receipt: {
+          label: "Receipt #",
+          inputKind: "numpad",
+          onSearch: (val: string | number) =>
+            setResults(findInvoices({ type: "phone", value: val })),
+        },
+      },
+    },
+    advSearch: {
+      label: "Advanced Search",
+      types: {
+        phone: {
+          label: "Phone",
+          inputKind: "numpad",
+          onSearch: (val: string | number) =>
+            setResults(findInvoices({ type: "phone", value: val })),
+        },
+        cc: {
+          label: "Credit Card",
+          inputKind: "text",
+          onSearch: (val: string | number) =>
+            setResults(findInvoices({ type: "cc", value: val })),
+        },
+      },
+    },
+  };
+
+  const activeMode = oConfig[localSettings.mode];
+  const activeType = activeMode.types[localSettings.type];
+
+  // Search trigger
+  const handleSearch = () => {
+    const val = localInputs.entryValue;
+    activeType.onSearch(val);
   };
 
   return (
-    <Stage id={"invo-search-card"} className={``} scene={scene}>
-      {/* Mode selection tiles */}
-      <div className="hbox fill-cross hug-main gap-8rpx">
-        <div
-          className={`tile ${local.mode === "enterTrxn" ? "active" : ""}`}
-          onClick={() => handleModeSelect("enterTrxn")}
-        >
-          Enter Transaction #
+    <Stage id="InvoSearch" scene={{ invoSearch: true }} className="receipts">
+      <div className="search-grid">
+        {/* Mode Column */}
+        <div className="vbox">
+          {Object.keys(oConfig).map((mode) => (
+            <div
+              key={mode}
+              className={`tile ${localSettings.mode === mode ? "active" : ""}`}
+              onClick={() => updateSetting("mode", mode)}
+            >
+              {oConfig[mode].label}
+            </div>
+          ))}
         </div>
-        <div
-          className={`tile ${local.mode === "search" ? "active" : ""}`}
-          onClick={() => handleModeSelect("search")}
-        >
-          Search Receipts
+
+        {/* Type Column */}
+        <div className="vbox">
+          {Object.keys(activeMode.types).map((type) => (
+            <div
+              key={type}
+              className={`tile ${localSettings.type === type ? "active" : ""}`}
+              onClick={() => updateSetting("type", type)}
+            >
+              {activeMode.types[type].label}
+            </div>
+          ))}
         </div>
-        {isActive && (
-          <button
-            className="tile text body"
-            onClick={handleToggleExpand}
-            aria-label="Collapse"
-          >
-            -
+
+        {/* Input Column */}
+        <div className="vbox fill">
+          {activeType.inputKind === "numpad" ? (
+            <Numpad
+              value={Number(localInputs.entryValue)}
+              onChange={(val) => updateInput("entryValue", val)}
+            />
+          ) : (
+            <input
+              type="text"
+              value={localInputs.entryValue}
+              onChange={(e) => updateInput("entryValue", e.target.value)}
+            />
+          )}
+          <button className="btn--primary" onClick={handleSearch}>
+            Search
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Expanded content */}
-      {isActive && (
-        <div className="hbox gap-8rpx padding-8rpx">
-          {local.mode === "enterTrxn" && (
-            <div className="hbox gap-8rpx align-center">
-              <div className="vbox w-md gap-8rpx">
-                <div className="vbox w-md gap-8rpx">
-                  <div
-                    className={`tile ${
-                      local.searchType === "receipt" ? "active" : ""
-                    }`}
-                    onClick={() =>
-                      setLocal((p) => ({ ...p, searchType: "receipt" }))
-                    }
-                  >
-                    Receipt #
-                  </div>
-                  <div
-                    className={`tile ${
-                      local.searchType === "order" ? "active" : ""
-                    }`}
-                    onClick={() =>
-                      setLocal((p) => ({ ...p, searchType: "order" }))
-                    }
-                  >
-                    Order #
-                  </div>
-                </div>
-              </div>
-              <div className="fill vbox gap-8rpx">
-                <Numpad
-                  value={local.entryValue}
-                  onChange={handleNumpadChange}
-                />
-                <button className="tile" onClick={handleAdd}>
-                  Add
-                </button>
-              </div>
+      {/* Results (advSearch only) */}
+      {localSettings.mode === "advSearch" && results.length > 0 && (
+        <div className="card-ctnr">
+          {results.map((inv) => (
+            <div key={inv.invoId} className="card">
+              <LabeledValue label="Invoice #" value={inv.invoId} />
             </div>
-          )}
-          {local.mode === "search" && (
-            <div className="vbox gap-8rpx">
-              <div className="hbox gap-8rpx">
-                <div className="tile active">Search Phone</div>
-                <div className="tile">Search CC#</div>
-              </div>
-              <Numpad value={local.entryValue} onChange={handleNumpadChange} />
-              <div className="vbox">
-                <div className="tile">Search Results (stub)</div>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </Stage>
   );
-};
+}
 
 // ================================
 // RECEIPT CARD
@@ -377,6 +600,7 @@ function ReceiptList() {
   // <InvoSearchCard />
   return (
     <div className="card-ctnr">
+      <InvoSearchBar />
       {Array.from(receipts.values()).map((invoice: Invoice) => (
         <ReceiptCard key={invoice.invoId} invoice={invoice} />
       ))}

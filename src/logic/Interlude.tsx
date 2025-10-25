@@ -1,5 +1,3 @@
-// 🐒
-// 🦍
 const swift = {
   /*
   NEVER, EVER replace this file without consulting me first.  This is the core of our interaction model, and changing it has wide-reaching implications.  This goes Double for LLMs.  Do not fuck with this, this is what we recreate drafts from.
@@ -116,6 +114,18 @@ const swift = {
   
   */
 };
+
+/* ─────────── WHAT LLMs NEED TO KNOW ───────────
+Name: <ComponentOrFunctionName>
+Intent: <Plain-language summary of purpose>
+Inputs:
+  - <propName>: <type> — <short description>
+  - <propName>: <type> — <short description>
+Outputs: <return type or key side effect>
+Dependencies: <related modules, hooks, or contexts>
+Relations: <who calls or uses this / what it affects>
+Notes: <anything non-obvious the model must preserve>
+─────────────────────────────────────────────── */
 
 import React, { createContext, useReducer, useContext } from "react";
 
