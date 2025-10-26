@@ -246,9 +246,11 @@ const swift_SearchResults = {
   */
 };
 
-// --- Main InvoSearchCard logic ---
-export const InvoSearchBarOld = () => {
+export function InvoSearchBar() {
+  // --- Main InvoSearchCard logic ---
+
   const [transaction, dispatchTransaction] = useTransaction();
+
   const stageId = "invo-search-card";
   const scene = { [stageId]: true } as Scene;
   const isActive = useIsActive(scene);
@@ -256,7 +258,8 @@ export const InvoSearchBarOld = () => {
   type Mode = "keySearch" | "advSearch";
   type KeySearch = "receipt" | "order";
   type AdvSearch = "phone" | "cc";
-  type LocalSettingsProps = {
+
+  type LocalSettings = {
     mode: Mode;
     keySearch: KeySearch;
     advSearch: AdvSearch;
@@ -267,10 +270,10 @@ export const InvoSearchBarOld = () => {
     | { type: "SET_KEYSEARCH"; payload: KeySearch }
     | { type: "SET_ADVSEARCH"; payload: AdvSearch };
 
-  function localSettingsReducer(
-    state: LocalSettingsProps,
+  const localSettingsReducer = (
+    state: LocalSettings,
     action: LocalSettingsAction
-  ): LocalSettingsProps {
+  ): LocalSettings => {
     switch (action.type) {
       case "SET_MODE":
         return { ...state, mode: action.payload };
@@ -281,226 +284,109 @@ export const InvoSearchBarOld = () => {
       default:
         return state;
     }
-  }
+  };
 
-  // Usage
   const [localSettings, dispatchSettings] = React.useReducer(
     localSettingsReducer,
-    {
-      mode: "keySearch",
-      keySearch: "receipt",
-      advSearch: "phone",
-    } as LocalSettingsProps
+    { mode: "keySearch", keySearch: "receipt", advSearch: "phone" }
   );
 
   const [localInputs, setLocalInputs] = React.useState({
-    entryValue: null,
+    entryValue: null as number | null,
   });
 
-  function handleInputChange() {
-    // Fttb, this should all happen through numpad.
+  function handleInputChange(val: number) {
+    setLocalInputs({ entryValue: val });
   }
 
-  // iconCol 4rem | modeCol 12rem | typeCol 12rem | inputCol 1fr
+  // START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  type UiSelectionTileProps = {
+    group: keyof LocalSettings;
+    value: string; // this is supposed to be the value it sets AND checks against
+  };
 
-// START_SCOPE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
+  function UiSelectionTile({ group, value }: UiSelectionTileProps) {
+    const valInState = localSettings[group];
+    console.log("group:", group, "value:", value, "valInState:", valInState);
+    const isSelected = valInState === value;
+    console.log("isSelected:", isSelected);
 
+    const actionType =
+      group === "mode"
+        ? "SET_MODE"
+        : group === "keySearch"
+        ? "SET_KEYSEARCH"
+        : "SET_ADVSEARCH";
 
-  function UiSelectionTile(key: string, value: string) {
-    // standard template for Mode and Type tiles.
-    // on click, set localSettings accordingly.
-    // highlight if active, logic sets scss class conditionally.
+    return (
+      <SelectionTile
+        key={`${group}-${value}`}
+        isSelected={isSelected}
+        isDisabled={false}
+        onClick={() =>
+          dispatchSettings({ type: actionType as any, payload: value } as any)
+        }
+      >
+        {value}
+      </SelectionTile>
+    );
+  }
 
-    const keyStr = `invoSearchSelectionTile${value}`;
-    const isActive = localSettings[key as keyof LocalSettingsProps] === value;
-      // converts the key to uppercase and dispatches the appropriate action.
+  return (
+    <Stage className={`receipts hbox`} id={stageId} scene={scene}>
+      {/* Icon column (placeholder for visual alignment) */}
 
-      return (
-        <div
-          id={`${keyStr}`}
-          key={keyStr}
-          className={`tile test subtitle h-sm ${isActive ? "active" : ""}`}
-          onClick={}
+      {!isActive ? (
+        <Actor
+          id={`${stageId}-bar`}
+          scene={scene}
+          className="tile hbox align-center"
         >
+          <div className={`card`}>
+            <div className="text subtitle">Search Receipts</div>
+            <div className="icon sm">🔍</div>
+          </div>
+        </Actor>
+      ) : (
+        <Dialog
+          scene={scene}
+          id={`${stageId}-dialog`}
+          className={`receipts search-grid`}
+          rowClassName={`align-start`}
+        >
+          {/* Mode column */}
+          <div className="modeCol vbox">
+            <UiSelectionTile group="mode" value="keySearch" />
+            <UiSelectionTile group="mode" value="advSearch" />
+          </div>
 
-        </div>
-      );
-    };
-  }
-// END_SCOPE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  return (
-    <Stage id={stageId} className={`invo-search-card grid`} scene={scene}>
-      <div className="hbox invo-search-grid">
-        <div className={`iconCol`}></div>
-        <div className={`modeCol `}>
-        <SelectionTile />
-        </div>
-        <div className={`typeCol `}></div>
-        <div className={`inputCol `}>
-          <Numpad
-            value={localInputs.entryValue || 0}
-            onChange={handleInputChange}
-          />
-        </div>
-      </div>
-      <div className={`hbox`}></div>
-    </Stage>
-  );
-};
+          {/* Type column */}
+          <div className="typeCol vbox">
+            {localSettings.mode === "keySearch" && (
+              <>
+                <UiSelectionTile group="keySearch" value="receipt" />
+                <UiSelectionTile group="keySearch" value="order" />
+              </>
+            )}
 
-// END
-export function InvoSearchBar() {
-  const oConfig = {
-    keySearch: {
-      label: "Key Search",
-      types: {
-        receipt: { label: "Receipt #" },
-        order: { label: "Order #" },
-      },
-    },
-    advSearch: {
-      label: "Advanced Search",
-      types: {
-        phone: { label: "Phone" },
-        cc: { label: "Credit Card" },
-      },
-    },
-  } as const;
+            {localSettings.mode === "advSearch" && (
+              <>
+                <UiSelectionTile group="advSearch" value="phone" />
+                <UiSelectionTile group="advSearch" value="cc" />
+              </>
+            )}
+          </div>
 
-  type Mode = keyof typeof oConfig;
-  type SearchType = keyof (typeof oConfig)[Mode]["types"];
-  type LocalSettings = {
-    mode: Mode;
-    searchType: SearchType;
-  };
-
-  const [transaction, dispatchTransaction] = useTransaction();
-
-  type LocalSettingsProps = {
-    mode: Mode;
-    searchType: SearchType;
-  };
-  // Local configuration + input states
-  const [localSettings, setLocalSettings] = React.useState({
-    mode: "keySearch",
-    searchType: "receipt",
-  } as LocalSettingsProps);
-
-  const [localInputs, setLocalInputs] = React.useState({
-    entryValue: "",
-  });
-
-  const [results, setResults] = React.useState<Invoice[]>([]);
-
-  type ModeKey = keyof typeof oConfig;
-  type TypeKey<M extends ModeKey> = keyof (typeof oConfig)[M]["types"];
-
-  // Generic state setters
-  const updateSetting = (key: keyof typeof localSettings, value: any) =>
-    setLocalSettings((prev) => ({ ...prev, [key]: value }));
-
-  const updateInput = (key: keyof typeof localInputs, value: any) =>
-    setLocalInputs((prev) => ({ ...prev, [key]: value }));
-
-  // Local configuration object
-  const oldOConfig = {
-    keySearch: {
-      label: "Key Search",
-      types: {
-        receipt: {
-          label: "Receipt #",
-          inputKind: "numpad",
-          onSearch: (val: string | number) =>
-            setResults(findInvoices({ type: "phone", value: val })),
-        },
-      },
-    },
-    advSearch: {
-      label: "Advanced Search",
-      types: {
-        phone: {
-          label: "Phone",
-          inputKind: "numpad",
-          onSearch: (val: string | number) =>
-            setResults(findInvoices({ type: "phone", value: val })),
-        },
-        cc: {
-          label: "Credit Card",
-          inputKind: "text",
-          onSearch: (val: string | number) =>
-            setResults(findInvoices({ type: "cc", value: val })),
-        },
-      },
-    },
-  };
-
-  const activeMode = oConfig[localSettings.mode];
-  const activeType = activeMode.types[localSettings.type];
-
-  // Search trigger
-  const handleSearch = () => {
-    const val = localInputs.entryValue;
-    activeType.onSearch(val);
-  };
-
-  return (
-    <Stage id="InvoSearch" scene={{ invoSearch: true }} className="receipts">
-      <div className="search-grid">
-        {/* Mode Column */}
-        <div className="vbox">
-          {Object.keys(oConfig).map((mode) => (
-            <div
-              key={mode}
-              className={`tile ${localSettings.mode === mode ? "active" : ""}`}
-              onClick={() => updateSetting("mode", mode)}
-            >
-              {oConfig[mode].label}
-            </div>
-          ))}
-        </div>
-
-        {/* Type Column */}
-        <div className="vbox">
-          {Object.keys(activeMode.types).map((type) => (
-            <div
-              key={type}
-              className={`tile ${localSettings.type === type ? "active" : ""}`}
-              onClick={() => updateSetting("type", type)}
-            >
-              {activeMode.types[type].label}
-            </div>
-          ))}
-        </div>
-
-        {/* Input Column */}
-        <div className="vbox fill">
-          {activeType.inputKind === "numpad" ? (
+          {/* Input column */}
+          <div className="inputCol vbox">
             <Numpad
-              value={Number(localInputs.entryValue)}
-              onChange={(val) => updateInput("entryValue", val)}
+              value={localInputs.entryValue || 0}
+              onChange={handleInputChange}
+              showIncrementButtons={false}
             />
-          ) : (
-            <input
-              type="text"
-              value={localInputs.entryValue}
-              onChange={(e) => updateInput("entryValue", e.target.value)}
-            />
-          )}
-          <button className="btn--primary" onClick={handleSearch}>
-            Search
-          </button>
-        </div>
-      </div>
-
-      {/* Results (advSearch only) */}
-      {localSettings.mode === "advSearch" && results.length > 0 && (
-        <div className="card-ctnr">
-          {results.map((inv) => (
-            <div key={inv.invoId} className="card">
-              <LabeledValue label="Invoice #" value={inv.invoId} />
-            </div>
-          ))}
-        </div>
+          </div>
+        </Dialog>
       )}
     </Stage>
   );

@@ -33,6 +33,7 @@
     --color-bg-main: #fff;
     --color-bg-alt: #f4f6fa;
     --color-bg-interactive: #e6f0ff;
+    --color-bg-stage: #ebebeb;
 
     --color-fg: #222;
     --color-border: #ddd;
@@ -250,7 +251,7 @@
     flex-direction: column;
 
     &.active {
-      background-color: var(--color-bg-interactive);
+      background-color: var(--color-bg-stage);
       box-shadow: var(--shadow-card);
       border-color: transparent;
     }
@@ -275,11 +276,11 @@
   }
 
   // Numpad Component
-
+  // START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   .numpad {
     @extend .vbox;
     min-width: 12.5rem; /* ~200px */
-    width: 20rem;
+    width: 22rem;
   }
 
   .numpad-controls {
@@ -288,13 +289,18 @@
     padding: var(--8rpx);
     align-items: center;
     align-self: stretch;
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
 
   .numpad-input {
     text-align: center;
     @extend .h-sm;
     @extend .title;
-    width: 5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
   }
 
   .numpad-btn {
@@ -304,9 +310,9 @@
     justify-content: center;
     align-items: center;
     min-height: var(--56rpx); /* ~3.5rem */
-    padding: 0rem, var(--8rpx);
-    flex: 1 1 0rem;
-    width: 100%;
+    padding: var(--8rpx);
+    flex: 1 1 0;
+    min-width: 5rem;
   }
 
   .numpad-grid {
@@ -315,8 +321,9 @@
     gap: var(--8rpx);
     justify-items: center;
     align-items: center;
-    padding: var(--8rpx);
   }
+
+  // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /* Four-Column Grid for Receipts / Search Layouts */
 
@@ -326,28 +333,13 @@
     .search-grid {
       display: grid;
       grid-template-columns:
-        [iconCol] 4rem
-        [modeCol] 12rem
-        [typeCol] 12rem
+        [modeCol] 8rem
+        [typeCol] 8rem
         [inputCol] 1fr;
       gap: var(--16rpx);
       align-items: start;
       width: 100%;
     }
-
-    .subgrid-4col {
-      display: grid;
-      grid-template-columns: subgrid;
-      gap: inherit;
-      align-items: inherit;
-    }
-  }
-
-  .subgrid-4col {
-    display: grid;
-    grid-template-columns: subgrid;
-    gap: inherit;
-    align-items: inherit;
   }
 }
 

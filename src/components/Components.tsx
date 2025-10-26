@@ -96,7 +96,7 @@ export function SelectionTile({
   children,
   className = "",
 }: SelectionTileProps) {
-  const sClasses = `${isSelected ? "selected" : ""} ${
+  const sClasses = `${isSelected ? "active" : ""} ${
     isDisabled ? "" : "disabled"
   } ${className}`;
   return (
@@ -109,13 +109,20 @@ export function SelectionTile({
   );
 }
 
+// START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 export type NumpadProps = {
   value?: number;
   onChange?: (val: number) => void;
   className?: string;
+  showIncrementButtons?: boolean; // Optional; defaults to true
 };
 
-export function Numpad({ value, onChange, className = "" }: NumpadProps) {
+export function Numpad({
+  value,
+  onChange,
+  className = "",
+  showIncrementButtons = true,
+}: NumpadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // Auto-focus the input when the numpad mounts or its parent tile is clicked
   React.useEffect(() => {
@@ -157,12 +164,14 @@ export function Numpad({ value, onChange, className = "" }: NumpadProps) {
   return (
     <div className={`numpad ${className}`}>
       <div className="numpad-controls">
-        <button
-          className="numpad-btn text title"
-          onClick={() => handleIncrement(-1)}
-        >
-          -
-        </button>
+        {showIncrementButtons && (
+          <button
+            className="numpad-btn text title"
+            onClick={() => handleIncrement(-1)}
+          >
+            -
+          </button>
+        )}
         <input
           id="numpad-input"
           ref={inputRef}
@@ -171,12 +180,14 @@ export function Numpad({ value, onChange, className = "" }: NumpadProps) {
           className="numpad-input text title"
           inputMode="numeric"
         />
-        <button
-          className="numpad-btn text title"
-          onClick={() => handleIncrement(1)}
-        >
-          +
-        </button>
+        {showIncrementButtons && (
+          <button
+            className="numpad-btn text title"
+            onClick={() => handleIncrement(1)}
+          >
+            +
+          </button>
+        )}
         <button className="numpad-btn text title" onClick={handleBackspace}>
           ←
         </button>
@@ -197,6 +208,8 @@ export function Numpad({ value, onChange, className = "" }: NumpadProps) {
 }
 
 export default Numpad;
+
+// END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // Overlay participates in the transient z-axis model and uses .layer-top.blocking for correct stacking.
 export function Overlay({

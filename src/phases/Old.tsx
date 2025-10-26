@@ -462,3 +462,21 @@ const SwiftScriptTree = {
   
   */
 };
+
+const goals = {
+  /*
+    - Get Receipt Lookup done
+      -This is critical.  We need it for tomorrow.
+
+    - Flip logic on non-receipted display to show Missing Receipts
+
+    - Numpad.
+      - Probably have to start treating this like a real component.
+        -Thinking 3 columns.
+
+    
+      - Idea is to have an Expando configuration.  
+        -There would be a first line that is always there, and it remains consistent when clicked so the user understands "This is more of what I just used"
+        -And then the Dialog expands, too.
+  */
+};
