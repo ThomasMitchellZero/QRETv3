@@ -323,6 +323,65 @@
     align-items: center;
   }
 
+  /* KeyPad Component */
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--8rpx);
+    justify-items: center;
+    align-items: center;
+    width: 100%;
+
+    .keypad-input {
+      text-align: center;
+      @extend .h-sm;
+      @extend .title;
+      min-width: 0;
+      width: 100%;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-s);
+      background-color: var(--color-bg-main);
+    }
+  }
+
+  .ui-control {
+    @extend .tile;
+    @extend .h-xs;
+    @extend .title;
+    justify-content: center;
+    align-items: center;
+    min-height: var(--56rpx);
+    padding: var(--8rpx);
+    flex: 1 1 0;
+    width: 100%;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--color-bg-main);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-s);
+    transition: filter 0.2s ease;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+
+    &:active {
+      filter: brightness(0.9);
+    }
+  }
+
+  .keypad-input {
+    text-align: center;
+    @extend .h-sm;
+    @extend .title;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-s);
+    background-color: var(--color-bg-main);
+  }
+
   // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /* Four-Column Grid for Receipts / Search Layouts */
