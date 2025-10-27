@@ -25,6 +25,7 @@ import {
   Stage,
   Actor,
   Dialog,
+  Expando,
   type Scene,
 } from "../logic/Interlude";
 import { ProductImage } from "../assets/product-images/ProductImage";
@@ -126,67 +127,51 @@ export function InvoSearchBar() {
   }
 
   return (
-    <Stage className={`receipts vbox`} id={stageId} scene={scene}>
-      {/* Icon column (placeholder for visual alignment) */}
+    <Expando
+      className={`receipts card vbox`}
+      id={stageId}
+      scene={scene}
+      headline={
+        <div className={`hbox align-center`}>
+          <div className="text subtitle">Search Receipts</div>
+          <div className="icon sm">🔍</div>
+        </div>
+      }
+    >
+      <div id={`${stageId}-dialog`} className={`receipts search-grid`}>
+        {/* Mode column */}
+        <div className="modeCol vbox">
+          <UiSelectionTile group="mode" value="keySearch" />
+          <UiSelectionTile group="mode" value="advSearch" />
+        </div>
 
-      {!isActive ? (
-        <Actor
-          id={`${stageId}-bar`}
-          scene={scene}
-          className="tile hbox align-center"
-        >
-          <div className={`card`}>
-            <div className="text subtitle">Search Receipts</div>
-            <div className="icon sm">🔍</div>
-          </div>
-        </Actor>
-      ) : (
-        <>
-          <div className={`card`}>
-            <div className="text subtitle">Search Receipts</div>
-            <div className="icon sm">🔍</div>
-          </div>
-          <Dialog
-            scene={scene}
-            id={`${stageId}-dialog`}
-            className={`receipts search-grid`}
-            rowClassName={`align-start`}
-          >
-            {/* Mode column */}
-            <div className="modeCol vbox">
-              <UiSelectionTile group="mode" value="keySearch" />
-              <UiSelectionTile group="mode" value="advSearch" />
-            </div>
+        {/* Type column */}
+        <div className="typeCol vbox">
+          {localSettings.mode === "keySearch" && (
+            <>
+              <UiSelectionTile group="keySearch" value="receipt" />
+              <UiSelectionTile group="keySearch" value="order" />
+            </>
+          )}
 
-            {/* Type column */}
-            <div className="typeCol vbox">
-              {localSettings.mode === "keySearch" && (
-                <>
-                  <UiSelectionTile group="keySearch" value="receipt" />
-                  <UiSelectionTile group="keySearch" value="order" />
-                </>
-              )}
+          {localSettings.mode === "advSearch" && (
+            <>
+              <UiSelectionTile group="advSearch" value="phone" />
+              <UiSelectionTile group="advSearch" value="cc" />
+            </>
+          )}
+        </div>
 
-              {localSettings.mode === "advSearch" && (
-                <>
-                  <UiSelectionTile group="advSearch" value="phone" />
-                  <UiSelectionTile group="advSearch" value="cc" />
-                </>
-              )}
-            </div>
-
-            {/* Input column */}
-            <div className="inputCol vbox">
-              <KeyPad
-                value={localInputs.entryValue || ""}
-                onChange={handleInputChange}
-                display={`Enter ${activeSearch} #`}
-              />
-            </div>
-          </Dialog>
-        </>
-      )}
-    </Stage>
+        {/* Input column */}
+        <div className="inputCol vbox">
+          <KeyPad
+            value={localInputs.entryValue || ""}
+            onChange={handleInputChange}
+            display={`Enter ${activeSearch} #`}
+          />
+        </div>
+      </div>
+    </Expando>
   );
 }
 

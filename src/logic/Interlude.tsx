@@ -341,7 +341,6 @@ export function Dialog({
 
 export type ExpandoProps = InterludeProps & {
   headline: ReactNode;
-  reveal: ReactNode;
 };
 
 export function Expando({
@@ -349,14 +348,14 @@ export function Expando({
   scene,
   className = "",
   headline,
-  reveal,
+  children,
 }: ExpandoProps) {
   const active = useIsActive(scene);
 
   return (
-    <Stage id={id} scene={scene} className={`expando ${className}`}>
+    <Stage id={id} scene={scene} className={`${className}`}>
       {headline}
-      {active && reveal}
+      {active && children}
     </Stage>
   );
 }
