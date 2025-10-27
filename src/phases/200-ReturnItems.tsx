@@ -306,7 +306,9 @@ function ItemEntry() {
           })
         }
       />
-      <button onClick={handleAdd}>Add Item</button>
+      <button className="btn--outline" onClick={handleAdd}>
+        Add Item
+      </button>
     </div>
   );
 }
