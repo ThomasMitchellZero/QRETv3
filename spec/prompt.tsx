@@ -234,19 +234,20 @@ const promptLayer = {
 
     -------------------------------------
 
+    Your objective is to create a component in Interlude called Expando.  This component will display a Label area (always) and an expandable Details area (conditionally).
 
+    -The Expando is NOT a Stage!  It is contained within a Stage.  It's closer to an Actor than anything else.  
 
-    Your objective is to create a component in Interlude called Expando.  This component will display a Label area (always) and an expandable Details area (conditionally).  
-
-    -The component is always a Stage, following the same Interlude-clearing pattern.  So once the stage is clicked, it blocks ALL actions that would close it within its own borderns.
+    -The Component uses the Interlude infrastructure.  It just needs to be a component that sets its own inactive / active property in the parent Stage and prevent event bubbling past itself.
 
         When creating the Type, expand InterludeProps to include:
-            -Label: React.ReactNode
-            -Details: React.ReactNode
-        -The Label area is always visible.  Contents can be any JSX.
-            -This is critical - The label area can stretch, but padding MUST be preserved.  It has to look like the same thing just got bigger.
+            -Headline: React.ReactNode
+            -Reveal: React.ReactNode
+        -The Headline area is always visible.  Contents can be any JSX.
+            -This is critical - The Headline area can stretch, but padding MUST be preserved.  It has to look like the same thing just got bigger.
 
-        -The Details area is only visible when the component is expanded.
+        -The Details area is only visible when the Stage is active (clicked).  Contents can be any JSX.
+        
         -Do not intake either one as Children.  The props should have clear labels.
 
 

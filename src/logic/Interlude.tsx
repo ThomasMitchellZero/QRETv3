@@ -139,6 +139,7 @@ export type Scene = Record<string, boolean>;
 // Core action types for all Interlude components
 export type InterludeAction =
   | { kind: "SET_SCENE"; payload: Scene }
+  | { kind: "ADD_TO_SCENE"; payload: Scene }
   | { kind: "CLEAR_SCENE" };
 
 // Component-specific type contracts (unified family)
@@ -160,6 +161,8 @@ function interludeReducer(state: Scene, action: InterludeAction): Scene {
   switch (action.kind) {
     case "SET_SCENE":
       return action.payload;
+    case "ADD_TO_SCENE":
+      return { ...state, ...action.payload };
     case "CLEAR_SCENE":
       return {};
     default:
@@ -206,55 +209,6 @@ export function isSceneActive(interlude: Scene, scene: Scene): boolean {
 
 // === UI Components ===
 
-const swiftActorDialog = {
-  /*
-  -- INTERLUDE LAYOUT MODEL (Flex-Column Dialog System) --
-
-    Intent:
-    Use a two-axis flex structure to manage Actors and Dialogs with minimal layout logic.
-    No absolute positioning, no manual margins, no z-index stacking.
-    The container defines total width; flex rules handle all spacing and alignment.
-    -All style should come from standard style primitives unless something unique is needed.  No inline-style, all class-based.
-
-      Structure:
-      Stage (style-agnostic)
-        Tile (flex row)
-          Actor (flex column)
-            Dialog (optional, contains its own style.)
-
-      Stage :
-        - Stage defines total horizontal bounds of all Actors it contains.  No Actor or Dialog can ever exceed the width of the Stage.  Width: 100%. 
-          -This should be style-agnostic.  The only requirement is that Stage sets the max width for its contents.
-            -All other styling will be provided by contents or primitives.
-          -This will be a component to handle background clicks, but afaict it needs no special styling.  That can come from existing style primitives.
-
-      Actor Rules:
-        - Actors remain fixed size and position; never resize on activation.
-        - An actor itself is unclickable.  However, it contains a clickable Tile element that triggers its Scene change.
-          - When an Actor's Tile is clicked:
-          - It sets its Scene as the new Interlude 
-            - Dialog visibility and Selected style applied by same condition - presence of its Scene in Interlude.
-            -its Dialog becomes visible directly beneath it.
-        - The Stage grows vertically to accommodate new Dialogs.
-        - Other Actors retain position; only vertical expansion occurs.
-
-      Dialog Rules:
-        - Each Actor has a reserved “slot” for its Dialog in the flex column.
-        - Dialogs can be any width up to the Stage’s width (container boundary).
-          -This should happen automatically, no manual width calculations needed.
-        - If the desired centered position would cause overflow, the browser naturally
-          clamps the Dialog to remain fully within the Stage bounds.
-        - Dialogs expand in flow, pushing content below downward (no overlap).
-
-
-      Result:
-      A self-contained, purely flex-driven vertical stack that handles progressive
-      disclosure without any absolute positioning or grid math.  Dialogs expand below
-      their Actors, can safely exceed the Actor’s width, and auto-clamp to fit within
-      the container.  Entire system is predictable, fluid, and responsive by default.
-        */
-};
-
 export function Stage({
   id,
   scene = {},
@@ -273,6 +227,24 @@ export function Stage({
         dispatch({ kind: "SET_SCENE", payload: scene });
       }}
     >
+      {children}
+    </div>
+  );
+}
+
+export function BlankActor({
+  id,
+  scene,
+  className = "",
+  children,
+}: InterludeProps) {
+  const [, dispatch] = useInterlude();
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch({ kind: "SET_SCENE", payload: { ...scene, [id]: true } });
+  };
+  return (
+    <div id={id} className={className} onClick={handleClick}>
       {children}
     </div>
   );
@@ -308,6 +280,33 @@ export function Actor({ id, scene, className, children }: InterludeProps) {
 export type DialogProps = InterludeProps & {
   rowClassName?: string;
 };
+
+export function BlankDialog({
+  id,
+  scene,
+  className = "",
+  children,
+}: DialogProps) {
+  const isActive = useIsActive(scene);
+  const activeClass = isActive ? "active" : "";
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`BlankDialog ${id} clicked`); // For debugging purposes
+  };
+  return (
+    isActive && (
+      <div
+        onClick={(e) => handleClick(e)}
+        id={`blank-dialog-${id}`}
+        className={`${className} ${activeClass}`}
+      >
+        {children}
+      </div>
+    )
+  );
+}
+
 export function Dialog({
   id,
   scene,
@@ -339,24 +338,44 @@ export function Dialog({
 
 // START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-export type ExpandoProps = InterludeProps & {
-  headline: ReactNode;
-};
+// START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+// Expando — a Stage-based expanding component that reveals content when active.
 export function Expando({
   id,
   scene,
-  className = "",
   headline,
-  children,
-}: ExpandoProps) {
+  reveal,
+  className = "",
+}: InterludeProps & {
+  headline?: React.ReactNode;
+  reveal?: React.ReactNode;
+}) {
   const active = useIsActive(scene);
+  const [, dispatch] = useInterlude();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch({ kind: "SET_SCENE", payload: scene });
+  };
 
   return (
-    <Stage id={id} scene={scene} className={`${className}`}>
-      {headline}
-      {active && children}
+    <Stage id={id} scene={scene} className={`expando ${className}`}>
+      <div id={`${id}-label`} className="expando-label" onClick={handleClick}>
+        {headline}
+      </div>
+
+      {active && (
+        <BlankDialog
+          id={`${id}-dialog`}
+          scene={scene}
+          className="expando-dialog"
+        >
+          {reveal}
+        </BlankDialog>
+      )}
     </Stage>
   );
 }
+
 // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

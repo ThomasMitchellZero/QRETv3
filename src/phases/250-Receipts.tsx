@@ -30,7 +30,7 @@ import {
 } from "../logic/Interlude";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
-import { KeyPad } from "../components/KeyPad";
+import { EntryKeyPad, EntryKeyPadExpando } from "../components/KeyPad";
 
 // ================================
 // INVOICE SEARCH CARD
@@ -43,9 +43,10 @@ export function InvoSearchBar() {
 
   const [transaction, dispatchTransaction] = useTransaction();
 
-  const stageId = "invo-search-card";
+  const stageId = "invo-search-bar";
   const scene = { [stageId]: true } as Scene;
-  const isActive = useIsActive(scene);
+  const entryId = "invo-search-entry";
+  const entryScene = { [stageId]: true, [entryId]: true } as Scene;
 
   type Mode = "keySearch" | "advSearch";
   type KeySearch = "receipt" | "order";
@@ -92,6 +93,12 @@ export function InvoSearchBar() {
     setLocalInputs({ entryValue: isNaN(parsed) ? val : parsed });
   }
 
+  const handleKeySearch = () => {};
+
+  const handleAdvancedSearch = () => {};
+  
+
+
   const activeSearch = localSettings[localSettings.mode];
 
   type UiSelectionTileProps = {
@@ -101,9 +108,7 @@ export function InvoSearchBar() {
 
   function UiSelectionTile({ group, value }: UiSelectionTileProps) {
     const valInState = localSettings[group];
-    console.log("group:", group, "value:", value, "valInState:", valInState);
     const isSelected = valInState === value;
-    console.log("isSelected:", isSelected);
 
     const actionType =
       group === "mode"
@@ -128,8 +133,8 @@ export function InvoSearchBar() {
 
   return (
     <Expando
-      className={`receipts card vbox`}
-      id={stageId}
+      className={`receipts fill-cross card vbox`}
+      id={`${stageId}-expando`}
       scene={scene}
       headline={
         <div className={`hbox align-center`}>
@@ -137,41 +142,49 @@ export function InvoSearchBar() {
           <div className="icon sm">🔍</div>
         </div>
       }
-    >
-      <div id={`${stageId}-dialog`} className={`receipts search-grid`}>
-        {/* Mode column */}
-        <div className="modeCol vbox">
-          <UiSelectionTile group="mode" value="keySearch" />
-          <UiSelectionTile group="mode" value="advSearch" />
-        </div>
+      reveal={
+        <div className={`receipts search-grid`}>
+          {/* Mode column */}
+          <div className="modeCol vbox">
+            <UiSelectionTile group="mode" value="keySearch" />
+            <UiSelectionTile group="mode" value="advSearch" />
+          </div>
 
-        {/* Type column */}
-        <div className="typeCol vbox">
-          {localSettings.mode === "keySearch" && (
-            <>
-              <UiSelectionTile group="keySearch" value="receipt" />
-              <UiSelectionTile group="keySearch" value="order" />
-            </>
-          )}
+          {/* Type column */}
+          <div className="typeCol vbox">
+            {localSettings.mode === "keySearch" && (
+              <>
+                <UiSelectionTile group="keySearch" value="receipt" />
+                <UiSelectionTile group="keySearch" value="order" />
+              </>
+            )}
 
-          {localSettings.mode === "advSearch" && (
-            <>
-              <UiSelectionTile group="advSearch" value="phone" />
-              <UiSelectionTile group="advSearch" value="cc" />
-            </>
-          )}
-        </div>
+            {localSettings.mode === "advSearch" && (
+              <>
+                <UiSelectionTile group="advSearch" value="phone" />
+                <UiSelectionTile group="advSearch" value="cc" />
+              </>
+            )}
+          </div>
 
-        {/* Input column */}
-        <div className="inputCol vbox">
-          <KeyPad
-            value={localInputs.entryValue || ""}
-            onChange={handleInputChange}
-            display={`Enter ${activeSearch} #`}
-          />
+          {/* Input column */}
+          <div className="inputCol vbox">
+            <Expando // Try this with top fields in Headline and Numpad in Reveal
+              id={`${entryId}`}
+              scene={entryScene as Scene}
+              headline={<div className="text subtitle">Enter Valuer</div>}
+              reveal={
+                <EntryKeyPad
+                  value={localInputs.entryValue || ""}
+                  onChange={handleInputChange}
+                  onClick={handleInputChange}
+                />
+              }
+            ></Expando>
+          </div>
         </div>
-      </div>
-    </Expando>
+      }
+    ></Expando>
   );
 }
 
@@ -213,11 +226,10 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
   return (
     <div className="card hbox">
       <LabeledValue label="Receipt #" value={invoId} className="w-sm" />
-
       <Stage
         className={`align-start fill-main blooble`}
         id={`receipt-${invoId}`}
-        scene={{}}
+        scene={scene}
       >
         <Actor
           scene={scene}
@@ -278,7 +290,7 @@ function ReceiptList() {
 }
 
 // ================================
-// RECEIPT ENTRY
+// RECEIPT ENTRY  / deprecated
 // ================================
 function ReceiptEntry() {
   const [transaction, dispatch] = useTransaction();
@@ -352,6 +364,7 @@ export function ReceiptsPhase() {
         pageTitle="Receipts"
         leftColumn={<UiMissingReceipt />}
         mainContent={<ReceiptList />}
+
         //rightColumn={<ReceiptEntry />}
       />
     </Phase>

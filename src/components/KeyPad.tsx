@@ -1,6 +1,7 @@
 // START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 import React from "react";
+import { Expando, type Scene } from "../logic/Interlude";
 
 export interface ControlProps {
   value: string | number;
@@ -11,6 +12,7 @@ export interface ControlProps {
   className?: string;
   display?: React.ReactNode;
   children?: React.ReactNode;
+  scene?: Scene;
 }
 
 // Base Control — single source of truth for all behavior
@@ -145,7 +147,7 @@ export function SubmitKey(props: ControlProps) {
 }
 
 // Base Numeric Pad
-export function KeyPad(props: ControlProps) {
+export function EntryKeyPad(props: ControlProps) {
   const {
     value,
     onChange = () => {},
@@ -216,4 +218,31 @@ export function QtyPad(props: ControlProps) {
     </div>
   );
 }
+
+export function EntryKeyPadExpando({
+  value,
+  onChange = () => {},
+  onClick = () => {},
+  className = "",
+  display = "",
+  scene
+}: ControlProps) {
+  return (
+    <Expando
+      id="entrykeypad-expando"
+      scene={scene as Scene}
+      className={`${className}`}
+      headline={<div className="text subtitle">Enter Valuer</div>}
+      reveal={
+        <EntryKeyPad
+          value={value}
+          onChange={onChange}
+          onClick={onClick}
+          display={display}
+        />
+      }
+    ></Expando>
+  );
+}
+
 // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
