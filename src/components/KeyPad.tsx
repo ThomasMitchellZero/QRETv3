@@ -54,7 +54,7 @@ export function InputField(props: ControlProps) {
     <input
       id="keypadInput"
       ref={inputRef}
-      className={`keypad-input ${className}`}
+      className={`keypad-input text ${className}`}
       type="text"
       style={style}
       inputMode="numeric"

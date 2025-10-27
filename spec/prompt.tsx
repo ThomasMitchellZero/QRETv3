@@ -230,18 +230,29 @@ const promptLayer = {
 
     These are the unique instructions for this *Prompt*. 
   
-    *Target File*: style.scss, between pairs of *START_SCOPER* and *END_SCOPER* markers.
+    *Target File*:  Interlude.tsx, between pairs of *START_SCOPER* and *END_SCOPER* markers.
 
     -------------------------------------
 
-    -Upate style.scss to add styles for the Numpad component.
-    -Ensure styles follow The Ape's preferences from the Preference Layer.
 
-    -Analyze the contents of Keypad.tsx - that is what you are styling.  
-        -New style should be minimal, possibly just the grid layout and UiControl specific styles.
-    - Use existing assets and classnames where possible.
-    - Do not replace the old numpad styles;
-    - Instead create a new family of styles to reflect the simpler constraints of the KeyPad component - size and layout are set in composition and props.
+
+    Your objective is to create a component in Interlude called Expando.  This component will display a Label area (always) and an expandable Details area (conditionally).  
+
+    -The component is always a Stage, following the same Interlude-clearing pattern.  So once the stage is clicked, it blocks ALL actions that would close it within its own borderns.
+
+        When creating the Type, expand InterludeProps to include:
+            -Label: React.ReactNode
+            -Details: React.ReactNode
+        -The Label area is always visible.  Contents can be any JSX.
+            -This is critical - The label area can stretch, but padding MUST be preserved.  It has to look like the same thing just got bigger.
+
+        -The Details area is only visible when the component is expanded.
+        -Do not intake either one as Children.  The props should have clear labels.
+
+
+        -Both are mandatory.
+
+    -All State will be in Interlude, though children may have their own state interactions.
 
 
 

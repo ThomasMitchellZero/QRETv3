@@ -336,3 +336,28 @@ export function Dialog({
     )
   );
 }
+
+// START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+export type ExpandoProps = InterludeProps & {
+  headline: ReactNode;
+  reveal: ReactNode;
+};
+
+export function Expando({
+  id,
+  scene,
+  className = "",
+  headline,
+  reveal,
+}: ExpandoProps) {
+  const active = useIsActive(scene);
+
+  return (
+    <Stage id={id} scene={scene} className={`expando ${className}`}>
+      {headline}
+      {active && reveal}
+    </Stage>
+  );
+}
+// END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
