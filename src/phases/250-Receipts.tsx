@@ -96,8 +96,6 @@ export function InvoSearchBar() {
   const handleKeySearch = () => {};
 
   const handleAdvancedSearch = () => {};
-  
-
 
   const activeSearch = localSettings[localSettings.mode];
 
@@ -265,8 +263,12 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
         </Dialog>
       </Stage>
 
-      <button onClick={handleRemove} aria-label="Remove receipt">
-        🗑️
+      <button
+        className={`btn--outline`}
+        onClick={handleRemove}
+        aria-label="Remove receipt"
+      >
+        X
       </button>
     </div>
   );

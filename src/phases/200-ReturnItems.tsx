@@ -279,39 +279,35 @@ function ItemEntry() {
 
   // Why is the Muggle's model of the time involved in UI work so skewed?
   return (
-    <>
-      <div className="catalog-items-list">
-        Available Item IDs: {Object.keys(fakeCatalog).join(", ")}
-      </div>
-      <div className="item-entry">
-        <input
-          type="text"
-          placeholder="Item #"
-          value={pendingItemId}
-          onChange={(e) =>
-            dispatchPhase({
-              kind: "SET_LOCAL",
-              payload: { key: "pendingItemId", value: e.target.value },
-            })
-          }
-        />
-        <input
-          type="number"
-          min={1}
-          value={pendingQty}
-          onChange={(e) =>
-            dispatchPhase({
-              kind: "SET_LOCAL",
-              payload: {
-                key: "pendingQty",
-                value: parseInt(e.target.value, 10) || 1,
-              },
-            })
-          }
-        />
-        <button onClick={handleAdd}>Add Item</button>
-      </div>
-    </>
+    <div className="vbox gap-16rpx align-start">
+      <div className="text subtitle bold">Add Item to Return</div>
+      <input
+        type="text"
+        placeholder="Item #"
+        value={pendingItemId}
+        onChange={(e) =>
+          dispatchPhase({
+            kind: "SET_LOCAL",
+            payload: { key: "pendingItemId", value: e.target.value },
+          })
+        }
+      />
+      <input
+        type="number"
+        min={1}
+        value={pendingQty}
+        onChange={(e) =>
+          dispatchPhase({
+            kind: "SET_LOCAL",
+            payload: {
+              key: "pendingQty",
+              value: parseInt(e.target.value, 10) || 1,
+            },
+          })
+        }
+      />
+      <button onClick={handleAdd}>Add Item</button>
+    </div>
   );
 }
 

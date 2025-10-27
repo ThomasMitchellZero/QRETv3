@@ -19,6 +19,16 @@
     font-family: "Comic Sans MS", "Comic Sans", cursive;
     line-height: 1.4;
   }
+
+  input {
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    font-size: 1.25rem;
+    min-height: 5rem;
+    color: inherit;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-s);
+    background-color: var(--color-bg-main);
+  }
 }
 
 /* ─────────── BASE ─────────── */
