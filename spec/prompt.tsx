@@ -236,13 +236,14 @@ const promptLayer = {
     *Target *:  QRET Folder
 
     - Objetive 1:
-        -A standard, recursible format I can use for Components, Folders, and Indexes throughout the app.
+        - Propose options for a standard, recursible format I can use for Components, Folders, and Indexes throughout the app.
         -A format that is easy for me to read and understand at a glance.
         -I should be able to easily move components around into folders with as little friction as possible.
         -It should be easy for me to identify names and lineages.  
 
     Objective 2:
         -Recreate the entire QRET folder, or at least the src file, with the new format.  
+
 
         Always
         --------
