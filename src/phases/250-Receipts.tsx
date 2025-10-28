@@ -16,7 +16,7 @@ import type {
   Item,
 } from "../types/Types";
 
-import { fakeInvoices, findInvoices } from "../api/fakeApi";
+import { fakeInvoices, getFakeInvoicesMap } from "../api/fakeApi";
 
 import { useDerivation } from "../logic/Derivation";
 import {
@@ -30,7 +30,11 @@ import {
 } from "../logic/Interlude";
 import { ProductImage } from "../assets/product-images/ProductImage";
 
-import { EntryKeyPad, EntryKeyPadExpando } from "../components/KeyPad";
+import {
+  EntryKeyPad,
+  EntryKeyPadExpando,
+  KeyPadMini,
+} from "../components/KeyPad";
 
 // ================================
 // INVOICE SEARCH CARD
@@ -41,6 +45,7 @@ import { EntryKeyPad, EntryKeyPadExpando } from "../components/KeyPad";
 export function InvoSearchBar() {
   // --- Main InvoSearchCard logic ---
 
+  // * transactionReducer*
   const [transaction, dispatchTransaction] = useTransaction();
 
   const stageId = "invo-search-bar";
@@ -92,12 +97,41 @@ export function InvoSearchBar() {
     const parsed = Number(val);
     setLocalInputs({ entryValue: isNaN(parsed) ? val : parsed });
   }
+  // START_SCOPE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  const handleKeySearch = () => {
+    if (!localInputs.entryValue) return;
+    const searchResult = fakeInvoices[String(localInputs.entryValue)] || null;
+    if (searchResult) {
+      const receipts = transaction.receipts ?? new Map();
+      const next = cloneDeep(receipts);
+      next.set(searchResult.invoId, searchResult);
+      dispatchTransaction({
+        kind: "SET_INPUT",
+        payload: { key: "receipts", value: next },
+      });
+      setLocalInputs({ entryValue: null });
+    }
+  };
 
-  const handleKeySearch = () => {};
+  let advResults: { [key: string]: Invoice } = {};
 
-  const handleAdvancedSearch = () => {};
+  const handleAdvancedSearch = () => {
+    if (!localInputs.entryValue) return;
+    const advResults = fakeInvoices;
+    setLocalInputs({ entryValue: null });
+  };
+
+  function autoSearch() {
+    if (localSettings.mode === "keySearch") {
+      handleKeySearch();
+    } else {
+      handleAdvancedSearch();
+    }
+  }
 
   const activeSearch = localSettings[localSettings.mode];
+
+  // END_SCOPE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   type UiSelectionTileProps = {
     group: keyof LocalSettings;
@@ -141,44 +175,51 @@ export function InvoSearchBar() {
         </div>
       }
       reveal={
-        <div className={`receipts search-grid`}>
-          {/* Mode column */}
-          <div className="modeCol vbox">
-            <UiSelectionTile group="mode" value="keySearch" />
-            <UiSelectionTile group="mode" value="advSearch" />
-          </div>
+        <div className="vbox gap-16rpx">
+          <div className={`receipts search-grid`}>
+            {/* Mode column */}
+            <div className="modeCol vbox">
+              <div className="text body">Type</div>
+              <UiSelectionTile group="mode" value="keySearch" />
+              <UiSelectionTile group="mode" value="advSearch" />
+            </div>
 
-          {/* Type column */}
-          <div className="typeCol vbox">
-            {localSettings.mode === "keySearch" && (
-              <>
-                <UiSelectionTile group="keySearch" value="receipt" />
-                <UiSelectionTile group="keySearch" value="order" />
-              </>
-            )}
+            {/* Type column */}
+            <div className="typeCol vbox">
+              {localSettings.mode === "keySearch" && (
+                <> 
+                  <div className="text body">Search By:</div>
+                  <UiSelectionTile group="keySearch" value="receipt" />
+                  <UiSelectionTile group="keySearch" value="order" />
+                </>
+              )}
 
-            {localSettings.mode === "advSearch" && (
-              <>
-                <UiSelectionTile group="advSearch" value="phone" />
-                <UiSelectionTile group="advSearch" value="cc" />
-              </>
-            )}
-          </div>
-
-          {/* Input column */}
-          <div className="inputCol vbox">
-            <Expando // Try this with top fields in Headline and Numpad in Reveal
-              id={`${entryId}`}
-              scene={entryScene as Scene}
-              headline={<div className="text subtitle">Enter Valuer</div>}
-              reveal={
-                <EntryKeyPad
-                  value={localInputs.entryValue || ""}
-                  onChange={handleInputChange}
-                  onClick={handleInputChange}
-                />
-              }
-            ></Expando>
+              {localSettings.mode === "advSearch" && (
+                <>
+                  <UiSelectionTile group="advSearch" value="phone" />
+                  <UiSelectionTile group="advSearch" value="cc" />
+                </>
+              )}
+            </div>
+            {/* Input column */}
+            <div className="inputCol vbox">
+              <div className="text body">Enter Value:</div>
+              <KeyPadMini // Try this with top fields in Headline and Numpad in Reveal
+                scene={entryScene as Scene}
+                value={localInputs.entryValue || ""}
+                onChange={handleInputChange}
+              ></KeyPadMini>
+            </div>
+            {/* Action column */}
+            <div className="actionCol vbox justify-center">
+              <button
+                className="btn--primary"
+                onClick={autoSearch}
+                aria-label="Search Receipts"
+              >
+                Search
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -198,9 +239,9 @@ const receiptCardScene = (invoId: string) => {
   return next;
 };
 
-type ReceiptCardProps = { invoice: Invoice };
+type ReceiptCardProps = { invoice: Invoice; hasAdd: boolean };
 
-function ReceiptCard({ invoice }: ReceiptCardProps) {
+function ReceiptCard({ invoice, hasAdd = false }: ReceiptCardProps) {
   const [transaction, dispatch] = useTransaction();
   const { invoId, items } = invoice;
   const scene = receiptCardScene(invoId);
@@ -263,6 +304,12 @@ function ReceiptCard({ invoice }: ReceiptCardProps) {
         </Dialog>
       </Stage>
 
+      {hasAdd && (
+        <button
+          className="btn--outline"
+          aria-label="View receipt details"
+        ></button>
+      )}
       <button
         className={`btn--outline`}
         onClick={handleRemove}
@@ -285,7 +332,7 @@ function ReceiptList() {
     <div className="card-ctnr">
       <InvoSearchBar />
       {Array.from(receipts.values()).map((invoice: Invoice) => (
-        <ReceiptCard key={invoice.invoId} invoice={invoice} />
+        <ReceiptCard hasAdd={false} key={invoice.invoId} invoice={invoice} />
       ))}
     </div>
   );

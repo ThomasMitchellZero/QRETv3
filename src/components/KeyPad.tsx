@@ -225,7 +225,7 @@ export function EntryKeyPadExpando({
   onClick = () => {},
   className = "",
   display = "",
-  scene
+  scene,
 }: ControlProps) {
   return (
     <Expando
@@ -240,6 +240,100 @@ export function EntryKeyPadExpando({
           onClick={onClick}
           display={display}
         />
+      }
+    ></Expando>
+  );
+}
+
+export function KeyPadMini({
+  value,
+  onChange = () => {},
+  onClick = () => {},
+  className = "",
+  display = "",
+  scene,
+}: ControlProps) {
+  return (
+    <Expando
+      id="entrykeypad-expando"
+      scene={scene as Scene}
+      className={`${className}`}
+      headline={
+        <div className={`keypad-grid ${className}`}>
+          <InputField
+            value={value}
+            onChange={onChange}
+            display={display}
+            span={2}
+          />
+          <DeleteKey value={value} onClick={onClick} onChange={onChange} />
+        </div>
+      }
+      reveal={
+        <div className={`keypad-grid ${className}`}>
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="7"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="8"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="9"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="4"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="5"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="6"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="1"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="2"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="3"
+          />
+          <DigitKey
+            value={value}
+            onClick={onClick}
+            onChange={onChange}
+            digit="0"
+            span={2}
+          />
+          <SubmitKey value={value} onClick={onClick} onChange={onChange} />
+        </div>
       }
     ></Expando>
   );

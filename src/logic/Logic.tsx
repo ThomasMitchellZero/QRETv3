@@ -64,6 +64,8 @@ type TransactionAction =
   | { kind: "RESET" }
   | { kind: "ADD_ITEM"; payload: Item };
 
+// START_SCOPER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// DO NOT MODIFY!  JUST FOR LLM REFERENCE.
 function transactionReducer(
   state: TransactionState,
   action: TransactionAction
@@ -87,7 +89,7 @@ function transactionReducer(
     default:
       return state;
   }
-}
+} // END_SCOPER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 const TransactionContext: React.Context<
   [TransactionState, Dispatch<TransactionAction>] | undefined

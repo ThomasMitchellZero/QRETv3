@@ -26,9 +26,12 @@ const protocolLayer = {
         Always ---------------------------------------------
             - Follow the layers sequentially.
             - Seek clarifications if any checklist item is below 90% confidence.
+
         Never -------------------------------
-            - Never skip checklist steps.
-            - Never modify code unless told to Patch by The Ape.
+            - skip checklist steps.
+            - modify code unless told to Patch by The Ape.
+            - modify code outside pairs of Start / End Scopers.
+            - treat things outside of this Prompt as canoncial context.
     */
 };
 
@@ -230,32 +233,25 @@ const promptLayer = {
 
     These are the unique instructions for this *Prompt*. 
   
-    *Target File*:  Interlude.tsx, between pairs of *START_SCOPER* and *END_SCOPER* markers.
+    *Target *:  QRET Folder
 
-    -------------------------------------
+    - Objetive 1:
+        -A standard, recursible format I can use for Components, Folders, and Indexes throughout the app.
+        -A format that is easy for me to read and understand at a glance.
+        -I should be able to easily move components around into folders with as little friction as possible.
+        -It should be easy for me to identify names and lineages.  
 
-    Your objective is to create a component in Interlude called Expando.  This component will display a Label area (always) and an expandable Details area (conditionally).
+    Objective 2:
+        -Recreate the entire QRET folder, or at least the src file, with the new format.  
 
-    -The Expando is NOT a Stage!  It is contained within a Stage.  It's closer to an Actor than anything else.  
-
-    -The Component uses the Interlude infrastructure.  It just needs to be a component that sets its own inactive / active property in the parent Stage and prevent event bubbling past itself.
-
-        When creating the Type, expand InterludeProps to include:
-            -Headline: React.ReactNode
-            -Reveal: React.ReactNode
-        -The Headline area is always visible.  Contents can be any JSX.
-            -This is critical - The Headline area can stretch, but padding MUST be preserved.  It has to look like the same thing just got bigger.
-
-        -The Details area is only visible when the Stage is active (clicked).  Contents can be any JSX.
+        Always
+        --------
+            -link the key files together through index.tsx files at each folder level.
         
-        -Do not intake either one as Children.  The props should have clear labels.
-
-
-        -Both are mandatory.
-
-    -All State will be in Interlude, though children may have their own state interactions.
-
-
+        Never
+        --------
+            -Make any logic changes other than import / export statements.
+            -Modify code outside of Start / End Scopers.
 
 
 
