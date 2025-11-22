@@ -1,0 +1,39 @@
+QRET Barrel Map
+================
+
+src/api/index.ts:
+  - fakeApi
+
+src/assets/index.ts:
+  - product-images
+
+src/assets/product-images/index.tsx:
+  - ProductImage
+
+src/components/index.tsx:
+  - Components
+  - Icons
+  - KeyPad
+
+src/logic/index.tsx:
+  - Derivation
+  - Interlude
+  - Logic
+
+src/phases/index.tsx:
+  - 050-Start
+  - 200-ReturnItems
+  - 250-Receipts
+  - Old
+
+src/types/index.ts:
+  - Types
+
+Root src/index.ts exports:
+  - api
+  - assets
+  - components
+  - logic
+  - phases
+  - style
+  - types
